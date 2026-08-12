@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard - Daily Mind Challenge</title>
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/pages/leaderboard.css">
+</head>
+<body>
+    <div id="site-header"></div>
+
+    <div class="content">
+        <div class="section">
+            <div class="section-title">Leaderboard</div>
+            <div class="lb-tabs">
+                <button class="lb-tab active" id="tab-today" type="button">Today</button>
+                <button class="lb-tab" id="tab-alltime" type="button">All-time</button>
+            </div>
+            <div class="leaderboard-table" id="leaderboard-full">
+                <div class="loading-text">Loading&hellip;</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="site-footer"></div>
+
+    <script type="module" src="js/pages/leaderboard.js"></script>
+</body>
+</html>

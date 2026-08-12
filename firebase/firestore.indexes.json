@@ -1,0 +1,13 @@
+{
+    "indexes": [
+        {
+            "collectionGroup": "dailyLeaderboard",
+            "queryScope": "COLLECTION",
+            "fields": [
+                { "fieldPath": "date", "order": "ASCENDING" },
+                { "fieldPath": "points", "order": "DESCENDING" }
+            ]
+        }
+    ],
+    "fieldOverrides": []
+}

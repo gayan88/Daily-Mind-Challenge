@@ -1,0 +1,4 @@
+.completed-status {
+    color: var(--color-success);
+    font-weight: 600;
+}

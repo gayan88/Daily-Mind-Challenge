@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Mind Challenge - Home</title>
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/pages/home.css">
+</head>
+<body>
+    <div id="site-header"></div>
+
+    <div class="content">
+        <div class="section">
+            <div class="status-card" id="status-card">
+                <div class="loading-text">Loading your status&hellip;</div>
+            </div>
+        </div>
+
+        <div class="ad-space">Google AdSense - Ad Space #1 (300x250)</div>
+
+        <div class="section">
+            <div class="section-title">Today's puzzles</div>
+            <div class="game-grid" id="game-grid">
+                <a href="wordle.html" class="game-tile wordle" id="tile-wordle">
+                    <span class="game-icon" data-icon="WORDLE"></span>
+                    <div class="game-name">Play Wordle Today</div>
+                    <div class="game-status">Solve in 6 tries</div>
+                </a>
+                <a href="sudoku.html" class="game-tile sudoku" id="tile-sudoku">
+                    <span class="game-icon" data-icon="SUDOKU"></span>
+                    <div class="game-name">Play Sudoku Today</div>
+                    <div class="game-status">Complete the grid</div>
+                </a>
+                <a href="wordsearch.html" class="game-tile wordsearch" id="tile-wordsearch">
+                    <span class="game-icon" data-icon="WORDSEARCH"></span>
+                    <div class="game-name">Play Word Search</div>
+                    <div class="game-status">Find all words</div>
+                </a>
+            </div>
+        </div>
+
+        <div class="ad-space">Google AdSense - Ad Space #2 (300x250)</div>
+
+        <div class="section">
+            <div class="section-title">Open challenges</div>
+            <div id="challenges-preview">
+                <div class="loading-text">Loading challenges&hellip;</div>
+            </div>
+
+            <div class="action-buttons">
+                <a href="challenges.html#create" class="btn primary">Create Challenge</a>
+                <a href="challenges.html" class="btn">Browse All</a>
+            </div>
+        </div>
+
+        <div class="ad-space">Google AdSense - Ad Space #3 (300x250)</div>
+
+        <div class="section">
+            <div class="section-title">Today's top players</div>
+            <div class="leaderboard-table" id="leaderboard-preview">
+                <div class="loading-text">Loading leaderboard&hellip;</div>
+            </div>
+            <div class="view-all">
+                <a href="leaderboard.html">View full leaderboard <span data-icon="ARROW_RIGHT"></span></a>
+            </div>
+        </div>
+    </div>
+
+    <div id="site-footer"></div>
+
+    <script type="module" src="js/pages/home.js"></script>
+</body>
+</html>

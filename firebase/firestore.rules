@@ -1,0 +1,54 @@
+rules_version = '2';
+
+// v1-pragmatic rules: guests can only ever write their own docs, and per-write point deltas are
+// capped so a client can't just set totalPoints to an arbitrary huge number. This is NOT full
+// server-authoritative scoring (that would need Cloud Functions, out of scope for v1) -- a
+// determined attacker could still repeatedly write small deltas. See README known limitations.
+service cloud.firestore {
+    match /databases/{database}/documents {
+
+        function isValidUserUpdate() {
+            let before = resource.data;
+            let after = request.resource.data;
+            let pointsDelta = after.totalPoints - before.totalPoints;
+            return pointsDelta >= 0 && pointsDelta <= 50
+                && after.displayName is string
+                && after.displayName.size() <= 24;
+        }
+
+        match /users/{uid} {
+            allow read: if true;
+            allow create: if request.auth != null && request.auth.uid == uid;
+            allow update: if request.auth != null && request.auth.uid == uid && isValidUserUpdate();
+            allow delete: if false;
+        }
+
+        match /dailyLeaderboard/{docId} {
+            allow read: if true;
+            allow create: if request.auth != null
+                && request.resource.data.uid == request.auth.uid
+                && request.resource.data.points >= 0
+                && request.resource.data.points <= 50
+                && docId == request.resource.data.date + '_' + request.auth.uid;
+            allow update: if request.auth != null
+                && resource.data.uid == request.auth.uid
+                && (request.resource.data.points - resource.data.points) >= 0
+                && (request.resource.data.points - resource.data.points) <= 50;
+            allow delete: if false;
+        }
+
+        match /challenges/{challengeId} {
+            allow read: if true;
+            allow create: if request.auth != null && request.resource.data.creatorUid == request.auth.uid;
+            allow update: if false;
+            allow delete: if false;
+
+            match /completions/{uid} {
+                allow read: if true;
+                allow create: if request.auth != null && request.auth.uid == uid;
+                allow update: if false;
+                allow delete: if false;
+            }
+        }
+    }
+}

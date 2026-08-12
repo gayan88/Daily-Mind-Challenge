@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - Daily Mind Challenge</title>
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/pages/profile.css">
+</head>
+<body>
+    <div id="site-header"></div>
+
+    <div class="content">
+        <div class="section">
+            <div class="section-title">Your Profile</div>
+            <div class="card">
+                <div class="form-field">
+                    <label for="display-name-input">Display name</label>
+                    <input type="text" id="display-name-input" maxlength="24">
+                </div>
+                <button class="btn primary" id="save-name-btn" type="button">Save</button>
+
+                <div class="profile-stats" id="profile-stats"></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Recent activity</div>
+            <div class="card" id="profile-history">
+                <div class="loading-text">Loading&hellip;</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="site-footer"></div>
+
+    <script type="module" src="js/pages/profile.js"></script>
+</body>
+</html>

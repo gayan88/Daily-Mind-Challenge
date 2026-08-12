@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Daily Mind Challenge</title>
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/pages/settings.css">
+</head>
+<body>
+    <div id="site-header"></div>
+
+    <div class="content">
+        <div class="section">
+            <div class="section-title">Account</div>
+            <div class="card">
+                <div class="form-field">
+                    <label for="display-name-input">Display name</label>
+                    <input type="text" id="display-name-input" maxlength="24">
+                </div>
+                <button class="btn primary" id="save-name-btn" type="button">Save</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Danger zone</div>
+            <div class="card danger-zone">
+                <p>
+                    You're playing as a guest. Your points and progress are tied to this browser only —
+                    there's no email or password to recover your account. Resetting will start a brand
+                    new guest identity and this browser will permanently lose access to your current
+                    points, streak, and history.
+                </p>
+                <button class="btn danger" id="reset-btn" type="button">Reset guest identity</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="site-footer"></div>
+
+    <script type="module" src="js/pages/settings.js"></script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+.danger-zone {
+    border-color: rgba(192, 57, 43, 0.3);
+}
+
+.danger-zone p {
+    color: var(--color-text-secondary);
+    font-size: 14px;
+    margin-bottom: 16px;
+}

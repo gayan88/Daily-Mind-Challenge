@@ -1,0 +1,55 @@
+.profile-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-top: 16px;
+}
+
+@media (min-width: 480px) {
+    .profile-stats {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.stat-tile {
+    background: var(--color-bg);
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--color-primary);
+}
+
+.stat-label {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    margin-top: 4px;
+}
+
+.history-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 0.5px solid var(--color-border);
+    font-size: 14px;
+}
+
+.history-row:last-child {
+    border-bottom: none;
+}
+
+.history-game {
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.history-detail {
+    color: var(--color-text-muted);
+    font-size: 13px;
+}
