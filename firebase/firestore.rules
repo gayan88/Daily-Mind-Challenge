@@ -1,51 +1,85 @@
 rules_version = '2';
 
-// v1-pragmatic rules: guests can only ever write their own docs, and per-write point deltas are
-// capped so a client can't just set totalPoints to an arbitrary huge number. This is NOT full
-// server-authoritative scoring (that would need Cloud Functions, out of scope for v1) -- a
-// determined attacker could still repeatedly write small deltas. See README known limitations.
+// v1-pragmatic rules for the guest/registered/admin login system. Real identity comes from
+// Firebase Auth (anonymous for guests, email/password for registered accounts) -- there is no
+// passwordHash anywhere in Firestore, Firebase Auth owns that entirely. Moderation fields
+// (isAdmin/isBanned/bannedReason/bannedDate) can only be changed by an existing admin; everyday
+// point writes are capped per-write so a client can't set itself an arbitrary score.
 service cloud.firestore {
     match /databases/{database}/documents {
 
-        function isValidUserUpdate() {
-            let before = resource.data;
-            let after = request.resource.data;
-            let pointsDelta = after.totalPoints - before.totalPoints;
-            return pointsDelta >= 0 && pointsDelta <= 50
-                && after.displayName is string
-                && after.displayName.size() <= 24;
+        function isSignedIn() {
+            return request.auth != null;
         }
 
-        match /users/{uid} {
+        function isAdmin() {
+            return isSignedIn()
+                && exists(/databases/$(database)/documents/registeredUsers/$(request.auth.uid))
+                && get(/databases/$(database)/documents/registeredUsers/$(request.auth.uid)).data.isAdmin == true;
+        }
+
+        match /guests/{uid} {
             allow read: if true;
-            allow create: if request.auth != null && request.auth.uid == uid;
-            allow update: if request.auth != null && request.auth.uid == uid && isValidUserUpdate();
+            allow create: if isSignedIn() && request.auth.uid == uid
+                && request.auth.token.firebase.sign_in_provider == 'anonymous';
+            allow update: if isSignedIn() && request.auth.uid == uid
+                && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastLoginAt']);
             allow delete: if false;
         }
 
-        match /dailyLeaderboard/{docId} {
+        match /registeredUsers/{uid} {
             allow read: if true;
-            allow create: if request.auth != null
-                && request.resource.data.uid == request.auth.uid
-                && request.resource.data.points >= 0
-                && request.resource.data.points <= 50
-                && docId == request.resource.data.date + '_' + request.auth.uid;
-            allow update: if request.auth != null
-                && resource.data.uid == request.auth.uid
-                && (request.resource.data.points - resource.data.points) >= 0
-                && (request.resource.data.points - resource.data.points) <= 50;
+            allow create: if isSignedIn() && request.auth.uid == uid;
+            allow update: if isSignedIn() && ((request.auth.uid == uid && isSelfServiceUpdate()) || isAdmin());
             allow delete: if false;
+
+            function isSelfServiceUpdate() {
+                let changed = request.resource.data.diff(resource.data).affectedKeys();
+                let pointsDelta = request.resource.data.loginPoints - resource.data.loginPoints;
+                return changed.hasOnly(['displayName', 'email', 'updatedAt', 'loginPoints', 'lastLoginDate', 'currentStreak'])
+                    && pointsDelta >= 0 && pointsDelta <= 100
+                    && request.resource.data.displayName is string
+                    && request.resource.data.displayName.size() <= 24
+                    && request.resource.data.isAdmin == resource.data.isAdmin
+                    && request.resource.data.isBanned == resource.data.isBanned
+                    && request.resource.data.username == resource.data.username;
+            }
+        }
+
+        match /usernames/{username} {
+            allow read: if true;
+            allow create: if isSignedIn() && request.auth.uid == request.resource.data.uid;
+            allow update: if false;
+            allow delete: if false;
+        }
+
+        match /gameScores/{scoreId} {
+            allow read: if true;
+            allow create: if isSignedIn()
+                && request.resource.data.userId == request.auth.uid
+                && scoreId == request.auth.uid + '_' + request.resource.data.gameType + '_' + request.resource.data.gameDate
+                && request.resource.data.score >= 0 && request.resource.data.score <= 10;
+            allow update: if isAdmin();
+            allow delete: if isAdmin();
+        }
+
+        match /config/{configId} {
+            allow read: if true;
+            allow write: if isAdmin();
         }
 
         match /challenges/{challengeId} {
             allow read: if true;
-            allow create: if request.auth != null && request.resource.data.creatorUid == request.auth.uid;
+            allow create: if isSignedIn()
+                && request.resource.data.creatorUid == request.auth.uid
+                && exists(/databases/$(database)/documents/registeredUsers/$(request.auth.uid))
+                && get(/databases/$(database)/documents/registeredUsers/$(request.auth.uid)).data.isBanned == false;
             allow update: if false;
-            allow delete: if false;
+            allow delete: if isAdmin();
 
             match /completions/{uid} {
                 allow read: if true;
-                allow create: if request.auth != null && request.auth.uid == uid;
+                allow create: if isSignedIn() && request.auth.uid == uid;
                 allow update: if false;
                 allow delete: if false;
             }

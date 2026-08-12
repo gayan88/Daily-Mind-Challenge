@@ -1,9 +1,9 @@
 import { initShell } from '../lib/partials.js';
 import { icon, applyIcons } from '../lib/icons.js';
-import { getTodayLeaderboard, findUserInLeaderboard } from '../lib/leaderboard.js';
+import { getTodayOverallLeaderboard, findUserInLeaderboard } from '../lib/leaderboard.js';
 import { listOpenChallenges } from '../lib/challenges.js';
-import { hasPlayedToday } from '../lib/points.js';
-import { escapeHtml } from '../lib/utils.js';
+import { checkPlayedToday } from '../lib/points.js';
+import { escapeHtml, formatLeaderboardName } from '../lib/utils.js';
 
 const GAME_LABELS = {
     wordle: 'Wordle',
@@ -11,18 +11,24 @@ const GAME_LABELS = {
     wordsearch: 'Word Search',
 };
 
-function renderStatusCard(profile, todayRank) {
+function renderStatusCard(profile, todayRank, todayPoints, bonusApplied) {
     const card = document.getElementById('status-card');
     const rankRow = todayRank
         ? `<div class="status-row"><span class="status-icon" data-icon="TROPHY"></span>You are <strong>#${todayRank}</strong> on today's leaderboard</div>`
         : `<div class="status-row"><span class="status-icon" data-icon="STAR"></span>Play a game today to join the leaderboard!</div>`;
 
+    const bonusRow = bonusApplied
+        ? `<div class="status-row"><span class="status-icon" data-icon="CHECK"></span>You visited today! <strong>+login points</strong></div>`
+        : profile.kind === 'guest'
+            ? `<div class="status-row"><span class="status-icon" data-icon="CHECK"></span>Welcome, guest! Sign up to earn daily login points.</div>`
+            : '';
+
     card.innerHTML = `
         <div class="status-welcome">Welcome back, ${escapeHtml(profile.displayName)}!</div>
-        <div class="status-row"><span class="status-icon" data-icon="CHECK"></span>You visited today! <strong>+10 login points</strong></div>
+        ${bonusRow}
         ${rankRow}
         <div class="points-display">
-            Your total points: <span class="points-number">${profile.totalPoints}</span>
+            Today's points: <span class="points-number">${todayPoints}</span>
         </div>
     `;
     applyIcons(card);
@@ -75,7 +81,7 @@ function renderLeaderboardPreview(rows, uid) {
         .map((row) => `
             <div class="lb-row ${row.uid === uid ? 'lb-you' : ''}">
                 <div class="lb-rank">${row.rank}</div>
-                <div class="lb-name">${escapeHtml(row.displayName)}</div>
+                <div class="lb-name">${escapeHtml(formatLeaderboardName(row.displayName, row.isGuest))}</div>
                 <div class="lb-score">${row.points} pts</div>
             </div>
         `)
@@ -83,19 +89,22 @@ function renderLeaderboardPreview(rows, uid) {
 }
 
 async function init() {
-    const { uid, profile } = await initShell();
+    const { uid, profile, bonusApplied } = await initShell();
 
-    const [leaderboardRows, openChallenges] = await Promise.all([
-        getTodayLeaderboard(20),
+    const [leaderboardRows, openChallenges, playedWordle, playedSudoku, playedWordsearch] = await Promise.all([
+        getTodayOverallLeaderboard(20),
         listOpenChallenges(10),
+        checkPlayedToday(uid, 'wordle'),
+        checkPlayedToday(uid, 'sudoku'),
+        checkPlayedToday(uid, 'wordsearch'),
     ]);
 
     const userRow = findUserInLeaderboard(leaderboardRows, uid);
-    renderStatusCard(profile, userRow?.rank ?? null);
+    renderStatusCard(profile, userRow?.rank ?? null, userRow?.points ?? 0, bonusApplied);
 
-    markTileCompleted('wordle', hasPlayedToday(profile, 'wordle'));
-    markTileCompleted('sudoku', hasPlayedToday(profile, 'sudoku'));
-    markTileCompleted('wordsearch', hasPlayedToday(profile, 'wordsearch'));
+    markTileCompleted('wordle', !!playedWordle);
+    markTileCompleted('sudoku', !!playedSudoku);
+    markTileCompleted('wordsearch', !!playedWordsearch);
 
     renderChallengesPreview(openChallenges, uid);
     renderLeaderboardPreview(leaderboardRows, uid);

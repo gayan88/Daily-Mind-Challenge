@@ -1,11 +1,27 @@
 {
     "indexes": [
         {
-            "collectionGroup": "dailyLeaderboard",
+            "collectionGroup": "gameScores",
             "queryScope": "COLLECTION",
             "fields": [
-                { "fieldPath": "date", "order": "ASCENDING" },
-                { "fieldPath": "points", "order": "DESCENDING" }
+                { "fieldPath": "gameType", "order": "ASCENDING" },
+                { "fieldPath": "gameDate", "order": "ASCENDING" }
+            ]
+        },
+        {
+            "collectionGroup": "gameScores",
+            "queryScope": "COLLECTION",
+            "fields": [
+                { "fieldPath": "userId", "order": "ASCENDING" },
+                { "fieldPath": "createdAt", "order": "DESCENDING" }
+            ]
+        },
+        {
+            "collectionGroup": "challenges",
+            "queryScope": "COLLECTION",
+            "fields": [
+                { "fieldPath": "creatorUid", "order": "ASCENDING" },
+                { "fieldPath": "createdAt", "order": "ASCENDING" }
             ]
         }
     ],

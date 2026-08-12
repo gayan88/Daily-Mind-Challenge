@@ -1,32 +1,67 @@
 import { initShell } from '../lib/partials.js';
-import { updateDisplayName } from '../lib/user-profile.js';
-import { signOutGuest } from '../firebase/auth.js';
+import { updateRegisteredProfile } from '../lib/user-profile.js';
+import { changePassword } from '../firebase/auth.js';
+import { containsBlockedWord } from '../lib/profanity.js';
 import { showToast } from '../lib/utils.js';
+
+const PASSWORD_RULE = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
+
+function blockGuestAccess() {
+    document.getElementById('settings-content').innerHTML = `
+        <div class="section">
+            <div class="empty-state">
+                Guest accounts don't have a settings page. <a href="index.html">Back to home</a> --
+                or sign up for an account from the login page to unlock settings.
+            </div>
+        </div>
+    `;
+}
 
 async function init() {
     const { uid, profile } = await initShell();
 
-    const nameInput = document.getElementById('display-name-input');
-    nameInput.value = profile.displayName;
+    if (profile.kind !== 'registered') {
+        blockGuestAccess();
+        return;
+    }
 
-    document.getElementById('save-name-btn').addEventListener('click', async () => {
+    const nameInput = document.getElementById('display-name-input');
+    const emailInput = document.getElementById('email-input');
+    nameInput.value = profile.displayName;
+    emailInput.value = profile.email || '';
+
+    document.getElementById('save-account-btn').addEventListener('click', async () => {
         const name = nameInput.value.trim();
+        const email = emailInput.value.trim();
         if (!name) {
             showToast('Display name cannot be empty');
             return;
         }
-        await updateDisplayName(uid, name);
-        showToast('Display name updated');
+        if (await containsBlockedWord(name)) {
+            showToast('That display name isn\'t allowed. Please choose another.');
+            return;
+        }
+        await updateRegisteredProfile(uid, { displayName: name, email: email || null });
+        showToast('Account updated');
     });
 
-    document.getElementById('reset-btn').addEventListener('click', async () => {
-        const confirmed = window.confirm(
-            'This will permanently disconnect this browser from your current guest identity. ' +
-            'Your points, streak, and history will NOT be recoverable afterward. Continue?'
-        );
-        if (!confirmed) return;
-        await signOutGuest();
-        window.location.href = 'index.html';
+    document.getElementById('change-password-btn').addEventListener('click', async () => {
+        const newPassword = document.getElementById('new-password-input').value;
+        if (!PASSWORD_RULE.test(newPassword)) {
+            showToast('Password needs at least 8 characters, 1 uppercase letter, and 1 number.');
+            return;
+        }
+        try {
+            await changePassword(newPassword);
+            document.getElementById('new-password-input').value = '';
+            showToast('Password changed');
+        } catch (err) {
+            if (err.code === 'auth/requires-recent-login') {
+                showToast('For security, please log out and back in before changing your password.');
+            } else {
+                showToast(err.message || 'Could not change password.');
+            }
+        }
     });
 }
 

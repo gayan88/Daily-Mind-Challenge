@@ -42,6 +42,14 @@ function renderShareResult(challengeId) {
 }
 
 async function initCreateForm(uid, profile) {
+    if (profile.kind !== 'registered') {
+        document.getElementById('create-section').innerHTML = `
+            <div class="section-title">Create a Challenge</div>
+            <div class="empty-state">Sign up for an account to create challenges. Guests can still solve and browse them!</div>
+        `;
+        return;
+    }
+
     const select = document.getElementById('word-select');
     select.innerHTML = WORDLE_ANSWERS.map((w) => `<option value="${w}">${w}</option>`).join('');
 
@@ -51,11 +59,15 @@ async function initCreateForm(uid, profile) {
     });
 
     document.getElementById('create-btn').addEventListener('click', async () => {
-        const word = select.value;
-        const id = await createChallenge(uid, profile.displayName, word, 'wordle');
-        renderShareResult(id);
-        showToast('Challenge created!');
-        loadOpenChallenges(uid);
+        try {
+            const word = select.value;
+            const id = await createChallenge(profile, word, 'wordle');
+            renderShareResult(id);
+            showToast('Challenge created!');
+            loadOpenChallenges(uid);
+        } catch (err) {
+            showToast(err.message);
+        }
     });
 }
 
@@ -122,6 +134,11 @@ async function initSolveView(uid, profile, challengeId) {
 
     if (challenge.creatorUid === uid) {
         gameMount.innerHTML = `<div class="empty-state">This is your own challenge — share the link with a friend so they can solve it!</div>`;
+        return;
+    }
+
+    if (profile.isAdmin) {
+        gameMount.innerHTML = `<div class="empty-state">Admin accounts don't play games.</div>`;
         return;
     }
 

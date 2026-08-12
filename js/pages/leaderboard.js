@@ -1,19 +1,19 @@
 import { initShell } from '../lib/partials.js';
-import { getTodayLeaderboard, getAllTimeLeaderboard } from '../lib/leaderboard.js';
-import { escapeHtml } from '../lib/utils.js';
+import { getTodayOverallLeaderboard, getTodayGameLeaderboard } from '../lib/leaderboard.js';
+import { escapeHtml, formatLeaderboardName } from '../lib/utils.js';
 
-function renderRows(rows, uid, scoreField) {
+function renderRows(rows, uid) {
     const el = document.getElementById('leaderboard-full');
     if (rows.length === 0) {
-        el.innerHTML = `<div class="empty-state">No scores yet. Be the first!</div>`;
+        el.innerHTML = `<div class="empty-state">No scores yet today. Be the first!</div>`;
         return;
     }
     el.innerHTML = rows
         .map((row) => `
             <div class="lb-row ${row.uid === uid ? 'lb-you' : ''}">
                 <div class="lb-rank">${row.rank}</div>
-                <div class="lb-name">${escapeHtml(row.displayName)}</div>
-                <div class="lb-score">${row[scoreField]} pts</div>
+                <div class="lb-name">${escapeHtml(formatLeaderboardName(row.displayName, row.isGuest))}</div>
+                <div class="lb-score">${row.points} pts</div>
             </div>
         `)
         .join('');
@@ -21,28 +21,21 @@ function renderRows(rows, uid, scoreField) {
 
 async function init() {
     const { uid } = await initShell();
-    const todayTab = document.getElementById('tab-today');
-    const allTimeTab = document.getElementById('tab-alltime');
+    const tabs = Array.from(document.querySelectorAll('.lb-tab'));
     const el = document.getElementById('leaderboard-full');
 
-    async function showToday() {
-        todayTab.classList.add('active');
-        allTimeTab.classList.remove('active');
+    async function showGame(game) {
+        tabs.forEach((tab) => tab.classList.toggle('active', tab.dataset.game === game));
         el.innerHTML = `<div class="loading-text">Loading&hellip;</div>`;
-        renderRows(await getTodayLeaderboard(50), uid, 'points');
+        const rows = game === 'overall'
+            ? await getTodayOverallLeaderboard(50)
+            : await getTodayGameLeaderboard(game, 50);
+        renderRows(rows, uid);
     }
 
-    async function showAllTime() {
-        allTimeTab.classList.add('active');
-        todayTab.classList.remove('active');
-        el.innerHTML = `<div class="loading-text">Loading&hellip;</div>`;
-        renderRows(await getAllTimeLeaderboard(50), uid, 'totalPoints');
-    }
+    tabs.forEach((tab) => tab.addEventListener('click', () => showGame(tab.dataset.game)));
 
-    todayTab.addEventListener('click', showToday);
-    allTimeTab.addEventListener('click', showAllTime);
-
-    showToday();
+    showGame('overall');
 }
 
 init();

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Daily Mind Challenge</title>
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/pages/admin.css">
+</head>
+<body>
+    <div id="site-header"></div>
+
+    <div class="content" id="admin-content">
+        <div class="section">
+            <div class="section-title">Platform Config</div>
+            <div class="card" id="config-forms">
+                <div class="loading-text">Loading&hellip;</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Moderate Users</div>
+            <div class="card">
+                <div class="mod-search-row">
+                    <input type="text" id="mod-search-input" placeholder="Username">
+                    <button class="btn primary" id="mod-search-btn" type="button">Look Up</button>
+                </div>
+                <div id="mod-result"></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Delete a Challenge</div>
+            <div class="card">
+                <div class="mod-search-row">
+                    <input type="text" id="delete-challenge-input" placeholder="Challenge ID">
+                    <button class="btn danger" id="delete-challenge-btn" type="button">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="site-footer"></div>
+
+    <script type="module" src="js/pages/admin.js"></script>
+</body>
+</html>

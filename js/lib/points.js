@@ -1,90 +1,105 @@
 import {
     doc,
+    getDoc,
+    setDoc,
     runTransaction,
+    serverTimestamp,
+    collection,
+    query,
+    where,
+    orderBy,
+    limit,
+    getDocs,
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 import { db } from '../firebase/firebase-init.js';
 import { getTodayDateString, isConsecutiveDay } from './utils.js';
+import { getConfig } from './config.js';
 
-const DAILY_LOGIN_BONUS = 10;
-
-function leaderboardDocId(date, uid) {
-    return `${date}_${uid}`;
-}
-
-/** Applies a leaderboard point delta using an already-read snapshot. Firestore transactions
- * require every tx.get() to happen before any tx.set()/tx.update(), so the read must be done
- * by the caller up front -- this only performs the write half. */
-function writeLeaderboardDelta(tx, lbRef, lbSnap, uid, displayName, date, delta) {
-    if (lbSnap.exists()) {
-        tx.update(lbRef, { points: lbSnap.data().points + delta });
-    } else {
-        tx.set(lbRef, { uid, date, displayName, points: delta });
-    }
+function gameScoreDocId(uid, gameType, date) {
+    return `${uid}_${gameType}_${date}`;
 }
 
 /**
- * Awards the one-time +10 daily login bonus if the guest hasn't already claimed it today.
- * Returns true if the bonus was just applied, false if already claimed today.
+ * Awards the one-time daily login bonus (amount from config/dailyLoginReward, default 10) for
+ * registered users only. Returns { applied, amount, newStreak }.
  */
 export async function applyDailyLoginBonus(uid) {
     const today = getTodayDateString();
-    const userRef = doc(db, 'users', uid);
+    const { points: bonusAmount } = await getConfig('dailyLoginReward');
+    const userRef = doc(db, 'registeredUsers', uid);
 
     return runTransaction(db, async (tx) => {
         const userSnap = await tx.get(userRef);
-        if (!userSnap.exists()) return false;
+        if (!userSnap.exists()) return { applied: false, amount: 0 };
         const user = userSnap.data();
 
-        if (user.lastLoginDate === today) return false;
-
-        const lbRef = doc(db, 'dailyLeaderboard', leaderboardDocId(today, uid));
-        const lbSnap = await tx.get(lbRef); // all reads before any writes
+        if (user.lastLoginDate === today) return { applied: false, amount: 0 };
 
         const newStreak = isConsecutiveDay(user.lastLoginDate, today) ? (user.currentStreak || 0) + 1 : 1;
 
         tx.update(userRef, {
-            totalPoints: (user.totalPoints || 0) + DAILY_LOGIN_BONUS,
+            loginPoints: (user.loginPoints || 0) + bonusAmount,
             lastLoginDate: today,
             currentStreak: newStreak,
         });
-        writeLeaderboardDelta(tx, lbRef, lbSnap, uid, user.displayName, today, DAILY_LOGIN_BONUS);
-        return true;
+        return { applied: true, amount: bonusAmount, newStreak };
     });
 }
 
 /**
- * Awards points for completing a game, guarded so the same game can't be replayed for points
- * on the same calendar day. `meta` is merged into gamesCompleted[game] (e.g. { won, attempts }).
- * Returns true if points were awarded, false if today's round was already recorded.
+ * Writes a gameScores doc with a deterministic ID (uid_gameType_date). The real "one attempt per
+ * game per day" guarantee is enforced server-side by firestore.rules (only `create`, never
+ * `update`, is allowed on this path for regular users, so a second write is rejected even in a
+ * race) -- the getDoc here is just a cheap client-side check to avoid attempting a doomed write.
+ * Returns true if this was the first attempt recorded today.
  */
-export async function awardGamePoints(uid, game, points, meta = {}) {
+export async function recordGameScore(uid, profile, gameType, score, timeTaken) {
     const today = getTodayDateString();
-    const userRef = doc(db, 'users', uid);
+    const ref = doc(db, 'gameScores', gameScoreDocId(uid, gameType, today));
 
-    return runTransaction(db, async (tx) => {
-        const userSnap = await tx.get(userRef);
-        if (!userSnap.exists()) return false;
-        const user = userSnap.data();
+    const existing = await getDoc(ref);
+    if (existing.exists()) return false;
 
-        const existing = (user.gamesCompleted || {})[game];
-        if (existing && existing.date === today) return false;
-
-        const lbRef = doc(db, 'dailyLeaderboard', leaderboardDocId(today, uid));
-        const lbSnap = await tx.get(lbRef); // all reads before any writes
-
-        const gamesCompleted = { ...(user.gamesCompleted || {}) };
-        gamesCompleted[game] = { date: today, ...meta };
-
-        tx.update(userRef, {
-            totalPoints: (user.totalPoints || 0) + points,
-            gamesCompleted,
+    try {
+        await setDoc(ref, {
+            userId: uid,
+            displayName: profile.displayName,
+            isGuest: profile.kind === 'guest',
+            gameType,
+            score,
+            timeTaken,
+            gameDate: today,
+            createdAt: serverTimestamp(),
         });
-        writeLeaderboardDelta(tx, lbRef, lbSnap, uid, user.displayName, today, points);
         return true;
-    });
+    } catch {
+        return false; // lost a race with another write to the same doc id -- already recorded
+    }
 }
 
-export function hasPlayedToday(userDoc, game) {
-    const entry = (userDoc?.gamesCompleted || {})[game];
-    return entry?.date === getTodayDateString();
+export async function checkPlayedToday(uid, gameType) {
+    const today = getTodayDateString();
+    const snap = await getDoc(doc(db, 'gameScores', gameScoreDocId(uid, gameType, today)));
+    return snap.exists() ? snap.data() : null;
+}
+
+/** Lifetime game-score total and count, for the "Total Points" formula on profile.html
+ * (registered users add loginPoints to totalScore themselves; guests just use totalScore). */
+export async function getUserLifetimeStats(uid) {
+    const q = query(collection(db, 'gameScores'), where('userId', '==', uid));
+    const snap = await getDocs(q);
+    let totalScore = 0;
+    snap.docs.forEach((d) => { totalScore += d.data().score; });
+    return { totalScore, gamesPlayedCount: snap.size };
+}
+
+export async function getUserGameHistory(uid, limitCount = 20) {
+    const q = query(
+        collection(db, 'gameScores'),
+        where('userId', '==', uid),
+        orderBy('createdAt', 'desc'),
+        limit(limitCount)
+    );
+    const snap = await getDocs(q);
+    return snap.docs.map((d) => d.data());
 }

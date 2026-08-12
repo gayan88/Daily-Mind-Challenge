@@ -35,6 +35,20 @@ export function escapeHtml(str) {
     return div.innerHTML;
 }
 
+/** Formats a duration in milliseconds as "M:SS" (or "H:MM:SS" past an hour), for gameScores.timeTaken. */
+export function formatDuration(ms) {
+    const totalSeconds = Math.max(0, Math.round(ms / 1000));
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    const pad = (n) => String(n).padStart(2, '0');
+    return hours > 0 ? `${hours}:${pad(minutes)}:${pad(seconds)}` : `${minutes}:${pad(seconds)}`;
+}
+
+export function formatLeaderboardName(displayName, isGuest) {
+    return isGuest ? `${displayName} [Guest]` : displayName;
+}
+
 export function showToast(message, duration = 2200) {
     let toast = document.querySelector('.toast');
     if (!toast) {

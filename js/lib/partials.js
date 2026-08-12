@@ -1,5 +1,5 @@
-import { getCurrentUser, signOutGuest } from '../firebase/auth.js';
-import { ensureUserDoc, subscribeToUserDoc } from './user-profile.js';
+import { getSessionUser, signOutSession } from '../firebase/auth.js';
+import { loadSessionProfile, BannedError } from './user-profile.js';
 import { applyDailyLoginBonus } from './points.js';
 import { applyIcons } from './icons.js';
 import { showToast } from './utils.js';
@@ -11,16 +11,24 @@ async function injectPartial(placeholderId, path) {
     el.innerHTML = await res.text();
 }
 
-function wireLogout(uid) {
+function currentPageWithQuery() {
+    return window.location.pathname.replace(/^\//, '') + window.location.search;
+}
+
+function redirectToLogin() {
+    window.location.href = `login.html?redirect=${encodeURIComponent(currentPageWithQuery())}`;
+}
+
+function wireLogout(profile) {
     const btn = document.getElementById('logout-btn');
     if (!btn) return;
     btn.addEventListener('click', async () => {
-        const confirmed = window.confirm(
-            'Logging out will end this guest session. Without this browser\'s saved login, your points and progress on this guest identity cannot be recovered. Continue?'
-        );
-        if (!confirmed) return;
-        await signOutGuest();
-        window.location.href = 'index.html';
+        const message = profile.kind === 'guest'
+            ? 'Logging out will end this guest session. Without this browser\'s saved login, your points and progress on this guest identity cannot be recovered. Continue?'
+            : 'Log out of your account?';
+        if (!window.confirm(message)) return;
+        await signOutSession();
+        window.location.href = 'login.html';
     });
 }
 
@@ -34,18 +42,25 @@ function wireFooterShare() {
     });
 }
 
-function updateUserBadge(profile) {
+function updateHeader(profile) {
     const badge = document.getElementById('user-badge');
-    if (!badge) return;
-    badge.textContent = `${profile.displayName} · ${profile.totalPoints} pts`;
+    if (badge) {
+        badge.textContent = profile.kind === 'guest' ? `${profile.displayName} [Guest]` : profile.displayName;
+    }
+    const adminLink = document.getElementById('admin-nav-link');
+    if (adminLink) {
+        adminLink.hidden = !profile.isAdmin;
+    }
 }
 
 /**
- * Loads the shared header/footer into a page's #site-header/#site-footer placeholders,
- * signs the guest in (creating their Firestore profile on first visit), applies the daily
- * +10 login bonus if not already claimed today, and wires common header/footer behavior.
+ * Loads the shared header/footer, then resolves the current session. If there is no session at
+ * all, redirects to login.html (no automatic guest creation). If the session is banned or its
+ * profile doc is missing, the user has already been signed out by loadSessionProfile -- redirect
+ * to login.html for that too. Otherwise applies the daily login bonus (registered users only)
+ * and wires up common header/footer behavior.
  *
- * Returns { uid, profile, bonusApplied } for page-specific scripts to build on.
+ * Returns { uid, profile, bonusApplied }.
  */
 export async function initShell() {
     await Promise.all([
@@ -55,27 +70,35 @@ export async function initShell() {
     applyIcons(document);
     wireFooterShare();
 
-    const user = await getCurrentUser();
-    const uid = user.uid;
+    const user = await getSessionUser();
+    if (!user) {
+        redirectToLogin();
+        return new Promise(() => {}); // never resolves; the redirect is already underway
+    }
 
-    await ensureUserDoc(uid);
-    const bonusApplied = await applyDailyLoginBonus(uid);
+    let profile;
+    try {
+        profile = await loadSessionProfile(user);
+    } catch (err) {
+        redirectToLogin();
+        return new Promise(() => {});
+    }
 
-    wireLogout(uid);
+    let bonusApplied = false;
+    if (profile.kind === 'registered') {
+        const bonus = await applyDailyLoginBonus(user.uid);
+        bonusApplied = bonus.applied;
+        if (bonus.applied) {
+            profile.loginPoints += bonus.amount;
+        }
+    }
 
-    let profile = await new Promise((resolve) => {
-        const unsubscribe = subscribeToUserDoc(uid, (data) => {
-            updateUserBadge(data);
-            resolve(data);
-            unsubscribe();
-        });
-    });
-
-    subscribeToUserDoc(uid, updateUserBadge);
+    updateHeader(profile);
+    wireLogout(profile);
 
     if (bonusApplied) {
         showToast('+10 points for visiting today!');
     }
 
-    return { uid, profile, bonusApplied };
+    return { uid: user.uid, profile, bonusApplied };
 }

@@ -13,10 +13,12 @@
 
     <div class="content">
         <div class="section">
-            <div class="section-title">Leaderboard</div>
+            <div class="section-title">Today's Leaderboard</div>
             <div class="lb-tabs">
-                <button class="lb-tab active" id="tab-today" type="button">Today</button>
-                <button class="lb-tab" id="tab-alltime" type="button">All-time</button>
+                <button class="lb-tab active" data-game="overall" type="button">Overall</button>
+                <button class="lb-tab" data-game="wordle" type="button">Wordle</button>
+                <button class="lb-tab" data-game="sudoku" type="button">Sudoku</button>
+                <button class="lb-tab" data-game="wordsearch" type="button">Word Search</button>
             </div>
             <div class="leaderboard-table" id="leaderboard-full">
                 <div class="loading-text">Loading&hellip;</div>

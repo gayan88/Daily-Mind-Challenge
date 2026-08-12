@@ -11,7 +11,7 @@
 <body>
     <div id="site-header"></div>
 
-    <div class="content">
+    <div class="content" id="settings-content">
         <div class="section">
             <div class="section-title">Account</div>
             <div class="card">
@@ -19,20 +19,23 @@
                     <label for="display-name-input">Display name</label>
                     <input type="text" id="display-name-input" maxlength="24">
                 </div>
-                <button class="btn primary" id="save-name-btn" type="button">Save</button>
+                <div class="form-field">
+                    <label for="email-input">Recovery email (optional, used for password reset)</label>
+                    <input type="email" id="email-input">
+                </div>
+                <button class="btn primary" id="save-account-btn" type="button">Save</button>
             </div>
         </div>
 
         <div class="section">
-            <div class="section-title">Danger zone</div>
-            <div class="card danger-zone">
-                <p>
-                    You're playing as a guest. Your points and progress are tied to this browser only —
-                    there's no email or password to recover your account. Resetting will start a brand
-                    new guest identity and this browser will permanently lose access to your current
-                    points, streak, and history.
-                </p>
-                <button class="btn danger" id="reset-btn" type="button">Reset guest identity</button>
+            <div class="section-title">Password</div>
+            <div class="card">
+                <div class="form-field">
+                    <label for="new-password-input">New password</label>
+                    <input type="password" id="new-password-input">
+                </div>
+                <div class="form-hint">At least 8 characters, with 1 uppercase letter and 1 number.</div>
+                <button class="btn primary" id="change-password-btn" type="button">Change Password</button>
             </div>
         </div>
     </div>

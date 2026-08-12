@@ -1,0 +1,106 @@
+.config-form {
+    border-bottom: 0.5px solid var(--color-border);
+    padding: 16px 0;
+}
+
+.config-form:first-child {
+    padding-top: 0;
+}
+
+.config-form:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.config-form-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--color-text);
+    margin-bottom: 4px;
+}
+
+.config-form-desc {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    margin-bottom: 10px;
+}
+
+.config-form-row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+}
+
+.config-form-row textarea {
+    flex: 1;
+    min-height: 70px;
+    padding: 10px 12px;
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-family: inherit;
+    resize: vertical;
+}
+
+.config-form-row input {
+    flex: 1;
+}
+
+.mod-search-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.mod-search-row input {
+    flex: 1;
+    padding: 10px 12px;
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+}
+
+.mod-user-card {
+    background: var(--color-bg);
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 16px;
+}
+
+.mod-user-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    padding: 6px 0;
+    border-bottom: 0.5px solid var(--color-border);
+}
+
+.mod-user-row:last-of-type {
+    border-bottom: none;
+}
+
+.mod-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+}
+
+.status-pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.status-pill.on {
+    background: var(--color-primary-tint);
+    color: var(--color-primary);
+}
+
+.status-pill.banned {
+    background: #FCEBE9;
+    color: var(--color-danger);
+}
