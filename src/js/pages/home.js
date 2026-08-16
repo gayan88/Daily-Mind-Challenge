@@ -1,5 +1,5 @@
 import { loadHeaderFooter, trySession } from '../app.js';
-import { icon, applyIcons } from '../utils/icons.js';
+import { applyIcons } from '../utils/icons.js';
 import { getTodayOverallLeaderboard, findUserInLeaderboard } from '../leaderboard/leaderboard-data.js';
 import { listOpenChallenges } from './challenges-data.js';
 import { checkPlayedTodayAll } from '../utils/points.js';
@@ -209,9 +209,7 @@ function markTileCompleted(game, played) {
     const tile = document.getElementById(`tile-${game}`);
     if (!tile || !played) return;
     tile.classList.add('completed');
-    const status = tile.querySelector('.game-status');
-    status.textContent = `${icon('CHECK')} Completed today`;
-    status.classList.add('completed-status');
+    tile.title = 'Completed today';
 }
 
 function renderChallengesPreview(challenges, uid) {

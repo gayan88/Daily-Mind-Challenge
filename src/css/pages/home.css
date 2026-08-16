@@ -1,8 +1,3 @@
-.completed-status {
-    color: var(--color-success);
-    font-weight: 600;
-}
-
 /* ---------- Sign-in modal ---------- */
 .modal-overlay {
     position: fixed;

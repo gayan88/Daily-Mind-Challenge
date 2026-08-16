@@ -5,9 +5,6 @@ export const ICONS = {
     CHECK: '✅',          // ✅
     TROPHY: '\u{1F3C6}',      // 🏆
     GEAR: '⚙️',     // ⚙️
-    WORDLE: '\u{1F524}',      // 🔤
-    SUDOKU: '\u{1F522}',      // 🔢
-    WORDSEARCH: '\u{1F50D}',  // 🔍
     ARROW_RIGHT: '→',    // →
     LINK: '\u{1F517}',        // 🔗
     STAR: '⭐',           // ⭐
