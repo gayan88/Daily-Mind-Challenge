@@ -6,8 +6,8 @@ import {
     writeBatch,
     serverTimestamp,
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-import { db } from '../firebase/firebase-init.js';
-import { signOutSession } from '../firebase/auth.js';
+import { db } from '../api/firebase-init.js';
+import { signOutSession } from './auth.js';
 
 export class BannedError extends Error {
     constructor(reason) {

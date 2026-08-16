@@ -1,4 +1,4 @@
-import { mulberry32 } from '../lib/utils.js';
+import { mulberry32 } from '../../utils/helpers.js';
 
 const GRID_SIZE = 13;
 // Forward-only directions: right, down, diagonal down-right, diagonal down-left.

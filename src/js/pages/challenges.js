@@ -1,6 +1,6 @@
-import { initShell } from '../lib/partials.js';
-import { icon } from '../lib/icons.js';
-import { getQueryParam, escapeHtml, showToast } from '../lib/utils.js';
+import { initShell } from '../app.js';
+import { icon } from '../utils/icons.js';
+import { getQueryParam, escapeHtml, showToast } from '../utils/helpers.js';
 import {
     createChallenge,
     getChallenge,
@@ -8,9 +8,9 @@ import {
     listOpenChallenges,
     getChallengeCompletion,
     recordChallengeCompletion,
-} from '../lib/challenges.js';
-import { WORDLE_ANSWERS } from '../data/words-wordle.js';
-import { playWordleRound } from '../games/wordle.js';
+} from './challenges-data.js';
+import { WORDLE_ANSWERS } from '../games/wordle/words-wordle.js';
+import { playWordleRound } from '../games/wordle/wordle-engine.js';
 
 const GAME_LABELS = { wordle: 'Wordle' };
 

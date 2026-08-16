@@ -1,4 +1,4 @@
-import { daysSinceEpoch } from '../lib/utils.js';
+import { daysSinceEpoch } from '../../utils/helpers.js';
 
 // Static bank of puzzle/solution pairs (81-char strings, row-major, '0' = blank). Generated from
 // randomized valid solved grids (digit relabeling + band/stack shuffles of a base Latin-square

@@ -1,8 +1,8 @@
-import { initShell } from '../lib/partials.js';
-import { updateRegisteredProfile } from '../lib/user-profile.js';
-import { changePassword } from '../firebase/auth.js';
-import { containsBlockedWord } from '../lib/profanity.js';
-import { showToast } from '../lib/utils.js';
+import { initShell } from '../app.js';
+import { updateRegisteredProfile } from '../auth/user-profile.js';
+import { changePassword } from '../auth/auth.js';
+import { containsBlockedWord } from '../utils/profanity.js';
+import { showToast } from '../utils/helpers.js';
 
 const PASSWORD_RULE = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
 

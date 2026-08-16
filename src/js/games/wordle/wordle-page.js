@@ -1,9 +1,9 @@
-import { initShell } from '../lib/partials.js';
-import { icon } from '../lib/icons.js';
-import { getTodayDateString, showToast, formatDuration } from '../lib/utils.js';
-import { recordGameScore, checkPlayedToday } from '../lib/points.js';
-import { getDailyWordleWord } from '../data/words-wordle.js';
-import { playWordleRound } from '../games/wordle.js';
+import { initShell } from '../../app.js';
+import { icon } from '../../utils/icons.js';
+import { getTodayDateString, showToast, formatDuration } from '../../utils/helpers.js';
+import { recordGameScore, checkPlayedToday } from '../../utils/points.js';
+import { getDailyWordleWord } from './words-wordle.js';
+import { playWordleRound } from './wordle-engine.js';
 
 const MAX_GUESSES = 6;
 

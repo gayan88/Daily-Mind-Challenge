@@ -1,6 +1,6 @@
-import { initShell } from '../lib/partials.js';
-import { getTodayOverallLeaderboard, getTodayGameLeaderboard } from '../lib/leaderboard.js';
-import { escapeHtml, formatLeaderboardName } from '../lib/utils.js';
+import { initShell } from '../app.js';
+import { getTodayOverallLeaderboard, getTodayGameLeaderboard } from './leaderboard-data.js';
+import { escapeHtml, formatLeaderboardName } from '../utils/helpers.js';
 
 function renderRows(rows, uid) {
     const el = document.getElementById('leaderboard-full');

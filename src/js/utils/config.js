@@ -4,7 +4,7 @@ import {
     setDoc,
     serverTimestamp,
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-import { db } from '../firebase/firebase-init.js';
+import { db } from '../api/firebase-init.js';
 
 // Hardcoded fallbacks so the app works correctly even before an admin has visited admin.html
 // to seed these documents in Firestore. admin.html writes these same shapes into config/*.

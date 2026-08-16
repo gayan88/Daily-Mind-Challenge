@@ -2,7 +2,6 @@
 // Kept as explicit Unicode escapes (not pasted glyphs) so a bad copy/paste
 // or editor re-encoding can never turn these into mojibake again.
 export const ICONS = {
-    LOGO: '\u{1F9E9}',        // 🧩 puzzle piece
     CHECK: '✅',          // ✅
     TROPHY: '\u{1F3C6}',      // 🏆
     GEAR: '⚙️',     // ⚙️

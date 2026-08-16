@@ -4,8 +4,8 @@ import {
     where,
     getDocs,
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-import { db } from '../firebase/firebase-init.js';
-import { getTodayDateString } from './utils.js';
+import { db } from '../api/firebase-init.js';
+import { getTodayDateString } from '../utils/helpers.js';
 
 // Cached for the page's lifetime -- banned status rarely changes mid-session, and without this,
 // switching leaderboard tabs (or the home page + a later leaderboard.html visit) re-fetches the

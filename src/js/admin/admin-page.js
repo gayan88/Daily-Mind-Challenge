@@ -1,7 +1,7 @@
-import { initShell } from '../lib/partials.js';
-import { ensureConfigDefaults, updateConfig } from '../lib/config.js';
-import { lookupUserByUsername, setUserBanned, setUserAdmin, deleteChallenge } from '../lib/admin.js';
-import { escapeHtml, showToast } from '../lib/utils.js';
+import { initShell } from '../app.js';
+import { ensureConfigDefaults, updateConfig } from '../utils/config.js';
+import { lookupUserByUsername, setUserBanned, setUserAdmin, deleteChallenge } from './moderation.js';
+import { escapeHtml, showToast } from '../utils/helpers.js';
 
 const CONFIG_FORMS = [
     {
