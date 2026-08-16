@@ -1,9 +1,9 @@
-import { initShell } from '../lib/partials.js';
-import { icon } from '../lib/icons.js';
-import { updateRegisteredProfile } from '../lib/user-profile.js';
-import { containsBlockedWord } from '../lib/profanity.js';
-import { getUserLifetimeStats, getUserGameHistory } from '../lib/points.js';
-import { showToast } from '../lib/utils.js';
+import { initShell } from '../app.js';
+import { icon } from '../utils/icons.js';
+import { updateRegisteredProfile } from '../auth/user-profile.js';
+import { containsBlockedWord } from '../utils/profanity.js';
+import { getUserLifetimeStats, getUserGameHistory } from '../utils/points.js';
+import { showToast } from '../utils/helpers.js';
 
 const GAME_LABELS = { wordle: 'Wordle', sudoku: 'Sudoku', wordsearch: 'Word Search' };
 

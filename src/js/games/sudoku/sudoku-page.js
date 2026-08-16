@@ -1,9 +1,9 @@
-import { initShell } from '../lib/partials.js';
-import { icon } from '../lib/icons.js';
-import { getTodayDateString, showToast, formatDuration } from '../lib/utils.js';
-import { recordGameScore, checkPlayedToday } from '../lib/points.js';
-import { getDailySudokuPuzzle } from '../data/sudoku-puzzles.js';
-import { playSudokuRound } from '../games/sudoku.js';
+import { initShell } from '../../app.js';
+import { icon } from '../../utils/icons.js';
+import { getTodayDateString, showToast, formatDuration } from '../../utils/helpers.js';
+import { recordGameScore, checkPlayedToday } from '../../utils/points.js';
+import { getDailySudokuPuzzle } from './sudoku-puzzles.js';
+import { playSudokuRound } from './sudoku-engine.js';
 
 const SUDOKU_SCORE = 6; // flat score on completion, kept on the same 0-6 scale as Wordle
 

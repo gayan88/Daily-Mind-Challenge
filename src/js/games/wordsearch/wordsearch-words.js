@@ -1,4 +1,4 @@
-import { daysSinceEpoch } from '../lib/utils.js';
+import { daysSinceEpoch } from '../../utils/helpers.js';
 
 // Curated per-day theme word lists. The grid itself is generated at runtime (seeded by date, see
 // js/games/wordsearch.js) so only the words need to be supplied here -- no hand-authored grids.

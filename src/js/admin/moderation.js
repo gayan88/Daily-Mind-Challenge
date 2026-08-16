@@ -5,7 +5,7 @@ import {
     deleteDoc,
     serverTimestamp,
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-import { db } from '../firebase/firebase-init.js';
+import { db } from '../api/firebase-init.js';
 
 /** Looks up a registered user by username (via the usernames/{username} mapping). */
 export async function lookupUserByUsername(username) {

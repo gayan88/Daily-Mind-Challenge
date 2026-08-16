@@ -11,8 +11,8 @@ import {
     limit,
     getDocs,
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-import { db } from '../firebase/firebase-init.js';
-import { getTodayDateString, isConsecutiveDay } from './utils.js';
+import { db } from '../api/firebase-init.js';
+import { getTodayDateString, isConsecutiveDay } from './helpers.js';
 import { getConfig } from './config.js';
 
 function gameScoreDocId(uid, gameType, date) {

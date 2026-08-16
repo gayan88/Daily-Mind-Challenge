@@ -1,4 +1,4 @@
-import { daysSinceEpoch } from '../lib/utils.js';
+import { daysSinceEpoch } from '../../utils/helpers.js';
 
 // Curated 5-letter answer list. The daily word is picked deterministically from this list by
 // date, so the same word shows for every player each day. Add new words to the END of the list

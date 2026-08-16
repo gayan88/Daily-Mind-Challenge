@@ -1,25 +1,25 @@
-import { loadHeaderFooter, trySession } from '../lib/partials.js';
-import { icon, applyIcons } from '../lib/icons.js';
-import { getTodayOverallLeaderboard, findUserInLeaderboard } from '../lib/leaderboard.js';
-import { listOpenChallenges } from '../lib/challenges.js';
-import { checkPlayedTodayAll } from '../lib/points.js';
-import { getConfig } from '../lib/config.js';
-import { escapeHtml, formatLeaderboardName, getQueryParam, getTodayDateString } from '../lib/utils.js';
+import { loadHeaderFooter, trySession } from '../app.js';
+import { icon, applyIcons } from '../utils/icons.js';
+import { getTodayOverallLeaderboard, findUserInLeaderboard } from '../leaderboard/leaderboard-data.js';
+import { listOpenChallenges } from './challenges-data.js';
+import { checkPlayedTodayAll } from '../utils/points.js';
+import { getConfig } from '../utils/config.js';
+import { escapeHtml, formatLeaderboardName, getQueryParam, getTodayDateString } from '../utils/helpers.js';
 import {
     signInAsGuest,
     signUpWithUsername,
     loginWithUsername,
     requestPasswordReset,
     friendlyAuthErrorMessage,
-} from '../firebase/auth.js';
+} from '../auth/auth.js';
 import {
     createGuestProfile,
     createRegisteredProfile,
     isUsernameTaken,
     loadSessionProfile,
     BannedError,
-} from '../lib/user-profile.js';
-import { containsBlockedWord } from '../lib/profanity.js';
+} from '../auth/user-profile.js';
+import { containsBlockedWord } from '../utils/profanity.js';
 
 const GAME_LABELS = {
     wordle: 'Wordle',

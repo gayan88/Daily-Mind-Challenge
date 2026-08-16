@@ -1,8 +1,8 @@
-import { getSessionUser, signOutSession } from '../firebase/auth.js';
-import { loadSessionProfile } from './user-profile.js';
-import { applyDailyLoginBonus } from './points.js';
-import { applyIcons } from './icons.js';
-import { showToast, getTodayDateString } from './utils.js';
+import { getSessionUser, signOutSession } from './auth/auth.js';
+import { loadSessionProfile } from './auth/user-profile.js';
+import { applyDailyLoginBonus } from './utils/points.js';
+import { applyIcons } from './utils/icons.js';
+import { showToast, getTodayDateString } from './utils/helpers.js';
 
 async function injectPartial(placeholderId, path) {
     const el = document.getElementById(placeholderId);
@@ -61,8 +61,8 @@ function updateHeader(profile) {
 /** Injects the shared header/footer partials. Safe to call whether or not a session exists yet. */
 export async function loadHeaderFooter() {
     await Promise.all([
-        injectPartial('site-header', 'partials/header.html'),
-        injectPartial('site-footer', 'partials/footer.html'),
+        injectPartial('site-header', '../partials/header.html'),
+        injectPartial('site-footer', '../partials/footer.html'),
     ]);
     applyIcons(document);
     wireFooterShare();

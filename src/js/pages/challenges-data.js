@@ -12,8 +12,8 @@ import {
     serverTimestamp,
     Timestamp,
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-import { db } from '../firebase/firebase-init.js';
-import { getConfig } from './config.js';
+import { db } from '../api/firebase-init.js';
+import { getConfig } from '../utils/config.js';
 
 function startOfTodayTimestamp() {
     const now = new Date();
