@@ -83,6 +83,24 @@ export async function checkPlayedToday(uid, gameType) {
     return snap.exists() ? snap.data() : null;
 }
 
+/** Same as checkPlayedToday but for all three games in a single round-trip (used by the home
+ * page, which needs all three) instead of three separate getDoc calls. */
+export async function checkPlayedTodayAll(uid) {
+    const today = getTodayDateString();
+    const q = query(
+        collection(db, 'gameScores'),
+        where('userId', '==', uid),
+        where('gameDate', '==', today)
+    );
+    const snap = await getDocs(q);
+    const result = { wordle: null, sudoku: null, wordsearch: null };
+    snap.docs.forEach((d) => {
+        const data = d.data();
+        result[data.gameType] = data;
+    });
+    return result;
+}
+
 /** Lifetime game-score total and count, for the "Total Points" formula on profile.html
  * (registered users add loginPoints to totalScore themselves; guests just use totalScore). */
 export async function getUserLifetimeStats(uid) {

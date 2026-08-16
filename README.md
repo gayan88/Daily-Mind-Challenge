@@ -45,7 +45,8 @@ No code path can safely auto-grant admin access. To get your first admin:
 
 Three ways in, matching `USER_LOGIN_SCHEMA_SUMMARY.txt`:
 
-- **Guest** — display name only, no automatic sign-in (you must explicitly choose "Continue as Guest" on `login.html`). Can play games and appear on the leaderboard, but can't earn daily login points, create challenges, or change their name, and has no settings page.
+- **Guest** — display name only, no automatic sign-in (you must explicitly choose "Continue as Guest" from the sign-in section inline on the home page). Can play games and appear on the leaderboard, but can't earn daily login points, create challenges, or change their name, and has no settings page.
+- There is no separate login page — `index.html` shows the Guest / Log In / Sign Up options inline whenever there's no active session, and shows the normal dashboard once there is one. Every other page redirects to `index.html?redirect=<page>` if it loads with no session; after signing in there, you're sent on to that original page.
 - **Log In / Sign Up** — username + password. Under the hood this uses Firebase Auth's email/password provider: your username maps to a synthetic login email (`username@dmc.local`) unless you supply a real email at signup, in which case that becomes the account's actual Auth email so Firebase's built-in password-reset email works. **There is no `passwordHash` field anywhere in Firestore** — Firebase Auth owns password storage/verification entirely, which is the one deliberate deviation from the schema doc (storing/comparing password hashes client-side isn't securely possible with no backend server).
 - **Admin** — a flag on a registered account (`registeredUsers/{uid}.isAdmin`), not a separate login type. Admins can access `admin.html` but cannot play games (scores aren't tracked for admin accounts) and are excluded from leaderboards.
 

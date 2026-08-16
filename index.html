@@ -14,7 +14,7 @@
     <div class="content">
         <div class="section">
             <div class="status-card" id="status-card">
-                <div class="loading-text">Loading your status&hellip;</div>
+                <div class="loading-text">Loading&hellip;</div>
             </div>
         </div>
 
@@ -69,6 +69,75 @@
     </div>
 
     <div id="site-footer"></div>
+
+    <!-- Sign-in modal: opened from the header's Login button, or automatically when a page
+         redirected here because it needs a session. -->
+    <div class="modal-overlay" id="auth-modal" hidden>
+        <div class="modal-dialog">
+            <button class="modal-close" id="auth-modal-close" type="button" aria-label="Close">&times;</button>
+
+            <div class="auth-tabs">
+                <button class="auth-tab active" id="tab-guest" type="button">Guest</button>
+                <button class="auth-tab" id="tab-login" type="button">Log In</button>
+                <button class="auth-tab" id="tab-signup" type="button">Sign Up</button>
+            </div>
+
+            <div class="auth-error" id="auth-error"></div>
+
+            <!-- Guest panel -->
+            <div class="auth-panel active" id="panel-guest">
+                <form id="guest-form">
+                    <div class="form-field">
+                        <label for="guest-name">Display name</label>
+                        <input type="text" id="guest-name" name="displayname" maxlength="24" placeholder="e.g. PuzzleFan" autocomplete="off">
+                    </div>
+                    <button class="btn primary" id="guest-submit" type="submit" style="width: 100%;">Continue as Guest</button>
+                </form>
+                <div class="form-hint">Guests can play and appear on the leaderboard, but can't earn daily login points, create challenges, or change their name later.</div>
+            </div>
+
+            <!-- Login panel: a dedicated <form> + autocomplete hints so browser autofill can't
+                 cross-contaminate this password field with the Sign Up panel's. -->
+            <div class="auth-panel" id="panel-login">
+                <form id="login-form">
+                    <div class="form-field">
+                        <label for="login-username">Username</label>
+                        <input type="text" id="login-username" name="username" maxlength="24" autocomplete="username">
+                    </div>
+                    <div class="form-field">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" name="password" autocomplete="current-password">
+                    </div>
+                    <button class="btn primary" id="login-submit" type="submit" style="width: 100%;">Log In</button>
+                </form>
+                <div class="auth-forgot"><a href="#" id="forgot-password-link">Forgot password?</a></div>
+            </div>
+
+            <!-- Sign up panel -->
+            <div class="auth-panel" id="panel-signup">
+                <form id="signup-form">
+                    <div class="form-field">
+                        <label for="signup-username">Username</label>
+                        <input type="text" id="signup-username" name="new-username" maxlength="24" autocomplete="username">
+                    </div>
+                    <div class="form-field">
+                        <label for="signup-displayname">Display name</label>
+                        <input type="text" id="signup-displayname" name="displayname" maxlength="24" autocomplete="off">
+                    </div>
+                    <div class="form-field">
+                        <label for="signup-password">Password</label>
+                        <input type="password" id="signup-password" name="new-password" autocomplete="new-password">
+                    </div>
+                    <div class="form-hint">At least 8 characters, with 1 uppercase letter and 1 number.</div>
+                    <div class="form-field">
+                        <label for="signup-email">Email (optional, only needed for password reset)</label>
+                        <input type="email" id="signup-email" name="email" autocomplete="email">
+                    </div>
+                    <button class="btn primary" id="signup-submit" type="submit" style="width: 100%;">Sign Up</button>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <script type="module" src="js/pages/home.js"></script>
 </body>

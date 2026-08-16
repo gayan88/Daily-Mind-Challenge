@@ -17,6 +17,14 @@
             ]
         },
         {
+            "collectionGroup": "gameScores",
+            "queryScope": "COLLECTION",
+            "fields": [
+                { "fieldPath": "userId", "order": "ASCENDING" },
+                { "fieldPath": "gameDate", "order": "ASCENDING" }
+            ]
+        },
+        {
             "collectionGroup": "challenges",
             "queryScope": "COLLECTION",
             "fields": [

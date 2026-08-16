@@ -23,7 +23,7 @@ export class ProfileNotFoundError extends Error {
     }
 }
 
-/** Called once by login.js right after signInAsGuest(). Guests cannot rename themselves later. */
+/** Called once by js/pages/home.js right after signInAsGuest(). Guests cannot rename themselves later. */
 export async function createGuestProfile(uid, displayName) {
     const ref = doc(db, 'guests', uid);
     const data = { displayName, createdAt: serverTimestamp(), lastLoginAt: serverTimestamp() };
@@ -31,7 +31,7 @@ export async function createGuestProfile(uid, displayName) {
     return data;
 }
 
-/** Called once by login.js right after signUpWithUsername(). Creates the profile doc and the
+/** Called once by js/pages/home.js right after signUpWithUsername(). Creates the profile doc and the
  * public username->authEmail lookup doc together so a signup can't leave one without the other. */
 export async function createRegisteredProfile(uid, { usernameLower, displayName, email, authEmail }) {
     const batch = writeBatch(db);

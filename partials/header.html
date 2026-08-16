@@ -10,9 +10,12 @@
         <a href="profile.html">Profile</a>
         <a href="admin.html" id="admin-nav-link" hidden>Admin</a>
     </nav>
-    <div class="user-menu">
+    <div class="user-menu" id="user-menu-loggedin" hidden>
         <div class="user-badge" id="user-badge">Guest</div>
         <a href="settings.html" class="menu-btn"><span data-icon="GEAR"></span> Settings</a>
         <button class="menu-btn" id="logout-btn">Logout</button>
+    </div>
+    <div class="user-menu" id="user-menu-loggedout" hidden>
+        <button class="menu-btn" id="header-login-btn">Login</button>
     </div>
 </div>

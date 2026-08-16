@@ -1,8 +1,8 @@
 import { getSessionUser, signOutSession } from '../firebase/auth.js';
-import { loadSessionProfile, BannedError } from './user-profile.js';
+import { loadSessionProfile } from './user-profile.js';
 import { applyDailyLoginBonus } from './points.js';
 import { applyIcons } from './icons.js';
-import { showToast } from './utils.js';
+import { showToast, getTodayDateString } from './utils.js';
 
 async function injectPartial(placeholderId, path) {
     const el = document.getElementById(placeholderId);
@@ -15,8 +15,11 @@ function currentPageWithQuery() {
     return window.location.pathname.replace(/^\//, '') + window.location.search;
 }
 
-function redirectToLogin() {
-    window.location.href = `login.html?redirect=${encodeURIComponent(currentPageWithQuery())}`;
+function redirectToSignIn() {
+    const here = currentPageWithQuery();
+    window.location.href = here === 'index.html'
+        ? 'index.html'
+        : `index.html?redirect=${encodeURIComponent(here)}`;
 }
 
 function wireLogout(profile) {
@@ -28,7 +31,7 @@ function wireLogout(profile) {
             : 'Log out of your account?';
         if (!window.confirm(message)) return;
         await signOutSession();
-        window.location.href = 'login.html';
+        window.location.href = 'index.html';
     });
 }
 
@@ -51,45 +54,42 @@ function updateHeader(profile) {
     if (adminLink) {
         adminLink.hidden = !profile.isAdmin;
     }
+    document.getElementById('user-menu-loggedin')?.removeAttribute('hidden');
+    document.getElementById('user-menu-loggedout')?.setAttribute('hidden', '');
 }
 
-/**
- * Loads the shared header/footer, then resolves the current session. If there is no session at
- * all, redirects to login.html (no automatic guest creation). If the session is banned or its
- * profile doc is missing, the user has already been signed out by loadSessionProfile -- redirect
- * to login.html for that too. Otherwise applies the daily login bonus (registered users only)
- * and wires up common header/footer behavior.
- *
- * Returns { uid, profile, bonusApplied }.
- */
-export async function initShell() {
+/** Injects the shared header/footer partials. Safe to call whether or not a session exists yet. */
+export async function loadHeaderFooter() {
     await Promise.all([
         injectPartial('site-header', 'partials/header.html'),
         injectPartial('site-footer', 'partials/footer.html'),
     ]);
     applyIcons(document);
     wireFooterShare();
+}
 
-    const user = await getSessionUser();
-    if (!user) {
-        redirectToLogin();
-        return new Promise(() => {}); // never resolves; the redirect is already underway
-    }
-
+/** Resolves an existing session (loads its profile, applies the daily bonus, wires the header)
+ * without redirecting. Returns null if there's no session, or if it's banned/broken (in which
+ * case the caller has already been signed out by loadSessionProfile). */
+async function resolveSession(user) {
     let profile;
     try {
         profile = await loadSessionProfile(user);
-    } catch (err) {
-        redirectToLogin();
-        return new Promise(() => {});
+    } catch {
+        return null;
     }
 
+    // applyDailyLoginBonus() costs 2 Firestore reads (a config lookup + a transaction re-read of
+    // the profile doc we just loaded). Skip it entirely once loadSessionProfile already told us
+    // today's bonus was claimed -- that's true for the large majority of page loads in a day.
     let bonusApplied = false;
-    if (profile.kind === 'registered') {
+    if (profile.kind === 'registered' && profile.lastLoginDate !== getTodayDateString()) {
         const bonus = await applyDailyLoginBonus(user.uid);
         bonusApplied = bonus.applied;
         if (bonus.applied) {
             profile.loginPoints += bonus.amount;
+            profile.lastLoginDate = getTodayDateString();
+            profile.raw.currentStreak = bonus.newStreak;
         }
     }
 
@@ -101,4 +101,39 @@ export async function initShell() {
     }
 
     return { uid: user.uid, profile, bonusApplied };
+}
+
+/**
+ * For every page EXCEPT index.html: loads the header/footer, then requires a session -- redirects
+ * to index.html (which shows the guest/login/sign-up options inline, see js/pages/home.js) if
+ * there isn't one. Returns { uid, profile, bonusApplied }.
+ */
+export async function initShell() {
+    await loadHeaderFooter();
+
+    const user = await getSessionUser();
+    if (!user) {
+        redirectToSignIn();
+        return new Promise(() => {}); // never resolves; the redirect is already underway
+    }
+
+    const session = await resolveSession(user);
+    if (!session) {
+        redirectToSignIn();
+        return new Promise(() => {});
+    }
+
+    return session;
+}
+
+/**
+ * For index.html only: loads the header/footer, then resolves a session WITHOUT redirecting.
+ * Returns { uid, profile, bonusApplied }, or null if there's no valid session -- the caller is
+ * expected to show the guest/login/sign-up UI inline in that case.
+ */
+export async function trySession() {
+    await loadHeaderFooter();
+    const user = await getSessionUser();
+    if (!user) return null;
+    return resolveSession(user);
 }

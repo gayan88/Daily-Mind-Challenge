@@ -7,10 +7,17 @@ import {
 import { db } from '../firebase/firebase-init.js';
 import { getTodayDateString } from './utils.js';
 
+// Cached for the page's lifetime -- banned status rarely changes mid-session, and without this,
+// switching leaderboard tabs (or the home page + a later leaderboard.html visit) re-fetches the
+// same list from scratch every time.
+let bannedUidsCache = null;
+
 async function getBannedUids() {
+    if (bannedUidsCache) return bannedUidsCache;
     const q = query(collection(db, 'registeredUsers'), where('isBanned', '==', true));
     const snap = await getDocs(q);
-    return new Set(snap.docs.map((d) => d.id));
+    bannedUidsCache = new Set(snap.docs.map((d) => d.id));
+    return bannedUidsCache;
 }
 
 function rank(rows) {

@@ -24,7 +24,7 @@ export function syntheticEmailFor(usernameLower) {
 /**
  * Resolves to the existing Firebase Auth user if one exists (guest or registered), or `null` if
  * not. Deliberately does NOT auto-create an anonymous guest -- that only happens when the user
- * explicitly chooses "Continue as Guest" on login.html.
+ * explicitly chooses "Continue as Guest" on the home page's inline sign-in section.
  */
 export function getSessionUser() {
     if (sessionPromise) return sessionPromise;
@@ -86,4 +86,22 @@ export async function changePassword(newPassword) {
 export async function signOutSession() {
     await signOut(auth);
     resetSessionCache();
+}
+
+const AUTH_ERROR_MESSAGES = {
+    // Firebase returns this same generic code for both "no such account" and "wrong password"
+    // (so a login attempt can't be used to probe which usernames exist).
+    'auth/invalid-credential': 'Incorrect username or password.',
+    'auth/wrong-password': 'Incorrect username or password.',
+    'auth/user-not-found': 'Incorrect username or password.',
+    'auth/too-many-requests': 'Too many attempts. Please wait a moment and try again.',
+    'auth/network-request-failed': 'Network error -- check your connection and try again.',
+    'auth/email-already-in-use': 'That username is already taken.',
+    'auth/weak-password': 'Password is too weak. Use at least 8 characters, 1 uppercase letter, and 1 number.',
+    'auth/requires-recent-login': 'For security, please log out and back in before doing that.',
+};
+
+/** Maps a raw Firebase Auth error to user-facing copy instead of surfacing "Firebase: Error (auth/...)" text. */
+export function friendlyAuthErrorMessage(err) {
+    return AUTH_ERROR_MESSAGES[err?.code] || err?.message || 'Something went wrong. Please try again.';
 }
