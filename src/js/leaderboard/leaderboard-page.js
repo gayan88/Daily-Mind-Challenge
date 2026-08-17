@@ -1,11 +1,19 @@
 import { initShell } from '../app.js';
-import { getTodayOverallLeaderboard, getTodayGameLeaderboard } from './leaderboard-data.js';
+import { getOverallLeaderboard, getGameLeaderboard } from './leaderboard-data.js';
 import { escapeHtml, formatLeaderboardName } from '../utils/helpers.js';
 
-function renderRows(rows, uid) {
+const EMPTY_MESSAGES = {
+    today: 'No scores yet today. Be the first!',
+    week: 'No scores yet this week. Be the first!',
+    month: 'No scores yet this month. Be the first!',
+    year: 'No scores yet this year. Be the first!',
+    all: 'No scores yet. Be the first!',
+};
+
+function renderRows(rows, uid, period) {
     const el = document.getElementById('leaderboard-full');
     if (rows.length === 0) {
-        el.innerHTML = `<div class="empty-state">No scores yet today. Be the first!</div>`;
+        el.innerHTML = `<div class="empty-state">${EMPTY_MESSAGES[period] || EMPTY_MESSAGES.today}</div>`;
         return;
     }
     el.innerHTML = rows
@@ -21,21 +29,33 @@ function renderRows(rows, uid) {
 
 async function init() {
     const { uid } = await initShell();
-    const tabs = Array.from(document.querySelectorAll('.lb-tab'));
+    const gameTabs = Array.from(document.querySelectorAll('.lb-tab'));
+    const periodTabs = Array.from(document.querySelectorAll('.lb-period-tab'));
     const el = document.getElementById('leaderboard-full');
 
-    async function showGame(game) {
-        tabs.forEach((tab) => tab.classList.toggle('active', tab.dataset.game === game));
+    let currentGame = 'overall';
+    let currentPeriod = 'today';
+
+    async function render() {
+        gameTabs.forEach((tab) => tab.classList.toggle('active', tab.dataset.game === currentGame));
+        periodTabs.forEach((tab) => tab.classList.toggle('active', tab.dataset.period === currentPeriod));
         el.innerHTML = `<div class="loading-text">Loading&hellip;</div>`;
-        const rows = game === 'overall'
-            ? await getTodayOverallLeaderboard(50)
-            : await getTodayGameLeaderboard(game, 50);
-        renderRows(rows, uid);
+        const rows = currentGame === 'overall'
+            ? await getOverallLeaderboard(currentPeriod, 50)
+            : await getGameLeaderboard(currentGame, currentPeriod, 50);
+        renderRows(rows, uid, currentPeriod);
     }
 
-    tabs.forEach((tab) => tab.addEventListener('click', () => showGame(tab.dataset.game)));
+    gameTabs.forEach((tab) => tab.addEventListener('click', () => {
+        currentGame = tab.dataset.game;
+        render();
+    }));
+    periodTabs.forEach((tab) => tab.addEventListener('click', () => {
+        currentPeriod = tab.dataset.period;
+        render();
+    }));
 
-    showGame('overall');
+    render();
 }
 
 init();

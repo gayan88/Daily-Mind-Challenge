@@ -27,3 +27,33 @@
     background: var(--color-bg);
     border-color: var(--color-border-strong);
 }
+
+.lb-period-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 20px;
+}
+
+.lb-period-tab {
+    padding: 6px 14px;
+    border: 0.5px solid var(--color-border);
+    background: white;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.lb-period-tab.active {
+    background: var(--color-primary-tint);
+    color: var(--color-primary);
+    border-color: var(--color-primary-light);
+}
+
+.lb-period-tab:not(.active):hover {
+    background: var(--color-bg);
+    border-color: var(--color-border-strong);
+}

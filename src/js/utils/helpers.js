@@ -17,6 +17,16 @@ export function isConsecutiveDay(prevDateString, todayDateString) {
     return daysSinceEpoch(todayDateString) - daysSinceEpoch(prevDateString) === 1;
 }
 
+/** Returns the "YYYY-MM-DD" date `daysAgo` days before today (0 = today itself). */
+export function getDateDaysAgo(daysAgo) {
+    const d = new Date();
+    d.setDate(d.getDate() - daysAgo);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
 export function getQueryParam(name) {
     return new URLSearchParams(window.location.search).get(name);
 }

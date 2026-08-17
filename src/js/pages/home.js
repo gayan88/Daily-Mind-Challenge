@@ -1,6 +1,6 @@
 import { loadHeaderFooter, trySession } from '../app.js';
 import { applyIcons } from '../utils/icons.js';
-import { getTodayOverallLeaderboard, findUserInLeaderboard } from '../leaderboard/leaderboard-data.js';
+import { getOverallLeaderboard, findUserInLeaderboard } from '../leaderboard/leaderboard-data.js';
 import { listOpenChallenges } from './challenges-data.js';
 import { checkPlayedTodayAll } from '../utils/points.js';
 import { getConfig } from '../utils/config.js';
@@ -259,7 +259,7 @@ async function renderLoggedOutDashboard() {
     renderStatusCardLoggedOut();
 
     const [leaderboardRows, openChallenges] = await Promise.all([
-        getTodayOverallLeaderboard(20),
+        getOverallLeaderboard('today', 20),
         listOpenChallenges(10),
     ]);
     renderChallengesPreview(openChallenges, null);
@@ -273,7 +273,7 @@ async function renderLoggedInDashboard(uid, profile, bonusApplied) {
     const needsBonusConfig = profile.kind === 'registered' && profile.lastLoginDate === getTodayDateString();
 
     const [leaderboardRows, openChallenges, playedToday, dailyRewardConfig] = await Promise.all([
-        getTodayOverallLeaderboard(20),
+        getOverallLeaderboard('today', 20),
         listOpenChallenges(10),
         checkPlayedTodayAll(uid),
         needsBonusConfig ? getConfig('dailyLoginReward') : Promise.resolve(null),

@@ -71,7 +71,7 @@ Full data-flow write-up: `docs/data-flow.md`.
 
 ## Known v1 scope limitations
 
-- Ad spaces are static placeholders — no real AdSense integration.
+- 9 ad slots across the site (3 on the home page, 2 each on Wordle/Sudoku/Word Search) are admin-configurable via `admin.html` — each can be turned off, left as a static "Google AdSense" placeholder (still no real AdSense integration), or swapped for a manual image ad with a click-through URL.
 - "Share on Facebook" links to the plain `sharer.php` share dialog, no App ID/rich cards.
 - Challenges are shareable links, not a real friends graph.
 - Points are protected by Firestore security rules capping per-write deltas, not full server-authoritative scoring (no Cloud Functions in v1).

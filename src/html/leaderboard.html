@@ -13,12 +13,19 @@
 
     <div class="content">
         <div class="section">
-            <div class="section-title">Today's Leaderboard</div>
+            <div class="section-title">Leaderboard</div>
             <div class="lb-tabs">
                 <button class="lb-tab active" data-game="overall" type="button">Overall</button>
                 <button class="lb-tab" data-game="wordle" type="button">Wordle</button>
                 <button class="lb-tab" data-game="sudoku" type="button">Sudoku</button>
                 <button class="lb-tab" data-game="wordsearch" type="button">Word Search</button>
+            </div>
+            <div class="lb-period-tabs">
+                <button class="lb-period-tab active" data-period="today" type="button">Today</button>
+                <button class="lb-period-tab" data-period="week" type="button">Week</button>
+                <button class="lb-period-tab" data-period="month" type="button">Month</button>
+                <button class="lb-period-tab" data-period="year" type="button">Year</button>
+                <button class="lb-period-tab" data-period="all" type="button">All-time</button>
             </div>
             <div class="leaderboard-table" id="leaderboard-full">
                 <div class="loading-text">Loading&hellip;</div>

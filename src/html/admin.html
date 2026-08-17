@@ -12,30 +12,69 @@
     <div id="site-header"></div>
 
     <div class="content" id="admin-content">
-        <div class="section">
-            <div class="section-title">Platform Config</div>
-            <div class="card" id="config-forms">
-                <div class="loading-text">Loading&hellip;</div>
-            </div>
-        </div>
-
-        <div class="section">
-            <div class="section-title">Moderate Users</div>
-            <div class="card">
-                <div class="mod-search-row">
-                    <input type="text" id="mod-search-input" placeholder="Username">
-                    <button class="btn primary" id="mod-search-btn" type="button">Look Up</button>
+        <div class="admin-section open" data-collapsible>
+            <button class="admin-section-header" type="button">General</button>
+            <div class="admin-section-body">
+                <div class="section">
+                    <div class="section-title">Platform Config</div>
+                    <div class="card" id="config-forms">
+                        <div class="loading-text">Loading&hellip;</div>
+                    </div>
                 </div>
-                <div id="mod-result"></div>
+
+                <div class="section">
+                    <div class="section-title">Moderate Users</div>
+                    <div class="card">
+                        <div class="mod-search-row">
+                            <input type="text" id="mod-search-input" placeholder="Username">
+                            <button class="btn primary" id="mod-search-btn" type="button">Look Up</button>
+                        </div>
+                        <div id="mod-result"></div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Delete a Challenge</div>
+                    <div class="card">
+                        <div class="mod-search-row">
+                            <input type="text" id="delete-challenge-input" placeholder="Challenge ID">
+                            <button class="btn danger" id="delete-challenge-btn" type="button">Delete</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="section">
-            <div class="section-title">Delete a Challenge</div>
-            <div class="card">
-                <div class="mod-search-row">
-                    <input type="text" id="delete-challenge-input" placeholder="Challenge ID">
-                    <button class="btn danger" id="delete-challenge-btn" type="button">Delete</button>
+        <div class="admin-section" data-collapsible>
+            <button class="admin-section-header" type="button">Advertisements</button>
+            <div class="admin-section-body">
+                <div class="section">
+                    <div class="section-title">Home Page Ad Slots</div>
+                    <div class="card" id="ad-slot-forms-home">
+                        <div class="loading-text">Loading&hellip;</div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Game wise</div>
+                    <div class="admin-subsection" data-collapsible>
+                        <button class="admin-subsection-header" type="button">Wordle</button>
+                        <div class="card" id="ad-slot-forms-wordle">
+                            <div class="loading-text">Loading&hellip;</div>
+                        </div>
+                    </div>
+                    <div class="admin-subsection" data-collapsible>
+                        <button class="admin-subsection-header" type="button">Sudoku</button>
+                        <div class="card" id="ad-slot-forms-sudoku">
+                            <div class="loading-text">Loading&hellip;</div>
+                        </div>
+                    </div>
+                    <div class="admin-subsection" data-collapsible>
+                        <button class="admin-subsection-header" type="button">Word Search</button>
+                        <div class="card" id="ad-slot-forms-wordsearch">
+                            <div class="loading-text">Loading&hellip;</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

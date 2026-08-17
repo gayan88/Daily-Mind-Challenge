@@ -1,3 +1,123 @@
+/* ---------- Collapsible admin sections (General / Advertisements) ----------
+   Plain divs + buttons, not <details>/<summary> -- the box's own width must never depend on
+   whether it's expanded or collapsed, and toggling display:none/block on an inner content div
+   (rather than relying on <details>'s built-in open/closed rendering) guarantees that. */
+.admin-section {
+    display: block;
+    width: 100%;
+    max-width: var(--content-max-width);
+    box-sizing: border-box;
+    background: var(--color-surface);
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    margin-bottom: 16px;
+    overflow: hidden;
+}
+
+.admin-section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 18px 20px;
+    border: none;
+    background: none;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-primary);
+    text-align: left;
+    cursor: pointer;
+    user-select: none;
+}
+
+.admin-section-header::before {
+    content: '▸';
+    display: inline-block;
+    font-size: 13px;
+    color: var(--color-text-muted);
+    transition: transform 0.15s;
+}
+
+.admin-section.open > .admin-section-header::before {
+    transform: rotate(90deg);
+}
+
+.admin-section-header:hover {
+    background: var(--color-bg);
+}
+
+.admin-section-body {
+    display: none;
+    padding: 4px 20px 20px;
+}
+
+.admin-section.open > .admin-section-body {
+    display: block;
+}
+
+.admin-section-body .section {
+    margin-bottom: 24px;
+}
+
+.admin-section-body .section:last-child {
+    margin-bottom: 0;
+}
+
+.admin-subsection {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    margin-bottom: 12px;
+    overflow: hidden;
+}
+
+.admin-subsection:last-child {
+    margin-bottom: 0;
+}
+
+.admin-subsection-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 12px 16px;
+    border: none;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text);
+    text-align: left;
+    cursor: pointer;
+    background: var(--color-bg);
+    user-select: none;
+}
+
+.admin-subsection-header::before {
+    content: '▸';
+    display: inline-block;
+    font-size: 12px;
+    color: var(--color-text-muted);
+    transition: transform 0.15s;
+}
+
+.admin-subsection.open > .admin-subsection-header::before {
+    transform: rotate(90deg);
+}
+
+.admin-subsection > .card {
+    display: none;
+    border: none;
+    border-radius: 0;
+    border-top: 0.5px solid var(--color-border);
+}
+
+.admin-subsection.open > .card {
+    display: block;
+}
+
 .config-form {
     border-bottom: 0.5px solid var(--color-border);
     padding: 16px 0;
@@ -59,6 +179,46 @@
 .mod-search-row .btn {
     flex: 0 0 auto;
     white-space: nowrap;
+}
+
+.ad-slot-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+
+.ad-slot-enabled {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+}
+
+.ad-slot-row select {
+    padding: 8px 10px;
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-family: inherit;
+    background: white;
+    color: var(--color-text);
+}
+
+.ad-slot-image-fields {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.ad-slot-image-fields .form-field {
+    flex: 1;
+    min-width: 200px;
+    margin-bottom: 0;
 }
 
 .mod-search-row {

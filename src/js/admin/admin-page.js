@@ -1,5 +1,6 @@
 import { initShell } from '../app.js';
 import { ensureConfigDefaults, updateConfig } from '../utils/config.js';
+import { AD_SLOTS, DEFAULT_ADS_CONFIG } from '../utils/ads.js';
 import { lookupUserByUsername, setUserBanned, setUserAdmin, deleteChallenge } from './moderation.js';
 import { escapeHtml, showToast } from '../utils/helpers.js';
 
@@ -30,6 +31,14 @@ const CONFIG_FORMS = [
         fields: [{ key: 'blockedWords', type: 'textarea', label: 'Blocked words (comma-separated)', isArray: true }],
     },
 ];
+
+function wireCollapsibleSections() {
+    document.querySelectorAll('[data-collapsible] > .admin-section-header, [data-collapsible] > .admin-subsection-header').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            btn.closest('[data-collapsible]').classList.toggle('open');
+        });
+    });
+}
 
 function blockNonAdminAccess() {
     document.getElementById('admin-content').innerHTML = `
@@ -86,6 +95,83 @@ async function renderConfigForms() {
             showToast(`${form.title} saved`);
         });
     });
+}
+
+// Renders each AD_SLOTS group into its own admin-panel container (General/Advertisements/Game
+// wise sections), but all groups share one `slots` object -- saving a slot in any group re-reads
+// the whole map and writes it back, so editing e.g. a Wordle ad never clobbers the Home ads.
+async function renderAdSlotForms() {
+    const adsConfig = await ensureConfigDefaults('ads', DEFAULT_ADS_CONFIG);
+    let slots = { ...adsConfig.slots };
+
+    function fieldId(slotId, field) {
+        return `ad-${slotId}-${field}`;
+    }
+
+    function renderGroup(containerId, groupName) {
+        const container = document.getElementById(containerId);
+        const groupSlots = AD_SLOTS.filter((s) => s.group === groupName);
+
+        container.innerHTML = groupSlots.map(({ id, label }) => {
+            const slot = slots[id] || DEFAULT_ADS_CONFIG.slots[id];
+            const imageFieldsHidden = slot.type !== 'image' ? 'hidden' : '';
+            return `
+                <div class="config-form">
+                    <div class="config-form-title">${escapeHtml(label)}</div>
+                    <div class="ad-slot-row">
+                        <label class="ad-slot-enabled">
+                            <input type="checkbox" id="${fieldId(id, 'enabled')}" ${slot.enabled ? 'checked' : ''}>
+                            Enabled
+                        </label>
+                        <select id="${fieldId(id, 'type')}" data-ad-type-select="${id}">
+                            <option value="google" ${slot.type === 'google' ? 'selected' : ''}>Google AdSense placeholder</option>
+                            <option value="image" ${slot.type === 'image' ? 'selected' : ''}>Manual image ad</option>
+                        </select>
+                    </div>
+                    <div class="ad-slot-image-fields" id="${fieldId(id, 'image-fields')}" ${imageFieldsHidden}>
+                        <div class="form-field">
+                            <label for="${fieldId(id, 'imageUrl')}">Image URL</label>
+                            <input type="text" id="${fieldId(id, 'imageUrl')}" value="${escapeHtml(slot.imageUrl || '')}" placeholder="https://example.com/ad.png">
+                        </div>
+                        <div class="form-field">
+                            <label for="${fieldId(id, 'linkUrl')}">Click-through URL</label>
+                            <input type="text" id="${fieldId(id, 'linkUrl')}" value="${escapeHtml(slot.linkUrl || '')}" placeholder="https://example.com">
+                        </div>
+                    </div>
+                    <button class="btn primary" data-save-ad-slot="${id}" type="button">Save</button>
+                </div>
+            `;
+        }).join('');
+
+        container.querySelectorAll('[data-ad-type-select]').forEach((select) => {
+            select.addEventListener('change', () => {
+                const slotId = select.dataset.adTypeSelect;
+                document.getElementById(fieldId(slotId, 'image-fields')).hidden = select.value !== 'image';
+            });
+        });
+
+        container.querySelectorAll('[data-save-ad-slot]').forEach((btn) => {
+            btn.addEventListener('click', async () => {
+                const slotId = btn.dataset.saveAdSlot;
+                slots = {
+                    ...slots,
+                    [slotId]: {
+                        enabled: document.getElementById(fieldId(slotId, 'enabled')).checked,
+                        type: document.getElementById(fieldId(slotId, 'type')).value,
+                        imageUrl: document.getElementById(fieldId(slotId, 'imageUrl')).value.trim(),
+                        linkUrl: document.getElementById(fieldId(slotId, 'linkUrl')).value.trim(),
+                    },
+                };
+                await updateConfig('ads', { slots });
+                showToast(`${AD_SLOTS.find((s) => s.id === slotId).label} saved`);
+            });
+        });
+    }
+
+    renderGroup('ad-slot-forms-home', 'home');
+    renderGroup('ad-slot-forms-wordle', 'wordle');
+    renderGroup('ad-slot-forms-sudoku', 'sudoku');
+    renderGroup('ad-slot-forms-wordsearch', 'wordsearch');
 }
 
 function renderModResult(user) {
@@ -156,7 +242,9 @@ async function init() {
         return;
     }
 
+    wireCollapsibleSections();
     await renderConfigForms();
+    await renderAdSlotForms();
     wireModeration();
 }
 

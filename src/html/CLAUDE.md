@@ -16,6 +16,10 @@ Nine real, separate HTML pages — no client-side routing, no templating. Each p
 
 All paths are `../`-prefixed since these pages live one level below `src/` while `css/`, `js/`, and `partials/` are siblings of `html/`, not children of it.
 
+## Ad slots
+
+The home page and the three game pages each have `<div class="ad-space" data-ad-slot="<id>">` elements (3 on the home page, 2 each on the game pages — top of the game, bottom of the page). The `data-ad-slot` id is what `src/js/utils/ads.js#applyAdSlots()` matches against `config/ads` to decide whether to hide the slot, leave its static placeholder text alone, or rewrite it into an image ad — see `src/js/admin/CLAUDE.md` for the full picture. Don't add a new ad `<div>` without also adding its id to `AD_SLOTS` in `ads.js`, or it won't show up in the admin panel to configure.
+
 ## Pages
 
 | Page | Script |

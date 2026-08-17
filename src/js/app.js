@@ -2,6 +2,7 @@ import { getSessionUser, signOutSession } from './auth/auth.js';
 import { loadSessionProfile } from './auth/user-profile.js';
 import { applyDailyLoginBonus } from './utils/points.js';
 import { applyIcons } from './utils/icons.js';
+import { applyAdSlots } from './utils/ads.js';
 import { showToast, getTodayDateString } from './utils/helpers.js';
 
 async function injectPartial(placeholderId, path) {
@@ -58,11 +59,13 @@ function updateHeader(profile) {
     document.getElementById('user-menu-loggedout')?.setAttribute('hidden', '');
 }
 
-/** Injects the shared header/footer partials. Safe to call whether or not a session exists yet. */
+/** Injects the shared header/footer partials and applies admin-configured ad slot settings.
+ * Safe to call whether or not a session exists yet. */
 export async function loadHeaderFooter() {
     await Promise.all([
         injectPartial('site-header', '../partials/header.html'),
         injectPartial('site-footer', '../partials/footer.html'),
+        applyAdSlots(document),
     ]);
     applyIcons(document);
     wireFooterShare();

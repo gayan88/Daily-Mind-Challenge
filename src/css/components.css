@@ -69,6 +69,7 @@
     cursor: pointer;
     font-size: 13px;
     color: white;
+    text-decoration: none;
     transition: all 0.2s;
 }
 
@@ -164,7 +165,7 @@
     display: inline-block;
 }
 
-/* ---------- Ad placeholder ---------- */
+/* ---------- Ad slot (placeholder by default, admin-configurable via config/ads) ---------- */
 .ad-space {
     background: linear-gradient(135deg, #F1EFE8 0%, #F9F8FC 100%);
     border: 1px dashed var(--color-border-strong);
@@ -175,6 +176,26 @@
     font-size: 13px;
     margin-bottom: 32px;
     font-weight: 500;
+}
+
+/* Applied by applyAdSlots() when an admin sets a slot to a manual image ad. */
+.ad-space.ad-image {
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+.ad-space.ad-image a {
+    display: block;
+}
+
+.ad-space.ad-image img {
+    display: block;
+    width: 100%;
+    max-width: 300px;
+    height: auto;
+    margin: 0 auto;
+    border-radius: var(--radius-md);
 }
 
 /* ---------- Game tiles ---------- */
