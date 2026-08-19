@@ -27,21 +27,37 @@ function evaluateGuess(guess, target) {
     return result;
 }
 
+function formatClock(totalSeconds) {
+    const m = Math.floor(totalSeconds / 60);
+    const s = totalSeconds % 60;
+    return `${m}:${String(s).padStart(2, '0')}`;
+}
+
 /**
- * Mounts a playable Wordle round into `container`. Calls `onComplete({ won, attempts })` exactly
- * once when the round ends (win or out of guesses). Reused by both wordle.html (daily word) and
- * challenges.html solve mode (a challenge's target word).
+ * Mounts a playable Wordle round into `container`. Calls `onComplete({ won, attempts, guessStates,
+ * timedOut })` exactly once when the round ends (win, out of guesses, or time limit expiring).
+ * `guessStates` is the per-guess correct/present/absent array for each submitted row, for callers
+ * that want to render a shareable-style colored grid afterward.
+ *
+ * `timeLimitSeconds` is optional (tournament mode) -- when set, a visible countdown is shown and
+ * running out of time ends the round as a loss (`timedOut: true`) even with guesses remaining.
+ *
+ * Reused by wordle.html (daily challenge, tournaments) and challenges.html (a shared challenge's
+ * target word) -- callers that only destructure `{ won, attempts }` are unaffected by the extra
+ * fields.
  */
-export function playWordleRound({ container, targetWord, maxGuesses = 6, onComplete }) {
+export function playWordleRound({ container, targetWord, maxGuesses = 6, timeLimitSeconds = null, onComplete }) {
     const target = targetWord.toUpperCase();
     const wordLength = target.length;
 
     container.innerHTML = `
+        ${timeLimitSeconds ? '<div class="wordle-timer" id="wordle-timer"></div>' : ''}
         <div class="wordle-board" id="wordle-board"></div>
         <div class="wordle-message" id="wordle-message" aria-live="polite"></div>
         <div class="wordle-keyboard" id="wordle-keyboard"></div>
     `;
 
+    const timerEl = container.querySelector('#wordle-timer');
     const boardEl = container.querySelector('#wordle-board');
     const messageEl = container.querySelector('#wordle-message');
     const keyboardEl = container.querySelector('#wordle-keyboard');
@@ -80,6 +96,8 @@ export function playWordleRound({ container, targetWord, maxGuesses = 6, onCompl
     let currentGuess = '';
     let rowIndex = 0;
     let gameOver = false;
+    const guessStates = [];
+    let timerInterval = null;
 
     function setMessage(text) {
         messageEl.textContent = text;
@@ -121,6 +139,7 @@ export function playWordleRound({ container, targetWord, maxGuesses = 6, onCompl
         }
 
         const states = evaluateGuess(currentGuess, target);
+        guessStates.push(states);
         const row = rows[rowIndex];
         row.cells.forEach((cell, i) => {
             cell.dataset.state = states[i];
@@ -170,14 +189,36 @@ export function playWordleRound({ container, targetWord, maxGuesses = 6, onCompl
 
     document.addEventListener('keydown', onPhysicalKeydown);
 
-    function finish(won, attempts) {
+    if (timeLimitSeconds) {
+        let remaining = timeLimitSeconds;
+        timerEl.textContent = formatClock(remaining);
+        timerInterval = setInterval(() => {
+            remaining -= 1;
+            if (remaining <= 0) {
+                clearInterval(timerInterval);
+                if (!gameOver) {
+                    gameOver = true;
+                    setMessage(`Time's up! The word was ${target}`);
+                    finish(false, rowIndex, { timedOut: true });
+                }
+                return;
+            }
+            timerEl.textContent = formatClock(remaining);
+            timerEl.classList.toggle('urgent', remaining <= 10);
+        }, 1000);
+    }
+
+    function cleanup() {
         document.removeEventListener('keydown', onPhysicalKeydown);
-        onComplete({ won, attempts });
+        if (timerInterval) clearInterval(timerInterval);
+    }
+
+    function finish(won, attempts, extra = {}) {
+        cleanup();
+        onComplete({ won, attempts, guessStates: guessStates.slice(), timedOut: false, ...extra });
     }
 
     return {
-        destroy() {
-            document.removeEventListener('keydown', onPhysicalKeydown);
-        },
+        destroy: cleanup,
     };
 }

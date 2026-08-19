@@ -31,6 +31,22 @@
                 { "fieldPath": "creatorUid", "order": "ASCENDING" },
                 { "fieldPath": "createdAt", "order": "ASCENDING" }
             ]
+        },
+        {
+            "collectionGroup": "wordleChallenges",
+            "queryScope": "COLLECTION",
+            "fields": [
+                { "fieldPath": "visibility", "order": "ASCENDING" },
+                { "fieldPath": "createdAt", "order": "DESCENDING" }
+            ]
+        },
+        {
+            "collectionGroup": "wordleChallenges",
+            "queryScope": "COLLECTION",
+            "fields": [
+                { "fieldPath": "creatorUid", "order": "ASCENDING" },
+                { "fieldPath": "createdAt", "order": "DESCENDING" }
+            ]
         }
     ],
     "fieldOverrides": []

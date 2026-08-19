@@ -279,3 +279,96 @@
     background: #FCEBE9;
     color: var(--color-danger);
 }
+
+.daily-word-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 0.5px solid var(--color-border);
+    font-size: 14px;
+}
+
+.daily-word-row:last-child {
+    border-bottom: none;
+}
+
+.daily-word-id {
+    flex: 0 0 40px;
+    color: var(--color-text-muted);
+    font-weight: 600;
+}
+
+.daily-word-text {
+    flex: 1;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.daily-word-row .btn {
+    flex: 0 0 auto;
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+.tournament-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 0.5px solid var(--color-border);
+    font-size: 14px;
+    flex-wrap: wrap;
+}
+
+.tournament-row:last-child {
+    border-bottom: none;
+}
+
+.tournament-row-name {
+    flex: 1 1 160px;
+    font-weight: 700;
+}
+
+.tournament-row-meta {
+    flex: 1 1 220px;
+    color: var(--color-text-muted);
+    font-size: 12px;
+}
+
+.tournament-row-actions {
+    display: flex;
+    gap: 8px;
+    flex: 0 0 auto;
+}
+
+.tournament-row-actions .btn {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+.tournament-form {
+    border-top: 0.5px solid var(--color-border);
+    margin-top: 16px;
+    padding-top: 16px;
+}
+
+.tournament-form .form-field textarea {
+    width: 100%;
+    min-height: 70px;
+    padding: 10px 12px;
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-family: inherit;
+    resize: vertical;
+}
+
+.tournament-form-row {
+    display: flex;
+    gap: 12px;
+}
+
+.tournament-form-row .form-field {
+    flex: 1;
+}

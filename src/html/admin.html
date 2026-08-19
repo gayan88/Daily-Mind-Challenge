@@ -78,6 +78,55 @@
                 </div>
             </div>
         </div>
+
+        <div class="admin-section" data-collapsible>
+            <button class="admin-section-header" type="button">Wordle</button>
+            <div class="admin-section-body">
+                <div class="section">
+                    <div class="section-title">Daily Words</div>
+                    <div class="card">
+                        <p class="config-form-desc">Today's word is picked automatically by date from this list. Add-only &mdash; editing a word's text is fine, but the order determines which day it's used, so don't reorder or remove entries.</p>
+                        <div class="mod-search-row">
+                            <input type="text" id="daily-word-input" placeholder="5-letter word" maxlength="5">
+                            <button class="btn primary" id="daily-word-add-btn" type="button">Add Word</button>
+                        </div>
+                        <div id="daily-words-table">
+                            <div class="loading-text">Loading&hellip;</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Tournaments</div>
+                    <div class="card">
+                        <div id="tournaments-table">
+                            <div class="loading-text">Loading&hellip;</div>
+                        </div>
+                        <div class="tournament-form">
+                            <div class="form-field">
+                                <label for="tournament-name-input">Name</label>
+                                <input type="text" id="tournament-name-input" placeholder="e.g. Weekend Sprint">
+                            </div>
+                            <div class="form-field">
+                                <label for="tournament-words-input">Words (comma or newline-separated, 5 letters each)</label>
+                                <textarea id="tournament-words-input" placeholder="APPLE, BRAVE, CRISP"></textarea>
+                            </div>
+                            <div class="tournament-form-row">
+                                <div class="form-field">
+                                    <label for="tournament-time-input">Seconds per word</label>
+                                    <input type="number" id="tournament-time-input" value="60" min="10">
+                                </div>
+                                <div class="form-field">
+                                    <label for="tournament-bonus-input">Bonus points</label>
+                                    <input type="number" id="tournament-bonus-input" value="20" min="0">
+                                </div>
+                            </div>
+                            <button class="btn primary" id="tournament-create-btn" type="button">Create Tournament</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div id="site-footer"></div>

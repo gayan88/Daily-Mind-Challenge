@@ -2,6 +2,10 @@ import { initShell } from '../app.js';
 import { ensureConfigDefaults, updateConfig } from '../utils/config.js';
 import { AD_SLOTS, DEFAULT_ADS_CONFIG } from '../utils/ads.js';
 import { lookupUserByUsername, setUserBanned, setUserAdmin, deleteChallenge } from './moderation.js';
+import {
+    listDailyWords, addDailyWord, updateDailyWord,
+    listTournaments, createTournament, setTournamentActive, deleteTournament,
+} from './wordle-admin.js';
 import { escapeHtml, showToast } from '../utils/helpers.js';
 
 const CONFIG_FORMS = [
@@ -174,6 +178,155 @@ async function renderAdSlotForms() {
     renderGroup('ad-slot-forms-wordsearch', 'wordsearch');
 }
 
+async function renderDailyWordsTable() {
+    const container = document.getElementById('daily-words-table');
+    let words;
+    try {
+        words = await listDailyWords();
+    } catch {
+        container.innerHTML = `<div class="empty-state">Couldn't load daily words &mdash; check Firestore rules are deployed and try again.</div>`;
+        return;
+    }
+
+    if (words.length === 0) {
+        container.innerHTML = `<div class="empty-state">No words seeded yet. Add one above to activate the Daily Challenge.</div>`;
+        return;
+    }
+
+    container.innerHTML = words.map((w) => `
+        <div class="daily-word-row">
+            <span class="daily-word-id">#${w.id}</span>
+            <span class="daily-word-text">${escapeHtml(w.word)}</span>
+            <button class="btn" data-edit-word="${w.id}" type="button">Edit</button>
+        </div>
+    `).join('');
+
+    container.querySelectorAll('[data-edit-word]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+            const id = btn.dataset.editWord;
+            const current = words.find((w) => String(w.id) === id);
+            const next = window.prompt('Word text:', current.word);
+            if (next === null || !next.trim()) return;
+            try {
+                await updateDailyWord(id, next);
+                showToast(`Word #${id} updated`);
+                renderDailyWordsTable();
+            } catch {
+                showToast("Couldn't save -- check Firestore rules are deployed");
+            }
+        });
+    });
+}
+
+function wireDailyWordsAdd() {
+    document.getElementById('daily-word-add-btn').addEventListener('click', async () => {
+        const input = document.getElementById('daily-word-input');
+        const word = input.value.trim();
+        if (!/^[A-Za-z]{5}$/.test(word)) {
+            showToast('Enter a 5-letter word');
+            return;
+        }
+        try {
+            const id = await addDailyWord(word);
+            input.value = '';
+            showToast(`Word #${id} added`);
+            renderDailyWordsTable();
+        } catch {
+            showToast("Couldn't save -- check Firestore rules are deployed");
+        }
+    });
+}
+
+function parseWordsInput(raw) {
+    return raw.split(/[,\n]/).map((w) => w.trim()).filter(Boolean);
+}
+
+async function renderTournamentsTable() {
+    const container = document.getElementById('tournaments-table');
+    let tournaments;
+    try {
+        tournaments = await listTournaments();
+    } catch {
+        container.innerHTML = `<div class="empty-state">Couldn't load tournaments &mdash; check Firestore rules are deployed and try again.</div>`;
+        return;
+    }
+
+    if (tournaments.length === 0) {
+        container.innerHTML = `<div class="empty-state">No tournaments yet. Create one below.</div>`;
+        return;
+    }
+
+    container.innerHTML = tournaments.map((t) => `
+        <div class="tournament-row">
+            <span class="tournament-row-name">${escapeHtml(t.name)}</span>
+            <span class="tournament-row-meta">${t.words.length} words &bull; ${t.timePerWordSeconds}s/word &bull; +${t.bonusPoints} bonus</span>
+            <span class="status-pill ${t.active ? 'on' : ''}">${t.active ? 'Active' : 'Inactive'}</span>
+            <div class="tournament-row-actions">
+                <button class="btn" data-toggle-tournament="${t.id}" data-active="${t.active}" type="button">${t.active ? 'Deactivate' : 'Activate'}</button>
+                <button class="btn danger" data-delete-tournament="${t.id}" type="button">Delete</button>
+            </div>
+        </div>
+    `).join('');
+
+    container.querySelectorAll('[data-toggle-tournament]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+            const id = btn.dataset.toggleTournament;
+            const isActive = btn.dataset.active === 'true';
+            try {
+                await setTournamentActive(id, !isActive);
+                renderTournamentsTable();
+            } catch {
+                showToast("Couldn't save -- check Firestore rules are deployed");
+            }
+        });
+    });
+
+    container.querySelectorAll('[data-delete-tournament]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+            if (!window.confirm('Delete this tournament? Players\' progress on it will be orphaned.')) return;
+            try {
+                await deleteTournament(btn.dataset.deleteTournament);
+                showToast('Tournament deleted');
+                renderTournamentsTable();
+            } catch {
+                showToast("Couldn't delete -- check Firestore rules are deployed");
+            }
+        });
+    });
+}
+
+function wireTournamentCreate() {
+    document.getElementById('tournament-create-btn').addEventListener('click', async () => {
+        const name = document.getElementById('tournament-name-input').value.trim();
+        const words = parseWordsInput(document.getElementById('tournament-words-input').value);
+        const timePerWordSeconds = Number(document.getElementById('tournament-time-input').value);
+        const bonusPoints = Number(document.getElementById('tournament-bonus-input').value);
+
+        if (!name) {
+            showToast('Enter a tournament name');
+            return;
+        }
+        if (words.length === 0 || !words.every((w) => /^[A-Za-z]{5}$/.test(w))) {
+            showToast('Enter at least one 5-letter word, comma or newline-separated');
+            return;
+        }
+        if (!timePerWordSeconds || timePerWordSeconds < 10) {
+            showToast('Seconds per word must be at least 10');
+            return;
+        }
+
+        try {
+            await createTournament({ name, words, timePerWordSeconds, bonusPoints });
+            document.getElementById('tournament-name-input').value = '';
+            document.getElementById('tournament-words-input').value = '';
+            showToast('Tournament created');
+            renderTournamentsTable();
+        } catch {
+            showToast("Couldn't save -- check Firestore rules are deployed");
+        }
+    });
+}
+
 function renderModResult(user) {
     const el = document.getElementById('mod-result');
     if (!user) {
@@ -246,6 +399,10 @@ async function init() {
     await renderConfigForms();
     await renderAdSlotForms();
     wireModeration();
+    wireDailyWordsAdd();
+    await renderDailyWordsTable();
+    wireTournamentCreate();
+    await renderTournamentsTable();
 }
 
 init();

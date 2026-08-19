@@ -57,15 +57,19 @@ Three ways in:
 - `guests/{uid}` — uid is the Firebase Anonymous Auth uid.
 - `registeredUsers/{uid}` — uid is the Firebase Auth uid from email/password signup. Holds `username`, `displayName`, `email` (optional real email, separate from the Auth login email), `isAdmin`, `isBanned`, `bannedReason`, `bannedDate`, `loginPoints`, `lastLoginDate`, `currentStreak`.
 - `usernames/{usernameLower}` — public `{ uid, authEmail }` mapping, written once at signup, used to resolve a username to its Auth email at login time.
-- `gameScores/{uid}_{gameType}_{gameDate}` — one doc per game per day (deterministic ID gives "one attempt per day" for free via Firestore's create-vs-update rules, no extra query needed). `score` is 0–6 for Wordle (remaining guesses) and a flat 6 on completion for Sudoku/Word Search.
+- `gameScores/{uid}_{gameType}_{gameDate}` — one doc per game per day (deterministic ID gives "one attempt per day" for free via Firestore's create-vs-update rules, no extra query needed). `score` is a flat 6 on completion for Sudoku/Word Search; Wordle's three modes (see below) use richer per-mode formulas and repurpose `gameDate` as a generic deterministic key (tournament/challenge id) where the doc isn't tied to a calendar day — see `src/js/games/wordle/CLAUDE.md`.
 - `config/{dailyLoginReward|challengeExpiration|maxChallengeCreationsPerDay|wordValidationAPI|profanityList}` — admin-editable platform settings, seeded with defaults the first time `admin.html` loads.
-- `challenges/{id}` + `completions/{uid}` — shareable-link challenges; only registered, non-banned users can create them.
+- `challenges/{id}` + `completions/{uid}` — shareable-link challenges (generic, `challenges.html`); only registered, non-banned users can create them.
+- `wordleDailyWords/{id}` (+ `_meta`) — admin-managed numbered word pool backing Wordle's Daily Challenge, edited from `admin.html`'s Wordle section.
+- `wordleTournaments/{id}` + `wordleTournamentAttempts/{tournamentId}_{uid}` — admin-created timed multi-word Wordle tournaments and per-player progress.
+- `wordleChallenges/{id}` + `completions/{uid}` — Wordle's own "Challenge a Friend" shareable-link challenges (separate from the generic `challenges` collection above, built fresh inside `wordle.html`).
 
 Full data-flow write-up: `docs/data-flow.md`.
 
 ## Adding new daily content
 
-- **Wordle answers**: add words to the list in `src/js/games/wordle/words-wordle.js`. The daily word is picked deterministically from the list by date, so the list order matters (avoid reordering once live, or the "daily word" will shift for existing players).
+- **Wordle Daily Challenge words**: add words from `admin.html`'s Wordle section (append-only — the same "don't reorder, it shifts which day gets which word" rule applies, now enforced by the admin UI itself rather than by editing a source file). `src/js/games/wordle/words-wordle.js`'s static list is no longer used for the Daily Challenge — it's kept only for the separate, generic `challenges.html` feature's "pick a word" dropdown.
+- **Wordle Tournaments** and **Challenge a Friend** links: also created from `admin.html` (Tournaments) or in-page from `wordle.html` itself (Challenge a Friend) — no source file to edit for either.
 - **Sudoku puzzles**: add `{ puzzle, solution }` pairs (81-character strings, `0` = blank) to `src/js/games/sudoku/sudoku-puzzles.js`.
 - **Word Search themes**: add a day's word list to `src/js/games/wordsearch/wordsearch-words.js`; the grid itself is generated at runtime from a date-seeded random layout, so you only supply words.
 

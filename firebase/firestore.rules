@@ -58,9 +58,92 @@ service cloud.firestore {
             allow create: if isSignedIn()
                 && request.resource.data.userId == request.auth.uid
                 && scoreId == request.auth.uid + '_' + request.resource.data.gameType + '_' + request.resource.data.gameDate
-                && request.resource.data.score >= 0 && request.resource.data.score <= 10;
-            allow update: if isAdmin();
+                && request.resource.data.score >= 0 && request.resource.data.score <= maxCreateScore(request.resource.data.gameType);
+            // Facebook-share update: the doc owner may add exactly +20 to their own already-created
+            // wordle score, once, in exchange for flipping sharedToFacebook false -> true -- nothing
+            // else about the doc is allowed to change. See wordle-daily-data.js#markSharedToFacebook.
+            allow update: if isAdmin() || isFacebookShareUpdate();
             allow delete: if isAdmin();
+
+            function isFacebookShareUpdate() {
+                return isSignedIn() && request.auth.uid == resource.data.userId
+                    && resource.data.gameType == 'wordle'
+                    && resource.data.sharedToFacebook != true
+                    && request.resource.data.sharedToFacebook == true
+                    && request.resource.data.score == resource.data.score + 20
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['score', 'sharedToFacebook', 'updatedAt']);
+            }
+        }
+
+        // Everyday game scores (wordle/sudoku/wordsearch daily plays) stay capped at 10. The
+        // Wordle Daily Challenge's richer formula (play + attempts + speed bonuses, before the
+        // +20 Facebook share applied separately via update) can reach 30 on create. Tournament
+        // completions (30 + 15*numWords + bonusPoints, see wordle-tournament-data.js) are bounded
+        // generously since numWords/bonusPoints are admin-controlled, not player-controlled.
+        // Challenge a Friend plays (10 + 20 win bonus, see wordle-challenge-data.js) cap at 30
+        // like the Daily Challenge; the creator's separate +10-per-solver reward falls under the
+        // default 10 cap below.
+        function maxCreateScore(gameType) {
+            return gameType == 'wordle' ? 30
+                : gameType == 'wordle-tournament' ? 1000
+                : gameType == 'wordle-challenge' ? 30
+                : 10;
+        }
+
+        // Admin-managed pool of Daily Challenge words -- see src/js/admin/wordle-admin.js.
+        // wordleDailyWords/_meta holds { totalCount } alongside the numbered word docs.
+        match /wordleDailyWords/{id} {
+            allow read: if true;
+            allow write: if isAdmin();
+        }
+
+        // Admin-managed tournaments (name, words, timePerWordSeconds, bonusPoints, active).
+        match /wordleTournaments/{id} {
+            allow read: if true;
+            allow write: if isAdmin();
+        }
+
+        // One progress doc per player per tournament, id = {tournamentId}_{uid}. This only tracks
+        // progress (currentWordIndex/wordsWon/completed) -- actual points are granted separately
+        // via the guarded gameScores create above, so a client freely writing its own progress
+        // here can't award itself points on its own, consistent with this app's existing
+        // "v1-pragmatic, not fully cheat-proof" philosophy for self-reported game outcomes.
+        match /wordleTournamentAttempts/{attemptId} {
+            allow read: if true;
+            allow create: if isSignedIn()
+                && request.resource.data.uid == request.auth.uid
+                && attemptId == request.resource.data.tournamentId + '_' + request.auth.uid
+                && request.resource.data.currentWordIndex == 0
+                && request.resource.data.wordsWon == 0
+                && request.resource.data.completed == false
+                && request.resource.data.pointsAwarded == false;
+            allow update: if isSignedIn() && request.auth.uid == resource.data.uid
+                && request.resource.data.uid == resource.data.uid
+                && request.resource.data.tournamentId == resource.data.tournamentId
+                && (resource.data.completed == false || request.resource.data.completed == true)
+                && (request.resource.data.currentWordIndex == 0
+                    || request.resource.data.currentWordIndex == resource.data.currentWordIndex + 1
+                    || request.resource.data.currentWordIndex == resource.data.currentWordIndex);
+            allow delete: if isAdmin();
+        }
+
+        // "Challenge a Friend" -- a Wordle-specific parallel to /challenges below, same rule
+        // shape (see src/js/games/wordle/wordle-challenge-data.js).
+        match /wordleChallenges/{challengeId} {
+            allow read: if true;
+            allow create: if isSignedIn()
+                && request.resource.data.creatorUid == request.auth.uid
+                && exists(/databases/$(database)/documents/registeredUsers/$(request.auth.uid))
+                && get(/databases/$(database)/documents/registeredUsers/$(request.auth.uid)).data.isBanned == false;
+            allow update: if false;
+            allow delete: if isAdmin();
+
+            match /completions/{uid} {
+                allow read: if true;
+                allow create: if isSignedIn() && request.auth.uid == uid;
+                allow update: if false;
+                allow delete: if false;
+            }
         }
 
         match /config/{configId} {

@@ -1,3 +1,36 @@
+.wordle-mode-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    max-width: 480px;
+    margin: 0 auto 20px;
+}
+
+.wordle-mode-tab {
+    flex: 1;
+    min-width: 140px;
+    padding: 10px 14px;
+    border: 0.5px solid var(--color-border);
+    background: white;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.wordle-mode-tab.active {
+    background: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+}
+
+.wordle-mode-tab:not(.active):hover {
+    background: var(--color-bg);
+    border-color: var(--color-border-strong);
+}
+
 .game-container {
     max-width: 480px;
     margin: 0 auto;
@@ -126,6 +159,267 @@
 .wordle-key[data-state="absent"] {
     background: var(--color-text-muted);
     color: white;
+}
+
+.wordle-tournament-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.wordle-tournament-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 16px;
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+}
+
+.wordle-tournament-name {
+    flex: 1 1 140px;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--color-text);
+}
+
+.wordle-tournament-meta {
+    flex: 1 1 200px;
+    font-size: 12px;
+    color: var(--color-text-muted);
+}
+
+.wordle-tournament-card .btn {
+    flex: 0 0 auto;
+}
+
+.wordle-tournament-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 16px;
+}
+
+/* ---------- Challenge a Friend ---------- */
+.wc-subtabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.wc-subtab {
+    flex: 1;
+    padding: 8px 12px;
+    border: 0.5px solid var(--color-border);
+    background: white;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.wc-subtab.active {
+    background: var(--color-primary-tint);
+    color: var(--color-primary);
+    border-color: var(--color-primary-light);
+}
+
+.wc-subtab:not(.active):hover {
+    background: var(--color-bg);
+    border-color: var(--color-border-strong);
+}
+
+.wc-visibility-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin-bottom: 16px;
+}
+
+/* Same pattern as pages/challenges.css's .share-box -- duplicated here rather than shared since
+   only one page's CSS loads at a time and this page must not depend on challenges.css. */
+.share-box {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    background: var(--color-primary-tint);
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+    margin-top: 16px;
+}
+
+.share-box input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: var(--color-primary);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.share-box input:focus {
+    outline: none;
+}
+
+.wc-mine-card {
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.wc-completions {
+    margin-top: 12px;
+    border-top: 0.5px solid var(--color-border);
+    padding-top: 8px;
+}
+
+.wc-completion-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    padding: 4px 0;
+    color: var(--color-text-secondary);
+}
+
+.wc-no-completions {
+    font-size: 13px;
+    color: var(--color-text-muted);
+}
+
+.wordle-timer {
+    text-align: center;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: 12px;
+}
+
+.wordle-timer.urgent {
+    color: var(--color-danger);
+}
+
+/* ---------- Post-round summary modal ----------
+   Same overlay/dialog/close pattern as index.html's sign-in modal (defined in pages/home.css),
+   duplicated here rather than shared since only one page's CSS loads at a time and this page
+   must not depend on home.css. */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(44, 44, 42, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 300;
+}
+
+.modal-dialog {
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    padding: 52px 24px 24px;
+    width: 100%;
+    max-width: 400px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+}
+
+.modal-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    color: var(--color-text-muted);
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    z-index: 1;
+}
+
+.modal-close:hover {
+    background: var(--color-bg);
+    color: var(--color-text);
+}
+
+.wordle-summary-title {
+    text-align: center;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: 4px;
+}
+
+.wordle-summary-subtitle {
+    text-align: center;
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin-bottom: 20px;
+}
+
+.wordle-summary-grid {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 20px;
+}
+
+.wordle-summary-row {
+    display: flex;
+    gap: 4px;
+}
+
+.wordle-summary-cell {
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
+    background: var(--color-text-muted);
+}
+
+.wordle-summary-cell[data-state="correct"] {
+    background: var(--color-sudoku-start);
+}
+
+.wordle-summary-cell[data-state="present"] {
+    background: #D8A030;
+}
+
+.wordle-summary-breakdown {
+    border-top: 0.5px solid var(--color-border);
+    padding-top: 12px;
+    margin-bottom: 16px;
+}
+
+.wordle-summary-line {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    padding: 4px 0;
+}
+
+.wordle-summary-total {
+    border-top: 0.5px solid var(--color-border);
+    margin-top: 6px;
+    padding-top: 10px;
+    font-weight: 700;
+    color: var(--color-text);
+    font-size: 16px;
+}
+
+.wordle-summary-share {
+    width: 100%;
 }
 
 @media (max-width: 420px) {
