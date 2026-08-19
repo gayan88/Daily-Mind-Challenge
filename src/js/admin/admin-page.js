@@ -20,6 +20,21 @@ const CONFIG_FORMS = [
         fields: [{ key: 'days', type: 'number', label: 'Days' }],
     },
     {
+        id: 'myChallengesPageSize',
+        title: 'My Challenges Page Size',
+        fields: [{ key: 'size', type: 'number', label: 'Challenges per page (Load More)' }],
+    },
+    {
+        id: 'browseChallengesPageSize',
+        title: 'Browse Challenges Page Size',
+        fields: [{ key: 'size', type: 'number', label: 'Challenges per page (Load More)' }],
+    },
+    {
+        id: 'leaderboardPageSize',
+        title: 'Leaderboard Page Size',
+        fields: [{ key: 'size', type: 'number', label: 'Rows per page (Load More)' }],
+    },
+    {
         id: 'wordValidationAPI',
         title: 'Word Validation API',
         fields: [{ key: 'endpoint', type: 'text', label: 'Endpoint URL' }],

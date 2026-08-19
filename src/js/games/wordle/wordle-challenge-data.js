@@ -8,6 +8,7 @@ import {
     query,
     orderBy,
     limit,
+    startAfter,
     where,
     runTransaction,
     serverTimestamp,
@@ -79,23 +80,54 @@ export function isWordleChallengeExpired(challenge) {
     return challenge.expiresAt.toMillis() < Date.now();
 }
 
-/** Most recent non-expired PUBLIC challenges, for the Browse tab. */
-export async function listPublicWordleChallenges(limitCount = 20) {
-    const q = query(
-        collection(db, COLLECTION),
-        where('visibility', '==', 'public'),
-        orderBy('createdAt', 'desc'),
-        limit(limitCount)
-    );
+/**
+ * One page of the most recent PUBLIC challenges, for the Browse tab. Pass the previous call's
+ * `lastDoc` as `cursor` to fetch the next page. Note `hasMore` is based on the raw page fetched
+ * from Firestore -- since expired challenges are filtered out client-side afterward (and the
+ * caller separately excludes the viewer's own challenges), a rendered page can come back with
+ * fewer than `pageSize` visible cards even when `hasMore` is true; the next "Load More" click
+ * will still make forward progress since it's cursored off the raw docs, not the filtered count.
+ */
+export async function listPublicWordleChallengesPage(pageSize, cursor = null) {
+    const constraints = [collection(db, COLLECTION), where('visibility', '==', 'public'), orderBy('createdAt', 'desc')];
+    const q = cursor
+        ? query(...constraints, startAfter(cursor), limit(pageSize))
+        : query(...constraints, limit(pageSize));
     const snap = await getDocs(q);
-    return snap.docs.map((d) => ({ id: d.id, ...d.data() })).filter((c) => !isWordleChallengeExpired(c));
+    const challenges = snap.docs.map((d) => ({ id: d.id, ...d.data() })).filter((c) => !isWordleChallengeExpired(c));
+    return {
+        challenges,
+        lastDoc: snap.docs[snap.docs.length - 1] || null,
+        hasMore: snap.docs.length === pageSize,
+    };
 }
 
-/** All challenges (public and private) a user has created, for "My Challenges". */
+/** All challenges (public and private) a user has created, unpaginated -- used for
+ * syncCreatorRewards(), which must scan every challenge the creator owns regardless of how many
+ * of them are currently rendered on screen (see listMyWordleChallengesPage() for the paginated,
+ * render-only version). */
 export async function listMyWordleChallenges(uid) {
     const q = query(collection(db, COLLECTION), where('creatorUid', '==', uid), orderBy('createdAt', 'desc'));
     const snap = await getDocs(q);
     return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+/**
+ * One page of a user's challenges, newest first, for rendering "My Challenges" without loading
+ * everything at once. Pass the previous call's `lastDoc` as `cursor` to fetch the next page.
+ * Returns `hasMore: false` once a page comes back short of `pageSize`.
+ */
+export async function listMyWordleChallengesPage(uid, pageSize, cursor = null) {
+    const constraints = [collection(db, COLLECTION), where('creatorUid', '==', uid), orderBy('createdAt', 'desc')];
+    const q = cursor
+        ? query(...constraints, startAfter(cursor), limit(pageSize))
+        : query(...constraints, limit(pageSize));
+    const snap = await getDocs(q);
+    return {
+        challenges: snap.docs.map((d) => ({ id: d.id, ...d.data() })),
+        lastDoc: snap.docs[snap.docs.length - 1] || null,
+        hasMore: snap.docs.length === pageSize,
+    };
 }
 
 export async function getWordleChallengeCompletion(challengeId, uid) {

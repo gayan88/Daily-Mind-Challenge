@@ -57,3 +57,9 @@
     background: var(--color-bg);
     border-color: var(--color-border-strong);
 }
+
+.lb-load-more {
+    display: block;
+    width: 100%;
+    margin-top: 16px;
+}

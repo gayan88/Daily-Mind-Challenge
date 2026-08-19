@@ -17,6 +17,18 @@ export const CONFIG_DEFAULTS = {
         days: 3,
         description: 'Challenge expires after N days',
     },
+    myChallengesPageSize: {
+        size: 15,
+        description: 'Challenges shown per page in "My Challenges" on wordle.html (Load More fetches this many at a time)',
+    },
+    browseChallengesPageSize: {
+        size: 15,
+        description: 'Challenges shown per page in "Browse" on wordle.html (Load More fetches this many at a time)',
+    },
+    leaderboardPageSize: {
+        size: 20,
+        description: 'Rows shown per page on leaderboard.html (Load More reveals this many more at a time)',
+    },
     wordValidationAPI: {
         endpoint: 'https://api.dictionaryapi.dev/api/v1/entries/en/',
         description: 'Free Dictionary API endpoint for word validation',
