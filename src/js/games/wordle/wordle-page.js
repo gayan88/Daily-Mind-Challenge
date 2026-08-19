@@ -10,7 +10,7 @@ import {
 import {
     createWordleChallenge, getWordleChallenge, isWordleChallengeExpired,
     listPublicWordleChallenges, listMyWordleChallenges,
-    getWordleChallengeCompletion, listWordleChallengeCompletions,
+    getWordleChallengeCompletion, listWordleChallengeCompletions, getWordleChallengeSolveCount,
     recordWordleChallengeCompletion, syncCreatorRewards,
 } from './wordle-challenge-data.js';
 import { showWordleSummaryModal } from './wordle-summary-modal.js';
@@ -233,6 +233,16 @@ function shareLinkForChallenge(challengeId) {
     return url.toString();
 }
 
+function challengeTitle(c) {
+    return c.challengeNumber ? `${c.creatorDisplayName}'s Challenge #${c.challengeNumber}` : `${c.creatorDisplayName}'s Challenge`;
+}
+
+function solveCountLabel(count) {
+    if (count === 0) return 'No one has solved it yet';
+    if (count === 1) return '1 person solved it';
+    return `${count} people solved it`;
+}
+
 function wireCopyLink(btn, link) {
     btn.addEventListener('click', async () => {
         try {
@@ -297,11 +307,13 @@ async function renderChallengeBrowse(container, uid) {
         return;
     }
 
-    container.innerHTML = open.map((c) => `
+    const solveCounts = await Promise.all(open.map((c) => getWordleChallengeSolveCount(c.id)));
+
+    container.innerHTML = open.map((c, i) => `
         <div class="challenge-card">
             <div class="challenge-info">
-                <div class="challenge-name">${escapeHtml(c.creatorDisplayName)}'s Challenge</div>
-                <div class="challenge-meta">${c.word.length}-letter word</div>
+                <div class="challenge-name">${escapeHtml(challengeTitle(c))}</div>
+                <div class="challenge-meta">${solveCountLabel(solveCounts[i])}</div>
             </div>
             <a href="wordle.html?challenge=${encodeURIComponent(c.id)}" class="challenge-btn">Solve</a>
         </div>
@@ -335,7 +347,7 @@ async function renderChallengeMine(container, uid, profile) {
         return `
             <div class="challenge-card wc-mine-card">
                 <div class="challenge-info">
-                    <div class="challenge-name">${escapeHtml(c.word)} &bull; ${c.visibility}${isWordleChallengeExpired(c) ? ' &bull; expired' : ''}</div>
+                    <div class="challenge-name">${c.challengeNumber ? `#${c.challengeNumber} &bull; ` : ''}${escapeHtml(c.word)} &bull; ${c.visibility}${isWordleChallengeExpired(c) ? ' &bull; expired' : ''}</div>
                     <div class="share-box">
                         <input type="text" readonly value="${escapeHtml(link)}" id="wc-mine-link-${c.id}">
                         <button class="btn" data-copy-mine="${c.id}" type="button">Copy Link</button>
@@ -375,7 +387,7 @@ async function renderChallengeSolve(mount, uid, profile, challengeId) {
     }
 
     mount.innerHTML = `
-        <p class="game-intro">Challenge from <strong>${escapeHtml(challenge.creatorDisplayName)}</strong> &mdash; guess the ${challenge.word.length}-letter word in 6 tries.</p>
+        <p class="game-intro">${escapeHtml(challengeTitle(challenge))} &mdash; guess the ${challenge.word.length}-letter word in 6 tries.</p>
         <div id="wordle-round-mount"></div>
     `;
     const roundMount = document.getElementById('wordle-round-mount');
@@ -395,7 +407,7 @@ async function renderChallengeSolve(mount, uid, profile, challengeId) {
 
             showWordleSummaryModal({
                 title: won ? 'Challenge solved!' : `The word was ${challenge.word}`,
-                subtitle: `${challenge.creatorDisplayName}'s Challenge`,
+                subtitle: challengeTitle(challenge),
                 guessStates,
                 breakdown: [
                     { label: 'Attempting the challenge', points: 10 },

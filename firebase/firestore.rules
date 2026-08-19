@@ -127,14 +127,26 @@ service cloud.firestore {
             allow delete: if isAdmin();
         }
 
-        // "Challenge a Friend" -- a Wordle-specific parallel to /challenges below, same rule
-        // shape (see src/js/games/wordle/wordle-challenge-data.js).
-        match /wordleChallenges/{challengeId} {
-            allow read: if true;
-            allow create: if isSignedIn()
-                && request.resource.data.creatorUid == request.auth.uid
+        // "Challenge a Friend" -- built into wordle.html (see src/js/games/wordle/wordle-challenge-data.js).
+        function canCreateWordleChallenge() {
+            return isSignedIn()
                 && exists(/databases/$(database)/documents/registeredUsers/$(request.auth.uid))
                 && get(/databases/$(database)/documents/registeredUsers/$(request.auth.uid)).data.isBanned == false;
+        }
+
+        // Global, continuously-incrementing challenge counter (not per-creator) -- any registered,
+        // non-banned user can bump it by exactly 1 when they create a challenge, same bounded-
+        // increment shape as the Facebook-share update on gameScores above.
+        match /wordleChallenges/_meta {
+            allow read: if true;
+            allow create: if canCreateWordleChallenge() && request.resource.data.totalCount == 1;
+            allow update: if canCreateWordleChallenge()
+                && request.resource.data.totalCount == resource.data.totalCount + 1;
+        }
+
+        match /wordleChallenges/{challengeId} {
+            allow read: if true;
+            allow create: if canCreateWordleChallenge() && request.resource.data.creatorUid == request.auth.uid;
             allow update: if false;
             allow delete: if isAdmin();
 

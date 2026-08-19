@@ -1,14 +1,15 @@
 import {
     collection,
     doc,
-    addDoc,
     getDoc,
     getDocs,
+    getCountFromServer,
     setDoc,
     query,
     orderBy,
     limit,
     where,
+    runTransaction,
     serverTimestamp,
     Timestamp,
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
@@ -30,6 +31,12 @@ function creatorScoreDocId(creatorUid, challengeId, completerUid) {
  * page/collection has since been retired in favor of this). Only registered, non-banned users can
  * create one (banned users never reach this point, they're signed out at login); guests can still
  * solve/browse. Expiry reuses config/challengeExpiration.
+ *
+ * `challengeNumber` is a global, continuously-incrementing counter (not per-creator) so cards can
+ * show "Oshini's Challenge #7" instead of two indistinguishable "Oshini's Challenge" cards --
+ * same `_meta.totalCount` pattern as the Daily Challenge word pool (`wordle-admin.js`), just
+ * incremented inside a transaction here since any registered user can trigger it, not just admins.
+ * The doc's own Firestore ID (used in the `?challenge=` share link) is unrelated and unchanged.
  */
 export async function createWordleChallenge(profile, word, visibility = 'public') {
     if (profile.kind !== 'registered') {
@@ -39,15 +46,26 @@ export async function createWordleChallenge(profile, word, visibility = 'public'
     const { days: expiryDays } = await getConfig('challengeExpiration');
     const expiresAt = Timestamp.fromMillis(Date.now() + expiryDays * 24 * 60 * 60 * 1000);
 
-    const ref = await addDoc(collection(db, COLLECTION), {
-        creatorUid: profile.uid,
-        creatorDisplayName: profile.displayName,
-        word: word.trim().toUpperCase(),
-        visibility,
-        createdAt: serverTimestamp(),
-        expiresAt,
+    const challengeRef = doc(collection(db, COLLECTION));
+    const metaRef = doc(db, COLLECTION, '_meta');
+
+    await runTransaction(db, async (tx) => {
+        const metaSnap = await tx.get(metaRef);
+        const nextNumber = (metaSnap.exists() ? metaSnap.data().totalCount : 0) + 1;
+
+        tx.set(challengeRef, {
+            creatorUid: profile.uid,
+            creatorDisplayName: profile.displayName,
+            word: word.trim().toUpperCase(),
+            visibility,
+            challengeNumber: nextNumber,
+            createdAt: serverTimestamp(),
+            expiresAt,
+        });
+        tx.set(metaRef, { totalCount: nextNumber }, { merge: true });
     });
-    return ref.id;
+
+    return challengeRef.id;
 }
 
 export async function getWordleChallenge(challengeId) {
@@ -88,6 +106,15 @@ export async function getWordleChallengeCompletion(challengeId, uid) {
 export async function listWordleChallengeCompletions(challengeId) {
     const snap = await getDocs(collection(db, COLLECTION, challengeId, 'completions'));
     return snap.docs.map((d) => d.data());
+}
+
+/** Count of distinct players who *solved* (not just attempted) a challenge, for Browse cards.
+ * Uses a server-side aggregation query rather than fetching every completion doc -- cheap even
+ * for a popular challenge. */
+export async function getWordleChallengeSolveCount(challengeId) {
+    const q = query(collection(db, COLLECTION, challengeId, 'completions'), where('won', '==', true));
+    const snap = await getCountFromServer(q);
+    return snap.data().count;
 }
 
 /**
