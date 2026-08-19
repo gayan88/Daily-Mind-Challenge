@@ -42,10 +42,19 @@ function formatClock(totalSeconds) {
  * `timeLimitSeconds` is optional (tournament mode) -- when set, a visible countdown is shown and
  * running out of time ends the round as a loss (`timedOut: true`) even with guesses remaining.
  *
+ * `validateGuess` is an optional `async (guess) => boolean` callback -- when provided, every guess
+ * that isn't the exact target word is checked against it before being accepted (real Wordle rejects
+ * gibberish the same way); a rejected guess shakes the row and doesn't consume an attempt. Input is
+ * locked while a check is in flight, and the guess is snapshotted before awaiting so an in-flight
+ * check can never apply to a guess the player has since edited. The engine has no opinion on *how*
+ * `validateGuess` decides -- see `wordle-word-validation.js`'s dictionary-API version, wired up in
+ * `wordle-page.js`, which fails open (accepts the guess) on any API error so gameplay never gets
+ * stuck on a flaky third party.
+ *
  * Shared by all of wordle.html's modes (Daily Challenge, Tournaments, Challenge a Friend) --
  * callers that only destructure `{ won, attempts }` are unaffected by the extra fields.
  */
-export function playWordleRound({ container, targetWord, maxGuesses = 6, timeLimitSeconds = null, onComplete }) {
+export function playWordleRound({ container, targetWord, maxGuesses = 6, timeLimitSeconds = null, validateGuess = null, onComplete }) {
     const target = targetWord.toUpperCase();
     const wordLength = target.length;
 
@@ -95,6 +104,7 @@ export function playWordleRound({ container, targetWord, maxGuesses = 6, timeLim
     let currentGuess = '';
     let rowIndex = 0;
     let gameOver = false;
+    let submitting = false;
     const guessStates = [];
     let timerInterval = null;
 
@@ -125,45 +135,67 @@ export function playWordleRound({ container, targetWord, maxGuesses = 6, timeLim
         }
     }
 
-    function submitGuess() {
-        if (currentGuess.length !== wordLength) {
-            setMessage(`Word must be ${wordLength} letters`);
-            shakeCurrentRow();
-            return;
-        }
-        if (!/^[A-Z]+$/.test(currentGuess)) {
-            setMessage('Letters only');
-            shakeCurrentRow();
-            return;
-        }
+    async function submitGuess() {
+        if (submitting) return;
+        submitting = true;
+        try {
+            if (currentGuess.length !== wordLength) {
+                setMessage(`Word must be ${wordLength} letters`);
+                shakeCurrentRow();
+                return;
+            }
+            if (!/^[A-Z]+$/.test(currentGuess)) {
+                setMessage('Letters only');
+                shakeCurrentRow();
+                return;
+            }
 
-        const states = evaluateGuess(currentGuess, target);
-        guessStates.push(states);
-        const row = rows[rowIndex];
-        row.cells.forEach((cell, i) => {
-            cell.dataset.state = states[i];
-            upgradeKeyState(currentGuess[i], states[i]);
-        });
+            // Snapshot now, before any await -- currentGuess must not be read again after the
+            // check resolves, since input is locked but the round could still end from under us
+            // (e.g. a tournament timer running out) while the check is in flight.
+            const guess = currentGuess;
 
-        const won = currentGuess === target;
-        rowIndex++;
+            if (validateGuess && guess !== target) {
+                setMessage('Checking word…');
+                const isValid = await validateGuess(guess);
+                if (gameOver) return;
+                if (!isValid) {
+                    setMessage('Not a valid word');
+                    shakeCurrentRow();
+                    return;
+                }
+            }
 
-        if (won) {
-            gameOver = true;
-            setMessage('You solved it!');
-            finish(true, rowIndex);
-        } else if (rowIndex === maxGuesses) {
-            gameOver = true;
-            setMessage(`Out of guesses! The word was ${target}`);
-            finish(false, rowIndex);
-        } else {
-            currentGuess = '';
-            setMessage('');
+            const states = evaluateGuess(guess, target);
+            guessStates.push(states);
+            const row = rows[rowIndex];
+            row.cells.forEach((cell, i) => {
+                cell.dataset.state = states[i];
+                upgradeKeyState(guess[i], states[i]);
+            });
+
+            const won = guess === target;
+            rowIndex++;
+
+            if (won) {
+                gameOver = true;
+                setMessage('You solved it!');
+                finish(true, rowIndex);
+            } else if (rowIndex === maxGuesses) {
+                gameOver = true;
+                setMessage(`Out of guesses! The word was ${target}`);
+                finish(false, rowIndex);
+            } else {
+                currentGuess = '';
+                setMessage('');
+            }
+        } finally {
+            submitting = false;
         }
     }
 
     function handleKey(key) {
-        if (gameOver) return;
+        if (gameOver || submitting) return;
         if (key === 'ENTER') {
             submitGuess();
             return;

@@ -29,8 +29,14 @@ export const CONFIG_DEFAULTS = {
         size: 20,
         description: 'Rows shown per page on leaderboard.html (Load More reveals this many more at a time)',
     },
+    challengeAttemptsPageSize: {
+        size: 10,
+        description: 'Attempts shown per page in a Challenge a Friend\'s "More Info" detail view (Load More fetches this many at a time)',
+    },
     wordValidationAPI: {
-        endpoint: 'https://api.dictionaryapi.dev/api/v1/entries/en/',
+        // v2, not v1 -- v1 returns 502 (not 404) for a word that doesn't exist, which makes it
+        // impossible to distinguish "not a real word" from "the API is down".
+        endpoint: 'https://api.dictionaryapi.dev/api/v2/entries/en/',
         description: 'Free Dictionary API endpoint for word validation',
     },
     profanityList: {

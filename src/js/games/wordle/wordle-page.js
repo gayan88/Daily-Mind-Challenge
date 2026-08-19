@@ -4,6 +4,7 @@ import { showToast, escapeHtml, getQueryParam } from '../../utils/helpers.js';
 import { checkPlayedToday } from '../../utils/points.js';
 import { getConfig } from '../../utils/config.js';
 import { playWordleRound } from './wordle-engine.js';
+import { isRealWord } from './wordle-word-validation.js';
 import { getTodayChallenge, recordDailyResult, markSharedToFacebook } from './wordle-daily-data.js';
 import {
     listActiveTournaments, getAttempt, getOrStartAttempt, recordWordResult, finalizeTournament,
@@ -11,7 +12,8 @@ import {
 import {
     createWordleChallenge, getWordleChallenge, isWordleChallengeExpired,
     listPublicWordleChallengesPage, listMyWordleChallenges, listMyWordleChallengesPage,
-    getWordleChallengeCompletion, listWordleChallengeCompletions, getWordleChallengeSolveCount,
+    listWordleChallengeCompletionsPage, getWordleChallengeCompletion,
+    getWordleChallengeSolveCount, getWordleChallengeAttemptCount,
     recordWordleChallengeCompletion, syncCreatorRewards,
 } from './wordle-challenge-data.js';
 import { showWordleSummaryModal } from './wordle-summary-modal.js';
@@ -66,6 +68,7 @@ async function renderDailyMode(mount, uid, profile) {
         container: roundMount,
         targetWord: challenge.word,
         maxGuesses: MAX_GUESSES,
+        validateGuess: isRealWord,
         onComplete: async ({ won, attempts, guessStates }) => {
             const timeTakenSeconds = Math.round((Date.now() - startTime) / 1000);
             const result = await recordDailyResult(uid, profile, {
@@ -115,8 +118,17 @@ async function renderTournamentsMode(mount, uid, profile) {
                 return `
                     <div class="wordle-tournament-card">
                         <div class="wordle-tournament-name">${escapeHtml(t.name)}</div>
-                        <div class="wordle-tournament-meta">${numWords} words &bull; ${t.timePerWordSeconds}s/word &bull; +${t.bonusPoints} bonus</div>
-                        <button class="btn primary" data-play-tournament="${t.id}" ${attempt?.completed ? 'disabled' : ''} type="button">${statusLabel}</button>
+                        <div class="wordle-tournament-divider"></div>
+                        <div class="wordle-tournament-footer">
+                            <div class="wordle-tournament-meta-row">
+                                <span class="wordle-tournament-meta-item">${icon('WORDS')} ${numWords} words</span>
+                                <span class="wordle-tournament-sep">|</span>
+                                <span class="wordle-tournament-meta-item">${icon('STOPWATCH')} ${t.timePerWordSeconds}s/word</span>
+                                <span class="wordle-tournament-sep">|</span>
+                                <span class="wordle-tournament-meta-item">${icon('STAR')} +${t.bonusPoints} bonus</span>
+                            </div>
+                            <button class="btn primary" data-play-tournament="${t.id}" ${attempt?.completed ? 'disabled' : ''} type="button">${statusLabel}</button>
+                        </div>
                     </div>
                 `;
             }).join('')}
@@ -196,6 +208,7 @@ async function playTournamentRound(mount, uid, profile, tournament) {
         targetWord: word,
         maxGuesses: MAX_GUESSES,
         timeLimitSeconds: tournament.timePerWordSeconds,
+        validateGuess: isRealWord,
         onComplete: async ({ won }) => {
             const updated = await recordWordResult(tournament.id, uid, won);
 
@@ -244,10 +257,12 @@ function solveCountLabel(count) {
     return `${count} people solved it`;
 }
 
+const CHALLENGE_SHARE_MESSAGE = 'Daily Mind Challenge: I created a Wordle just for you! Can you crack it in 6 attempts?';
+
 function wireCopyLink(btn, link) {
     btn.addEventListener('click', async () => {
         try {
-            await navigator.clipboard.writeText(link);
+            await navigator.clipboard.writeText(`${CHALLENGE_SHARE_MESSAGE}\n${link}`);
             showToast('Link copied!');
         } catch {
             showToast('Copy failed — select and copy manually');
@@ -288,7 +303,7 @@ async function renderChallengeCreate(container, profile) {
             document.getElementById('wc-share-result').innerHTML = `
                 <div class="share-box">
                     <input type="text" readonly value="${escapeHtml(link)}" id="wc-share-link-input">
-                    <button class="btn primary" id="wc-copy-link-btn" type="button">Copy Link</button>
+                    <button class="btn primary wc-copy-btn" id="wc-copy-link-btn" type="button" aria-label="Copy link" title="Copy link">${icon('CLIPBOARD')}</button>
                 </div>
             `;
             wireCopyLink(document.getElementById('wc-copy-link-btn'), link);
@@ -355,29 +370,119 @@ async function renderChallengeBrowse(container, uid) {
     await loadPage();
 }
 
-function renderMineCard(c, completions) {
-    const link = shareLinkForChallenge(c.id);
-    const completionsHtml = completions.length === 0
-        ? `<div class="wc-no-completions">No one has attempted this yet.</div>`
-        : completions.map((comp) => `
-            <div class="wc-completion-row">
-                <span>${escapeHtml(comp.displayName)}</span>
-                <span>${comp.won ? `Solved in ${comp.attempts}` : 'Did not solve'}</span>
-            </div>
-        `).join('');
+function formatChallengeDate(c) {
+    const date = c.createdAt?.toDate ? c.createdAt.toDate() : null;
+    return date ? date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+}
 
+function renderMineCardCompact(c, attemptCount) {
+    const dateLabel = formatChallengeDate(c);
     return `
-        <div class="challenge-card wc-mine-card">
-            <div class="challenge-info">
-                <div class="challenge-name">${c.challengeNumber ? `#${c.challengeNumber} &bull; ` : ''}${escapeHtml(c.word)} &bull; ${c.visibility}${isWordleChallengeExpired(c) ? ' &bull; expired' : ''}</div>
-                <div class="share-box">
-                    <input type="text" readonly value="${escapeHtml(link)}" id="wc-mine-link-${c.id}">
-                    <button class="btn" data-copy-mine="${c.id}" type="button">Copy Link</button>
+        <div class="wc-mine-item" data-mine-item="${c.id}">
+            <div class="challenge-card wc-mine-summary-card">
+                <div class="challenge-info">
+                    <div class="wc-mine-title">${c.challengeNumber ? `#${c.challengeNumber} &bull; ` : ''}${escapeHtml(c.word)}</div>
+                    <div class="wc-mine-meta-row">
+                        ${dateLabel ? `<span class="wc-mine-meta">${icon('CALENDAR')} ${dateLabel}</span>` : ''}
+                        <span class="wc-mine-meta">${icon('PEOPLE')} ${attemptCount} Attempt${attemptCount === 1 ? '' : 's'}</span>
+                        <span class="wc-mine-meta">${icon('GLOBE')} ${c.visibility === 'public' ? 'Public' : 'Private'}</span>
+                        ${isWordleChallengeExpired(c) ? '<span class="wc-mine-meta wc-expired">Expired</span>' : ''}
+                    </div>
                 </div>
-                <div class="wc-completions">${completionsHtml}</div>
+                <button class="btn wc-more-info-btn" data-more-info type="button">More Info</button>
             </div>
+            <div class="wc-mine-detail" id="wc-mine-detail-${c.id}" hidden></div>
         </div>
     `;
+}
+
+function renderDetailShell(c) {
+    const link = shareLinkForChallenge(c.id);
+    return `
+        <div class="wc-detail-header">
+            <div class="wc-mine-title">${c.challengeNumber ? `#${c.challengeNumber} &bull; ` : ''}${escapeHtml(c.word)}</div>
+            <button class="wc-detail-close" data-close-detail type="button" aria-label="Close">&times;</button>
+        </div>
+        <div class="share-box">
+            <input type="text" readonly value="${escapeHtml(link)}">
+            <button class="btn wc-copy-btn" data-copy-mine type="button" aria-label="Copy link" title="Copy link">${icon('CLIPBOARD')}</button>
+        </div>
+        <div class="wc-attempts-title">Attempts</div>
+        <div class="wc-attempts-table" id="wc-attempts-table-${c.id}"></div>
+    `;
+}
+
+function renderAttemptRow(comp, index) {
+    return `
+        <div class="wc-attempt-row">
+            <span class="wc-attempt-index">${index}</span>
+            <span class="wc-attempt-user">${escapeHtml(comp.displayName)}</span>
+            <span class="wc-attempt-count">${comp.attempts}/${MAX_GUESSES}</span>
+            <span class="wc-attempt-result ${comp.won ? 'solved' : 'failed'}">${comp.won ? 'Solved' : 'Failed'}</span>
+        </div>
+    `;
+}
+
+/**
+ * Wires one card's "More Info" toggle. The attempts list is lazy: nothing is fetched until the
+ * card is expanded for the first time (avoids fetching completions for all 40-50 cards up front
+ * just to render a compact summary), and from there it's paginated with its own "Load More"
+ * (`config/challengeAttemptsPageSize.size` at a time). Re-opening after collapsing doesn't
+ * re-fetch -- `loaded` just toggles `hidden`.
+ */
+function wireMineDetailToggle(itemEl, c, attemptsPageSize) {
+    const btn = itemEl.querySelector('[data-more-info]');
+    const detailEl = itemEl.querySelector('.wc-mine-detail');
+    let loaded = false;
+    let cursor = null;
+    let rowIndex = 0;
+
+    async function loadAttemptsPage() {
+        const tableEl = document.getElementById(`wc-attempts-table-${c.id}`);
+        const { completions, lastDoc, hasMore } = await listWordleChallengeCompletionsPage(c.id, attemptsPageSize, cursor);
+        cursor = lastDoc;
+
+        if (rowIndex === 0 && completions.length === 0) {
+            tableEl.innerHTML = `<div class="wc-no-completions">No one has attempted this yet.</div>`;
+            return;
+        }
+        if (rowIndex === 0) {
+            tableEl.insertAdjacentHTML('beforeend', `
+                <div class="wc-attempt-row wc-attempt-header">
+                    <span>#</span><span>User</span><span>Attempts</span><span>Result</span>
+                </div>
+            `);
+        }
+
+        document.getElementById(`wc-attempts-load-more-${c.id}`)?.remove();
+        completions.forEach((comp) => {
+            rowIndex += 1;
+            tableEl.insertAdjacentHTML('beforeend', renderAttemptRow(comp, rowIndex));
+        });
+
+        if (hasMore) {
+            tableEl.insertAdjacentHTML(
+                'afterend',
+                `<button class="btn wc-load-more" id="wc-attempts-load-more-${c.id}" type="button">Load More</button>`
+            );
+            document.getElementById(`wc-attempts-load-more-${c.id}`).addEventListener('click', loadAttemptsPage);
+        }
+    }
+
+    btn.addEventListener('click', async () => {
+        if (!loaded) {
+            loaded = true;
+            detailEl.innerHTML = renderDetailShell(c);
+            wireCopyLink(detailEl.querySelector('[data-copy-mine]'), shareLinkForChallenge(c.id));
+            detailEl.querySelector('[data-close-detail]').addEventListener('click', () => {
+                detailEl.hidden = true;
+            });
+            detailEl.hidden = false;
+            await loadAttemptsPage();
+            return;
+        }
+        detailEl.hidden = !detailEl.hidden;
+    });
 }
 
 /**
@@ -396,7 +501,10 @@ async function renderChallengeMine(container, uid, profile) {
     const newlyAwarded = await syncCreatorRewards(uid, profile, allMine);
     if (newlyAwarded > 0) showToast(`+${newlyAwarded} points from friends completing your challenges!`);
 
-    const { size: pageSize } = await getConfig('myChallengesPageSize');
+    const [{ size: pageSize }, { size: attemptsPageSize }] = await Promise.all([
+        getConfig('myChallengesPageSize'),
+        getConfig('challengeAttemptsPageSize'),
+    ]);
 
     container.innerHTML = `<div class="wc-mine-list" id="wc-mine-list"></div>`;
     const listEl = document.getElementById('wc-mine-list');
@@ -406,11 +514,12 @@ async function renderChallengeMine(container, uid, profile) {
         const { challenges, lastDoc, hasMore } = await listMyWordleChallengesPage(uid, pageSize, cursor);
         cursor = lastDoc;
 
-        const completionsLists = await Promise.all(challenges.map((c) => listWordleChallengeCompletions(c.id)));
+        const attemptCounts = await Promise.all(challenges.map((c) => getWordleChallengeAttemptCount(c.id)));
+
         challenges.forEach((c, i) => {
-            listEl.insertAdjacentHTML('beforeend', renderMineCard(c, completionsLists[i]));
-            const btn = listEl.querySelector(`[data-copy-mine="${c.id}"]`);
-            if (btn) wireCopyLink(btn, shareLinkForChallenge(c.id));
+            listEl.insertAdjacentHTML('beforeend', renderMineCardCompact(c, attemptCounts[i]));
+            const itemEl = listEl.querySelector(`[data-mine-item="${c.id}"]`);
+            wireMineDetailToggle(itemEl, c, attemptsPageSize);
         });
 
         document.getElementById('wc-mine-load-more')?.remove();
@@ -459,6 +568,7 @@ async function renderChallengeSolve(mount, uid, profile, challengeId) {
         container: roundMount,
         targetWord: challenge.word,
         maxGuesses: MAX_GUESSES,
+        validateGuess: isRealWord,
         onComplete: async ({ won, attempts, guessStates }) => {
             const timeTakenSeconds = Math.round((Date.now() - startTime) / 1000);
             const result = await recordWordleChallengeCompletion(challengeId, uid, profile, { won, attempts, timeTakenSeconds });

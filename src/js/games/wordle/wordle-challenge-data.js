@@ -16,6 +16,7 @@ import {
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 import { db } from '../../api/firebase-init.js';
 import { getConfig } from '../../utils/config.js';
+import { isRealWord } from './wordle-word-validation.js';
 
 const COLLECTION = 'wordleChallenges';
 
@@ -31,7 +32,9 @@ function creatorScoreDocId(creatorUid, challengeId, completerUid) {
  * "Challenge a Friend" -- built directly into wordle.html (the app's older generic Challenges
  * page/collection has since been retired in favor of this). Only registered, non-banned users can
  * create one (banned users never reach this point, they're signed out at login); guests can still
- * solve/browse. Expiry reuses config/challengeExpiration.
+ * solve/browse. Expiry reuses config/challengeExpiration. The word must also be a real dictionary
+ * word per `isRealWord()` (`wordle-word-validation.js`) -- the 5-letter/alphabetic-only check
+ * happens earlier, in wordle-page.js's create form.
  *
  * `challengeNumber` is a global, continuously-incrementing counter (not per-creator) so cards can
  * show "Oshini's Challenge #7" instead of two indistinguishable "Oshini's Challenge" cards --
@@ -42,6 +45,11 @@ function creatorScoreDocId(creatorUid, challengeId, completerUid) {
 export async function createWordleChallenge(profile, word, visibility = 'public') {
     if (profile.kind !== 'registered') {
         throw new Error('Only registered accounts can create challenges. Sign up to create one!');
+    }
+
+    const cleanWord = word.trim().toUpperCase();
+    if (!(await isRealWord(cleanWord))) {
+        throw new Error(`"${cleanWord}" doesn't look like a real word. Try another one!`);
     }
 
     const { days: expiryDays } = await getConfig('challengeExpiration');
@@ -57,7 +65,7 @@ export async function createWordleChallenge(profile, word, visibility = 'public'
         tx.set(challengeRef, {
             creatorUid: profile.uid,
             creatorDisplayName: profile.displayName,
-            word: word.trim().toUpperCase(),
+            word: cleanWord,
             visibility,
             challengeNumber: nextNumber,
             createdAt: serverTimestamp(),
@@ -135,9 +143,23 @@ export async function getWordleChallengeCompletion(challengeId, uid) {
     return snap.exists() ? snap.data() : null;
 }
 
-export async function listWordleChallengeCompletions(challengeId) {
-    const snap = await getDocs(collection(db, COLLECTION, challengeId, 'completions'));
-    return snap.docs.map((d) => d.data());
+/**
+ * One page of a challenge's attempts, newest first, for the "More Info" detail view in My
+ * Challenges (lazy-loaded only once that card is expanded, and paginated from there via Load
+ * More). Pass the previous call's `lastDoc` as `cursor` to fetch the next page. Ordering by
+ * `completedAt` alone (no `where`) only needs Firestore's automatic single-field index.
+ */
+export async function listWordleChallengeCompletionsPage(challengeId, pageSize, cursor = null) {
+    const constraints = [collection(db, COLLECTION, challengeId, 'completions'), orderBy('completedAt', 'desc')];
+    const q = cursor
+        ? query(...constraints, startAfter(cursor), limit(pageSize))
+        : query(...constraints, limit(pageSize));
+    const snap = await getDocs(q);
+    return {
+        completions: snap.docs.map((d) => d.data()),
+        lastDoc: snap.docs[snap.docs.length - 1] || null,
+        hasMore: snap.docs.length === pageSize,
+    };
 }
 
 /** Count of distinct players who *solved* (not just attempted) a challenge, for Browse cards.
@@ -146,6 +168,13 @@ export async function listWordleChallengeCompletions(challengeId) {
 export async function getWordleChallengeSolveCount(challengeId) {
     const q = query(collection(db, COLLECTION, challengeId, 'completions'), where('won', '==', true));
     const snap = await getCountFromServer(q);
+    return snap.data().count;
+}
+
+/** Total attempt count (won or not), for the "N Attempts" summary on My Challenges' compact
+ * cards -- distinct from getWordleChallengeSolveCount() above, which only counts wins. */
+export async function getWordleChallengeAttemptCount(challengeId) {
+    const snap = await getCountFromServer(collection(db, COLLECTION, challengeId, 'completions'));
     return snap.data().count;
 }
 
@@ -196,17 +225,19 @@ export async function recordWordleChallengeCompletion(challengeId, uid, profile,
  * from the CREATOR's own signed-in session (Firestore rules require the gameScores doc's userId
  * to equal request.auth.uid), which is exactly when this is called -- from "My Challenges", the
  * creator's own view. Guarded by the same create-once gameScores pattern as everywhere else in
- * this app, so it's safe to call every time that view opens. Returns points newly awarded.
+ * this app, so it's safe to call every time that view opens. Every completion's existence-check
+ * + maybe-write runs in parallel (not one at a time) -- with many solvers across many challenges
+ * this used to add up to a slow, fully sequential wait before the view finished loading. Returns
+ * points newly awarded.
  */
 async function awardCreatorPointsForChallenge(creatorUid, creatorProfile, challenge) {
     const completionsSnap = await getDocs(collection(db, COLLECTION, challenge.id, 'completions'));
-    let newlyAwarded = 0;
 
-    for (const completionDoc of completionsSnap.docs) {
+    const awards = await Promise.all(completionsSnap.docs.map(async (completionDoc) => {
         const completerUid = completionDoc.id;
         const scoreRef = doc(db, 'gameScores', creatorScoreDocId(creatorUid, challenge.id, completerUid));
         const existing = await getDoc(scoreRef);
-        if (existing.exists()) continue;
+        if (existing.exists()) return 0;
 
         try {
             await setDoc(scoreRef, {
@@ -220,20 +251,19 @@ async function awardCreatorPointsForChallenge(creatorUid, creatorProfile, challe
                 completerUid,
                 createdAt: serverTimestamp(),
             });
-            newlyAwarded += 10;
+            return 10;
         } catch (err) {
             console.error('awardCreatorPointsForChallenge: gameScores write failed', err);
+            return 0;
         }
-    }
-    return newlyAwarded;
+    }));
+
+    return awards.reduce((sum, n) => sum + n, 0);
 }
 
-/** Runs awardCreatorPointsForChallenge() across every challenge the creator owns. Returns total
- * points newly awarded, so the caller can toast it. */
+/** Runs awardCreatorPointsForChallenge() across every challenge the creator owns, in parallel
+ * (not one challenge at a time). Returns total points newly awarded, so the caller can toast it. */
 export async function syncCreatorRewards(uid, profile, myChallenges) {
-    let total = 0;
-    for (const challenge of myChallenges) {
-        total += await awardCreatorPointsForChallenge(uid, profile, challenge);
-    }
-    return total;
+    const awards = await Promise.all(myChallenges.map((challenge) => awardCreatorPointsForChallenge(uid, profile, challenge)));
+    return awards.reduce((sum, n) => sum + n, 0);
 }

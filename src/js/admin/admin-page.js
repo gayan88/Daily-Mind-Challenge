@@ -35,6 +35,11 @@ const CONFIG_FORMS = [
         fields: [{ key: 'size', type: 'number', label: 'Rows per page (Load More)' }],
     },
     {
+        id: 'challengeAttemptsPageSize',
+        title: 'Challenge Attempts Page Size',
+        fields: [{ key: 'size', type: 'number', label: 'Attempts per page (Load More)' }],
+    },
+    {
         id: 'wordValidationAPI',
         title: 'Word Validation API',
         fields: [{ key: 'endpoint', type: 'text', label: 'Endpoint URL' }],

@@ -10,6 +10,12 @@ export const ICONS = {
     STAR: '⭐',           // ⭐
     FLAME: '\u{1F525}',       // 🔥 streak
     LOCK: '\u{1F512}',        // 🔒
+    CALENDAR: '\u{1F4C5}',    // 📅
+    PEOPLE: '\u{1F465}',      // 👥
+    GLOBE: '\u{1F310}',       // 🌐
+    CLIPBOARD: '\u{1F4CB}',   // 📋
+    WORDS: '\u{1F524}',       // 🔤
+    STOPWATCH: '\u{23F1}\u{FE0F}', // ⏱️
 };
 
 export function icon(name) {
