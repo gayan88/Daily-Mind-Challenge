@@ -1,6 +1,6 @@
 # src/html
 
-Nine real, separate HTML pages — no client-side routing, no templating. Each page follows the same skeleton:
+Eight real, separate HTML pages — no client-side routing, no templating. Each page follows the same skeleton:
 
 ```html
 <link rel="stylesheet" href="../css/base.css">
@@ -29,7 +29,6 @@ The home page and the three game pages each have `<div class="ad-space" data-ad-
 | `sudoku.html` | `../js/games/sudoku/sudoku-page.js` |
 | `wordsearch.html` | `../js/games/wordsearch/wordsearch-page.js` |
 | `leaderboard.html` | `../js/leaderboard/leaderboard-page.js` |
-| `challenges.html` | `../js/pages/challenges.js` |
 | `profile.html` | `../js/pages/profile.js` |
 | `settings.html` | `../js/pages/settings.js` (registered users only) |
 | `admin.html` | `../js/admin/admin-page.js` (admins only) |

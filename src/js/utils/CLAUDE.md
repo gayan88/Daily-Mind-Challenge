@@ -13,4 +13,4 @@ Cross-cutting modules used by more than one feature area (games, pages, auth, ad
 
 ## Note
 
-`config.js` is genuinely shared (points.js, challenges-data.js, profanity.js, admin-page.js, home.js, and `src/js/app.js` all depend on it) — resist the temptation to move it into `src/js/admin/` just because the admin page is where it gets *edited*.
+`config.js` is genuinely shared (points.js, `wordle-challenge-data.js`, profanity.js, admin-page.js, home.js, and `src/js/app.js` all depend on it) — resist the temptation to move it into `src/js/admin/` just because the admin page is where it gets *edited*.

@@ -26,11 +26,10 @@ function creatorScoreDocId(creatorUid, challengeId, completerUid) {
 }
 
 /**
- * "Challenge a Friend" -- a Wordle-specific parallel to the generic challenges.html feature
- * (kept separate per the revamp plan, rather than reusing that page). Only registered,
- * non-banned users can create one (banned users never reach this point, they're signed out at
- * login); guests can still solve/browse. Expiry reuses config/challengeExpiration, same as the
- * generic challenges feature.
+ * "Challenge a Friend" -- built directly into wordle.html (the app's older generic Challenges
+ * page/collection has since been retired in favor of this). Only registered, non-banned users can
+ * create one (banned users never reach this point, they're signed out at login); guests can still
+ * solve/browse. Expiry reuses config/challengeExpiration.
  */
 export async function createWordleChallenge(profile, word, visibility = 'public') {
     if (profile.kind !== 'registered') {

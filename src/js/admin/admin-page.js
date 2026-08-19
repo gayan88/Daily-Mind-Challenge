@@ -1,7 +1,7 @@
 import { initShell } from '../app.js';
 import { ensureConfigDefaults, updateConfig } from '../utils/config.js';
 import { AD_SLOTS, DEFAULT_ADS_CONFIG } from '../utils/ads.js';
-import { lookupUserByUsername, setUserBanned, setUserAdmin, deleteChallenge } from './moderation.js';
+import { lookupUserByUsername, setUserBanned, setUserAdmin } from './moderation.js';
 import {
     listDailyWords, addDailyWord, updateDailyWord,
     listTournaments, createTournament, setTournamentActive, deleteTournament,
@@ -18,11 +18,6 @@ const CONFIG_FORMS = [
         id: 'challengeExpiration',
         title: 'Challenge Expiration',
         fields: [{ key: 'days', type: 'number', label: 'Days' }],
-    },
-    {
-        id: 'maxChallengeCreationsPerDay',
-        title: 'Max Challenges Per Day',
-        fields: [{ key: 'limit', type: 'number', label: 'Limit (blank = unlimited)', nullable: true }],
     },
     {
         id: 'wordValidationAPI',
@@ -375,15 +370,6 @@ function wireModeration() {
         if (!username) return;
         const user = await lookupUserByUsername(username);
         renderModResult(user);
-    });
-
-    document.getElementById('delete-challenge-btn').addEventListener('click', async () => {
-        const id = document.getElementById('delete-challenge-input').value.trim();
-        if (!id) return;
-        if (!window.confirm('Delete this challenge? This cannot be undone.')) return;
-        await deleteChallenge(id);
-        showToast('Challenge deleted');
-        document.getElementById('delete-challenge-input').value = '';
     });
 }
 

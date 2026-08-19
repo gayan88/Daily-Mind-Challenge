@@ -4,7 +4,7 @@ Two plain HTML fragments (not full documents — no `<html>`/`<head>`/`<body>`),
 
 ## Files
 
-- **`header.html`** — logo, nav links (Home/Leaderboard/Challenges/Profile, plus a hidden-by-default Admin link shown only for admins), and **two** user-menu variants (`#user-menu-loggedin` and `#user-menu-loggedout`, both `hidden` by default) that `app.js`/`home.js` toggle based on session state — logged in shows the display name badge + Settings + Logout, logged out shows a single Login button.
+- **`header.html`** — logo, nav links (Home/Leaderboard/Profile, plus a hidden-by-default Admin link shown only for admins), and **two** user-menu variants (`#user-menu-loggedin` and `#user-menu-loggedout`, both `hidden` by default) that `app.js`/`home.js` toggle based on session state — logged in shows the display name badge + Settings + Logout, logged out shows a single Login button.
 - **`footer.html`** — footer nav links + the "Share on Facebook" link (wired up in `app.js` to open `sharer.php` in a popup).
 
 ## Why two user-menu variants instead of one that gets rewritten

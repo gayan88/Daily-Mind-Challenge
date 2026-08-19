@@ -1,7 +1,6 @@
 import { loadHeaderFooter, trySession } from '../app.js';
 import { applyIcons } from '../utils/icons.js';
 import { getOverallLeaderboard, findUserInLeaderboard } from '../leaderboard/leaderboard-data.js';
-import { listOpenChallenges } from './challenges-data.js';
 import { checkPlayedTodayAll } from '../utils/points.js';
 import { getConfig } from '../utils/config.js';
 import { escapeHtml, formatLeaderboardName, getQueryParam, getTodayDateString } from '../utils/helpers.js';
@@ -20,12 +19,6 @@ import {
     BannedError,
 } from '../auth/user-profile.js';
 import { containsBlockedWord } from '../utils/profanity.js';
-
-const GAME_LABELS = {
-    wordle: 'Wordle',
-    sudoku: 'Sudoku',
-    wordsearch: 'Word Search',
-};
 
 /* ---------- Sign-in modal ---------- */
 
@@ -212,30 +205,6 @@ function markTileCompleted(game, played) {
     tile.title = 'Completed today';
 }
 
-function renderChallengesPreview(challenges, uid) {
-    const el = document.getElementById('challenges-preview');
-    if (challenges.length === 0) {
-        el.innerHTML = `<div class="empty-state">No open challenges yet. Create one to share with friends!</div>`;
-        return;
-    }
-
-    el.innerHTML = challenges
-        .slice(0, 3)
-        .map((c) => {
-            const isMine = c.creatorUid === uid;
-            return `
-                <div class="challenge-card">
-                    <div class="challenge-info">
-                        <div class="challenge-name">${escapeHtml(c.creatorDisplayName)}'s Challenge</div>
-                        <div class="challenge-meta">Word: ${'•'.repeat(c.word.length)} | ${GAME_LABELS[c.game] || c.game}</div>
-                    </div>
-                    <a href="challenges.html?id=${encodeURIComponent(c.id)}" class="challenge-btn">${isMine ? 'View' : 'Solve'}</a>
-                </div>
-            `;
-        })
-        .join('');
-}
-
 function renderLeaderboardPreview(rows, uid) {
     const el = document.getElementById('leaderboard-preview');
     if (rows.length === 0) {
@@ -258,11 +227,7 @@ function renderLeaderboardPreview(rows, uid) {
 async function renderLoggedOutDashboard() {
     renderStatusCardLoggedOut();
 
-    const [leaderboardRows, openChallenges] = await Promise.all([
-        getOverallLeaderboard('today', 20),
-        listOpenChallenges(10),
-    ]);
-    renderChallengesPreview(openChallenges, null);
+    const leaderboardRows = await getOverallLeaderboard('today', 20);
     renderLeaderboardPreview(leaderboardRows, null);
 }
 
@@ -272,9 +237,8 @@ async function renderLoggedInDashboard(uid, profile, bonusApplied) {
     // player's own "today's points" -- otherwise the login toast promises points that never show up.
     const needsBonusConfig = profile.kind === 'registered' && profile.lastLoginDate === getTodayDateString();
 
-    const [leaderboardRows, openChallenges, playedToday, dailyRewardConfig] = await Promise.all([
+    const [leaderboardRows, playedToday, dailyRewardConfig] = await Promise.all([
         getOverallLeaderboard('today', 20),
-        listOpenChallenges(10),
         checkPlayedTodayAll(uid),
         needsBonusConfig ? getConfig('dailyLoginReward') : Promise.resolve(null),
     ]);
@@ -288,7 +252,6 @@ async function renderLoggedInDashboard(uid, profile, bonusApplied) {
     markTileCompleted('sudoku', !!playedToday.sudoku);
     markTileCompleted('wordsearch', !!playedToday.wordsearch);
 
-    renderChallengesPreview(openChallenges, uid);
     renderLeaderboardPreview(leaderboardRows, uid);
 }
 

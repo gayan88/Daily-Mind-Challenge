@@ -25,14 +25,6 @@
             ]
         },
         {
-            "collectionGroup": "challenges",
-            "queryScope": "COLLECTION",
-            "fields": [
-                { "fieldPath": "creatorUid", "order": "ASCENDING" },
-                { "fieldPath": "createdAt", "order": "ASCENDING" }
-            ]
-        },
-        {
             "collectionGroup": "wordleChallenges",
             "queryScope": "COLLECTION",
             "fields": [

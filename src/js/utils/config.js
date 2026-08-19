@@ -17,10 +17,6 @@ export const CONFIG_DEFAULTS = {
         days: 3,
         description: 'Challenge expires after N days',
     },
-    maxChallengeCreationsPerDay: {
-        limit: null,
-        description: 'Max challenges user can create per day (null = no limit)',
-    },
     wordValidationAPI: {
         endpoint: 'https://api.dictionaryapi.dev/api/v1/entries/en/',
         description: 'Free Dictionary API endpoint for word validation',

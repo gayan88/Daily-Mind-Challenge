@@ -42,9 +42,8 @@ function formatClock(totalSeconds) {
  * `timeLimitSeconds` is optional (tournament mode) -- when set, a visible countdown is shown and
  * running out of time ends the round as a loss (`timedOut: true`) even with guesses remaining.
  *
- * Reused by wordle.html (daily challenge, tournaments) and challenges.html (a shared challenge's
- * target word) -- callers that only destructure `{ won, attempts }` are unaffected by the extra
- * fields.
+ * Shared by all of wordle.html's modes (Daily Challenge, Tournaments, Challenge a Friend) --
+ * callers that only destructure `{ won, attempts }` are unaffected by the extra fields.
  */
 export function playWordleRound({ container, targetWord, maxGuesses = 6, timeLimitSeconds = null, onComplete }) {
     const target = targetWord.toUpperCase();

@@ -2,7 +2,6 @@ import {
     doc,
     getDoc,
     updateDoc,
-    deleteDoc,
     serverTimestamp,
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 import { db } from '../api/firebase-init.js';
@@ -31,8 +30,4 @@ export async function setUserBanned(uid, isBanned, reason = '') {
 
 export async function setUserAdmin(uid, isAdmin) {
     await updateDoc(doc(db, 'registeredUsers', uid), { isAdmin, updatedAt: serverTimestamp() });
-}
-
-export async function deleteChallenge(challengeId) {
-    await deleteDoc(doc(db, 'challenges', challengeId));
 }

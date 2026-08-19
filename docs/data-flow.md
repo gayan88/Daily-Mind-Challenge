@@ -29,9 +29,9 @@
 
 `gameScoreToday` (from the leaderboard aggregate) + `config/dailyLoginReward.points` if `profile.lastLoginDate === today`. This is why the login-bonus toast's promised points actually show up here even though they're absent from the competitive leaderboard.
 
-## Challenges
+## Challenge a Friend (Wordle only)
 
-`createChallenge()` (registered, non-banned users only) → `challenges/{id}` doc with an expiry read from `config/challengeExpiration.days` and a per-day creation limit from `config/maxChallengeCreationsPerDay.limit`. Solving reuses the Wordle engine pointed at the challenge's word; one attempt is recorded per solver in a `challenges/{id}/completions/{uid}` subcollection doc.
+`createWordleChallenge()` (registered, non-banned users only) → `wordleChallenges/{id}` doc with an expiry read from `config/challengeExpiration.days`. Solving reuses the Wordle engine pointed at the challenge's word; one attempt is recorded per solver in a `wordleChallenges/{id}/completions/{uid}` subcollection doc. See `src/js/games/wordle/CLAUDE.md` for the full points flow (player's own score plus the creator's separately-synced reward).
 
 ## Config
 

@@ -11,7 +11,7 @@ Plain ES modules, loaded via `<script type="module">` directly in each HTML page
 | `games/wordle/`, `games/sudoku/`, `games/wordsearch/` | Each game's engine, page glue, and daily-content data, colocated |
 | `leaderboard/` | Daily leaderboard queries + the leaderboard page |
 | `admin/` | Moderation actions + the admin page |
-| `pages/` | Page glue for home, profile, settings, challenges (features without a dedicated folder) |
+| `pages/` | Page glue for home, profile, settings (features without a dedicated folder) |
 | `utils/` | Cross-cutting helpers used by more than one feature area |
 | `app.js` | Top-level app shell (see below) |
 
