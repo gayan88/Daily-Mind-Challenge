@@ -10,7 +10,7 @@ function blockGuestAccess() {
     document.getElementById('settings-content').innerHTML = `
         <div class="section">
             <div class="empty-state">
-                Guest accounts don't have a settings page. <a href="index.html">Back to home</a> --
+                Guest accounts don't have a settings page. <a href="/">Back to home</a> --
                 or sign up for an account from the login page to unlock settings.
             </div>
         </div>

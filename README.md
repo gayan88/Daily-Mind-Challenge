@@ -8,9 +8,9 @@ Source lives under `src/` — see `src/README.md` for the folder layout, and `do
 
 ## Running locally
 
-Static pages use `fetch()` for shared header/footer partials, and the Firebase SDK loads as an ES module — both require an actual HTTP server, not opening the files directly (`file://`).
+Static pages use `fetch()` for shared header/footer partials, and the Firebase SDK loads as an ES module — both require an actual HTTP server, not opening the files directly (`file://`). Paths throughout `src/` are root-relative (`/css/...`, `/js/...`), which assumes the server's root is `src/` itself, not the project root.
 
-From the **project root**, run either:
+From **`src/`**, run either:
 
 ```
 npx serve .
@@ -22,7 +22,9 @@ or
 python3 -m http.server 8000
 ```
 
-Then open `http://localhost:8000/src/html/index.html` (adjust the port if `npx serve` picked a different one).
+Then open `http://localhost:8000/html/index.html` (adjust the port if `npx serve` picked a different one).
+
+That gets working CSS/JS/partials, but not the clean production URLs (`/wordle` instead of `/html/wordle.html`) — those come from `firebase.json`'s `hosting.rewrites`, which plain `http.server`/`serve` don't know about. To test those exactly as they'll behave live, run the Firebase CLI's local hosting emulator instead, from the **project root**: `firebase emulators:start --only hosting`.
 
 ## Firebase setup (one-time, manual)
 
@@ -48,7 +50,7 @@ No code path can safely auto-grant admin access. To get your first admin:
 Three ways in:
 
 - **Guest** — display name only, no automatic sign-in (you must explicitly choose "Continue as Guest" from the sign-in modal, opened from the header's Login button or automatically when a page needs a session). Can play games and appear on the leaderboard, but can't earn daily login points, create Wordle challenges, or change their name, and has no settings page.
-- There is no separate login page — `index.html` doubles as the dashboard **and** the sign-in surface, showing the Guest/Log In/Sign Up options in a modal whenever there's no active session. Every other page redirects to `index.html?redirect=<page>` if it loads with no session; after signing in there, you're sent on to that original page.
+- There is no separate login page — the home page (`/`) doubles as the dashboard **and** the sign-in surface, showing the Guest/Log In/Sign Up options in a modal whenever there's no active session. Every other page redirects to `/?redirect=<page>` if it loads with no session; after signing in there, you're sent on to that original page.
 - **Log In / Sign Up** — username + password. Under the hood this uses Firebase Auth's email/password provider: your username maps to a synthetic login email (`username@dmc.local`) unless you supply a real email at signup, in which case that becomes the account's actual Auth email so Firebase's built-in password-reset email works. **There is no `passwordHash` field anywhere in Firestore** — Firebase Auth owns password storage/verification entirely (storing/comparing password hashes client-side isn't securely possible with no backend server — see `src/js/auth/CLAUDE.md`).
 - **Admin** — a flag on a registered account (`registeredUsers/{uid}.isAdmin`), not a separate login type. Admins can access `admin.html` but cannot play games (scores aren't tracked for admin accounts) and are excluded from leaderboards.
 
@@ -78,8 +80,7 @@ Full data-flow write-up: `docs/data-flow.md`.
 - "Share on Facebook" links to the plain `sharer.php` share dialog, no App ID/rich cards.
 - Challenge a Friend is a shareable link, not a real friends graph.
 - Points are protected by Firestore security rules capping per-write deltas, not full server-authoritative scoring (no Cloud Functions in v1).
-- `config/wordValidationAPI` exists in the schema but isn't wired to any feature yet — custom-word validation against a dictionary API is a future feature.
 - No Analytics collection, no pre-computed/cached leaderboards — leaderboards aggregate `gameScores` client-side on each load.
 - Password reset only works for accounts that supplied a real email at signup (relies on Firebase Auth's built-in reset email, which needs a real address to send to).
 - Changing your password requires a recent login (a Firebase Auth security requirement) — if it fails, log out and back in first.
-- Not yet deployed anywhere (runs locally only) — see `docs/deployment.md` for what's needed to put it on Firebase Hosting.
+- Deployed on Firebase Hosting — see `docs/deployment.md` for the URL scheme and how `firebase.json`'s rewrites map clean URLs to the physical pages.

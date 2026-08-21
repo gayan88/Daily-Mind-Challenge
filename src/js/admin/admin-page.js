@@ -62,7 +62,7 @@ function wireCollapsibleSections() {
 function blockNonAdminAccess() {
     document.getElementById('admin-content').innerHTML = `
         <div class="section">
-            <div class="empty-state">You don't have access to this page. <a href="index.html">Back to home</a></div>
+            <div class="empty-state">You don't have access to this page. <a href="/">Back to home</a></div>
         </div>
     `;
 }

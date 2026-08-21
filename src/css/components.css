@@ -84,11 +84,18 @@
 
 @media (max-width: 640px) {
     .header {
+        flex-wrap: wrap;
+        row-gap: 10px;
         padding: 12px 16px;
     }
 
     .logo {
-        font-size: 18px;
+        font-size: 16px;
+    }
+
+    .logo-icon {
+        width: 26px;
+        height: 26px;
     }
 
     .header-nav {
@@ -96,7 +103,17 @@
     }
 
     .user-menu {
+        /* Full width so it drops to its own row below the logo instead of squeezing onto the
+           same line -- that squeeze was forcing the 3-word logo to wrap across 3 lines. */
+        width: 100%;
+        justify-content: center;
         gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .user-badge {
+        font-size: 12px;
+        padding: 5px 10px;
     }
 
     .menu-btn {

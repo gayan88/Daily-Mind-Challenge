@@ -1,26 +1,46 @@
 # Deployment
 
-This project isn't deployed yet — it currently runs via a local static server (`python3 -m http.server`, see root `README.md`). This doc covers what's needed to actually host it.
+Deployed on Firebase Hosting, project `daily-mind-challenge` (see `.firebaserc`), currently reachable at `daily-mind-challenge.web.app` pending the custom domain (`dailymindchallenge.com`) being connected in the Firebase console.
 
 ## Firebase project setup (one-time, manual)
 
 Covered in full in the root `README.md` — summary: create a Firebase project, enable the **Anonymous** and **Email/Password** Auth providers, create a Firestore database, register a web app and paste its config into `src/js/api/firebase-config.js`, then publish `firebase/firestore.rules` and the indexes in `firebase/firestore.indexes.json` via the Firestore console.
 
-## Deploying static assets (Firebase Hosting)
+## Hosting config (`firebase.json`)
 
-Not set up yet — no `firebase.json`, no Firebase CLI project init has been done. To add it:
-
-```bash
-npm install -g firebase-tools   # one-time, global
-firebase login
-firebase init hosting           # in the project root
+```json
+{
+  "hosting": {
+    "public": "src",
+    "cleanUrls": true,
+    "rewrites": [
+      { "source": "/", "destination": "/html/index.html" },
+      { "source": "/leaderboard", "destination": "/html/leaderboard.html" },
+      { "source": "/profile", "destination": "/html/profile.html" },
+      { "source": "/settings", "destination": "/html/settings.html" },
+      { "source": "/admin", "destination": "/html/admin.html" },
+      { "source": "/wordle", "destination": "/html/wordle.html" },
+      { "source": "/sudoku", "destination": "/html/sudoku.html" },
+      { "source": "/wordsearch", "destination": "/html/wordsearch.html" }
+    ]
+  }
+}
 ```
 
-When prompted:
-- **Public directory**: `src/html` would serve pages at the root URL (`/index.html` etc.), but `src/css`/`src/js`/`src/partials` need to be reachable too — since Firebase Hosting serves from a single public directory, the practical choice is pointing it at `src/` itself (so URLs become `/html/index.html`, `/css/base.css`, etc.) or restructuring with a small deploy-time copy step that flattens `src/html/*` up to the hosting root while keeping `css/`/`js/`/`partials/` as siblings. Decide this before the first deploy — changing it later means every internal link/path in `src/html/*.html` changes again.
-- **Single-page app rewrite**: No — this is real multi-page navigation, not a client-side router.
+- **`public: "src"`** — the file structure under `src/` (`html/`, `css/`, `js/`, `partials/`, `assets/`) stays exactly as documented in `src/html/CLAUDE.md` and friends; hosting config is a presentation layer on top, not a physical reorganization.
+- **`rewrites`** — map each clean production URL to its real `.html` file. This is a deliberate choice over a single-page-app catch-all (`"source": "**" → "/index.html"`, which is `firebase init hosting`'s default suggestion) — this app is real multi-page navigation, not a client-side router, so every route needs its own explicit destination. **Adding a ninth page means adding a rewrite entry here** — see `src/html/CLAUDE.md`'s Pages table for the current full list, which must stay in sync with this file.
+- **`cleanUrls: true`** — auto-strips `.html` if a raw filename URL is ever hit directly.
+- Every path referenced from inside `src/` (asset `<link>`/`<script>` tags, nav `<a href>`s, `fetch()` calls for partials) is **root-relative** (`/css/...`, not `../css/...`) — this only resolves correctly because the site is served from a domain root. See `src/html/CLAUDE.md` for the one exception (JS `import` statements, which resolve against the importing script's own location and were never affected).
 
-Then: `firebase deploy --only hosting`.
+## Deploying
+
+```bash
+firebase deploy --only hosting
+```
+
+## Custom domain
+
+Firebase console → your project → **Build → Hosting → Add custom domain** → follow the DNS verification flow (a TXT record to prove ownership, then A/AAAA or CNAME records pointing at Firebase). Not yet connected as of this writing — the live site is still the default `.web.app` subdomain.
 
 ## Important: Hosting does not fix Firestore latency
 
@@ -28,10 +48,14 @@ Firebase Hosting serves your **static files** (HTML/CSS/JS) from a global CDN �
 
 ## Deploying rules/indexes changes
 
-Whenever `firebase/firestore.rules` or `firebase/firestore.indexes.json` change, they need to be re-published — either by pasting into the Firestore console's Rules/Indexes tabs manually (the approach used so far in this project), or, once `firebase init` has been run, via:
+Whenever `firebase/firestore.rules` or `firebase/firestore.indexes.json` change, they need to be re-published — either by pasting into the Firestore console's Rules/Indexes tabs manually (the approach used so far in this project), or via:
 
 ```bash
 firebase deploy --only firestore:rules,firestore:indexes
 ```
 
 Indexes take a minute or two to finish "Building" after deploy before queries against them succeed.
+
+## Local dev vs. production parity
+
+`python3 -m http.server`/`npx serve`, run from `src/`, correctly serves the root-relative asset paths but knows nothing about `firebase.json`'s `rewrites` — clean URLs like `/wordle` will 404 under a plain static server, only the raw `/html/wordle.html` works. To test the clean URLs exactly as they behave in production, use the Firebase CLI's own local hosting emulator instead, from the **project root**: `firebase emulators:start --only hosting`.

@@ -62,7 +62,7 @@ function wireAuthForms() {
     }
 
     function goToApp() {
-        window.location.href = pendingRedirect || getQueryParam('redirect') || 'index.html';
+        window.location.href = pendingRedirect || getQueryParam('redirect') || '/';
     }
 
     const tabs = {

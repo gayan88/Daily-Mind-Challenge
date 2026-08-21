@@ -321,7 +321,7 @@ function renderBrowseCard(c, solveCount) {
                 <div class="challenge-name">${escapeHtml(challengeTitle(c))}</div>
                 <div class="challenge-meta">${solveCountLabel(solveCount)}</div>
             </div>
-            <a href="wordle.html?challenge=${encodeURIComponent(c.id)}" class="challenge-btn">Solve</a>
+            <a href="/wordle?challenge=${encodeURIComponent(c.id)}" class="challenge-btn">Solve</a>
         </div>
     `;
 }

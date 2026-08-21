@@ -13,14 +13,14 @@ async function injectPartial(placeholderId, path) {
 }
 
 function currentPageWithQuery() {
-    return window.location.pathname.replace(/^\//, '') + window.location.search;
+    return window.location.pathname + window.location.search;
 }
 
 function redirectToSignIn() {
     const here = currentPageWithQuery();
-    window.location.href = here === 'index.html'
-        ? 'index.html'
-        : `index.html?redirect=${encodeURIComponent(here)}`;
+    window.location.href = here === '/'
+        ? '/'
+        : `/?redirect=${encodeURIComponent(here)}`;
 }
 
 function wireLogout(profile) {
@@ -32,7 +32,7 @@ function wireLogout(profile) {
             : 'Log out of your account?';
         if (!window.confirm(message)) return;
         await signOutSession();
-        window.location.href = 'index.html';
+        window.location.href = '/';
     });
 }
 
@@ -63,8 +63,8 @@ function updateHeader(profile) {
  * Safe to call whether or not a session exists yet. */
 export async function loadHeaderFooter() {
     await Promise.all([
-        injectPartial('site-header', '../partials/header.html'),
-        injectPartial('site-footer', '../partials/footer.html'),
+        injectPartial('site-header', '/partials/header.html'),
+        injectPartial('site-footer', '/partials/footer.html'),
         applyAdSlots(document),
     ]);
     applyIcons(document);
@@ -107,8 +107,8 @@ async function resolveSession(user) {
 }
 
 /**
- * For every page EXCEPT index.html: loads the header/footer, then requires a session -- redirects
- * to index.html (which shows the guest/login/sign-up options inline, see js/pages/home.js) if
+ * For every page EXCEPT the home page (`/`): loads the header/footer, then requires a session --
+ * redirects to `/` (which shows the guest/login/sign-up options inline, see js/pages/home.js) if
  * there isn't one. Returns { uid, profile, bonusApplied }.
  */
 export async function initShell() {
@@ -130,9 +130,9 @@ export async function initShell() {
 }
 
 /**
- * For index.html only: loads the header/footer, then resolves a session WITHOUT redirecting.
- * Returns { uid, profile, bonusApplied }, or null if there's no valid session -- the caller is
- * expected to show the guest/login/sign-up UI inline in that case.
+ * For the home page (`/`) only: loads the header/footer, then resolves a session WITHOUT
+ * redirecting. Returns { uid, profile, bonusApplied }, or null if there's no valid session --
+ * the caller is expected to show the guest/login/sign-up UI inline in that case.
  */
 export async function trySession() {
     await loadHeaderFooter();

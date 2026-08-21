@@ -1,16 +1,21 @@
 {
   "hosting": {
-    "public": ".",
+    "public": "src",
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
     ],
+    "cleanUrls": true,
     "rewrites": [
-      {
-        "source": "**",
-        "destination": "/index.html"
-      }
+      { "source": "/", "destination": "/html/index.html" },
+      { "source": "/leaderboard", "destination": "/html/leaderboard.html" },
+      { "source": "/profile", "destination": "/html/profile.html" },
+      { "source": "/settings", "destination": "/html/settings.html" },
+      { "source": "/admin", "destination": "/html/admin.html" },
+      { "source": "/wordle", "destination": "/html/wordle.html" },
+      { "source": "/sudoku", "destination": "/html/sudoku.html" },
+      { "source": "/wordsearch", "destination": "/html/wordsearch.html" }
     ]
   }
 }
