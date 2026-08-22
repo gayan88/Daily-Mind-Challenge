@@ -16,6 +16,7 @@ export const ICONS = {
     CLIPBOARD: '\u{1F4CB}',   // 📋
     WORDS: '\u{1F524}',       // 🔤
     STOPWATCH: '\u{23F1}\u{FE0F}', // ⏱️
+    WARNING: '\u{26A0}\u{FE0F}',   // ⚠️
 };
 
 export function icon(name) {

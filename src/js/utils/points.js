@@ -111,6 +111,27 @@ export async function getUserLifetimeStats(uid) {
     return { totalScore, gamesPlayedCount: snap.size };
 }
 
+/**
+ * Guarded, one-time +20 for sharing a game result to Facebook -- generic across any gameType
+ * covered by firestore.rules' isFacebookShareUpdate() (currently wordle/sudoku/sudoku-classic).
+ * A client-verifiable-only signal (no proof a share actually happened), same "v1-pragmatic, not
+ * fully cheat-proof" philosophy as the rest of this app's points. `gameDate` must match whatever
+ * value the target gameScores doc's ID was built from (a calendar date for daily-style docs, or
+ * a repurposed unique key for non-daily ones like sudoku-classic). Returns { applied, newScore }.
+ */
+export async function markSharedToFacebook(uid, gameType, gameDate) {
+    const ref = doc(db, 'gameScores', gameScoreDocId(uid, gameType, gameDate));
+    return runTransaction(db, async (tx) => {
+        const snap = await tx.get(ref);
+        if (!snap.exists() || snap.data().sharedToFacebook) {
+            return { applied: false, newScore: snap.exists() ? snap.data().score : 0 };
+        }
+        const newScore = snap.data().score + 20;
+        tx.update(ref, { score: newScore, sharedToFacebook: true, updatedAt: serverTimestamp() });
+        return { applied: true, newScore };
+    });
+}
+
 export async function getUserGameHistory(uid, limitCount = 20) {
     const q = query(
         collection(db, 'gameScores'),

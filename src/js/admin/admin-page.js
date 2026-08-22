@@ -6,6 +6,11 @@ import {
     listDailyWords, addDailyWord, updateDailyWord,
     listTournaments, createTournament, setTournamentActive, deleteTournament,
 } from './wordle-admin.js';
+import {
+    listDailySudokuPuzzles, addDailySudokuPuzzle, updateDailySudokuPuzzle,
+    listClassicSudokuPuzzles, addClassicSudokuPuzzle, updateClassicSudokuPuzzle,
+    listSudokuTournaments, createSudokuTournament, setSudokuTournamentActive, deleteSudokuTournament,
+} from './sudoku-admin.js';
 import { escapeHtml, showToast } from '../utils/helpers.js';
 
 const CONFIG_FORMS = [
@@ -38,6 +43,15 @@ const CONFIG_FORMS = [
         id: 'challengeAttemptsPageSize',
         title: 'Challenge Attempts Page Size',
         fields: [{ key: 'size', type: 'number', label: 'Attempts per page (Load More)' }],
+    },
+    {
+        id: 'sudokuTournamentSettings',
+        title: 'Sudoku Tournament Settings',
+        fields: [
+            { key: 'puzzleCount', type: 'number', label: 'Puzzles per tournament' },
+            { key: 'timeLimitSeconds', type: 'number', label: 'Seconds allowed per puzzle' },
+            { key: 'maxErrors', type: 'number', label: 'Errors allowed per puzzle' },
+        ],
     },
     {
         id: 'wordValidationAPI',
@@ -73,14 +87,20 @@ async function renderConfigForms() {
 
     container.innerHTML = CONFIG_FORMS.map((form, i) => {
         const data = docs[i];
+        // Each field gets its own label -- with a single field per form (the common case so
+        // far) the form title alone made this readable without one, but that breaks down once a
+        // form has several fields side by side (e.g. Sudoku Tournament Settings' four numbers).
         const fieldsHtml = form.fields.map((field) => {
             const value = data[field.key];
-            if (field.type === 'textarea') {
-                const text = field.isArray ? (value || []).join(', ') : (value || '');
-                return `<textarea id="cfg-${form.id}-${field.key}">${escapeHtml(text)}</textarea>`;
-            }
-            const inputValue = value === null || value === undefined ? '' : escapeHtml(String(value));
-            return `<input type="${field.type}" id="cfg-${form.id}-${field.key}" value="${inputValue}">`;
+            const inputHtml = field.type === 'textarea'
+                ? `<textarea id="cfg-${form.id}-${field.key}">${escapeHtml(field.isArray ? (value || []).join(', ') : (value || ''))}</textarea>`
+                : `<input type="${field.type}" id="cfg-${form.id}-${field.key}" value="${value === null || value === undefined ? '' : escapeHtml(String(value))}">`;
+            return `
+                <div class="config-form-field">
+                    <label for="cfg-${form.id}-${field.key}">${escapeHtml(field.label)}</label>
+                    ${inputHtml}
+                </div>
+            `;
         }).join('');
 
         return `
@@ -342,6 +362,231 @@ function wireTournamentCreate() {
     });
 }
 
+async function renderSudokuDailyTable() {
+    const container = document.getElementById('sudoku-daily-table');
+    let puzzles;
+    try {
+        puzzles = await listDailySudokuPuzzles();
+    } catch {
+        container.innerHTML = `<div class="empty-state">Couldn't load daily puzzles &mdash; check Firestore rules are deployed and try again.</div>`;
+        return;
+    }
+
+    if (puzzles.length === 0) {
+        container.innerHTML = `<div class="empty-state">No puzzles seeded yet. Add one above to activate the Daily Challenge.</div>`;
+        return;
+    }
+
+    container.innerHTML = puzzles.map((p) => {
+        const prefilled = p.puzzle.split('').filter((c) => c !== '0').length;
+        return `
+        <div class="sudoku-daily-row">
+            <span class="sudoku-daily-id">#${p.id}</span>
+            <span class="sudoku-daily-meta">${prefilled} Pre-Filled Cells</span>
+            <button class="btn" data-edit-puzzle="${p.id}" type="button">Edit</button>
+        </div>
+    `;
+    }).join('');
+
+    container.querySelectorAll('[data-edit-puzzle]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+            const id = btn.dataset.editPuzzle;
+            const current = puzzles.find((p) => String(p.id) === id);
+            const nextPuzzle = window.prompt('Puzzle (81 digits, 0 = blank):', current.puzzle);
+            if (nextPuzzle === null) return;
+            const nextSolution = window.prompt('Solution (81 digits, 1-9):', current.solution);
+            if (nextSolution === null) return;
+            try {
+                await updateDailySudokuPuzzle(id, nextPuzzle.trim(), nextSolution.trim());
+                showToast(`Puzzle #${id} updated`);
+                renderSudokuDailyTable();
+            } catch (err) {
+                showToast(err.message || "Couldn't save -- check Firestore rules are deployed");
+            }
+        });
+    });
+}
+
+function wireSudokuDailyAdd() {
+    document.getElementById('sudoku-daily-add-btn').addEventListener('click', async () => {
+        const puzzleInput = document.getElementById('sudoku-daily-puzzle-input');
+        const solutionInput = document.getElementById('sudoku-daily-solution-input');
+        const puzzle = puzzleInput.value.trim();
+        const solution = solutionInput.value.trim();
+        try {
+            const id = await addDailySudokuPuzzle(puzzle, solution);
+            puzzleInput.value = '';
+            solutionInput.value = '';
+            showToast(`Puzzle #${id} added`);
+            renderSudokuDailyTable();
+        } catch (err) {
+            showToast(err.message || "Couldn't save -- check Firestore rules are deployed");
+        }
+    });
+}
+
+async function renderSudokuClassicTable() {
+    const container = document.getElementById('sudoku-classic-table');
+    let puzzles;
+    try {
+        puzzles = await listClassicSudokuPuzzles();
+    } catch {
+        container.innerHTML = `<div class="empty-state">Couldn't load classic puzzles &mdash; check Firestore rules are deployed and try again.</div>`;
+        return;
+    }
+
+    if (puzzles.length === 0) {
+        container.innerHTML = `<div class="empty-state">No puzzles seeded yet. Add one above for each difficulty you want to offer.</div>`;
+        return;
+    }
+
+    container.innerHTML = puzzles.map((p) => {
+        const prefilled = p.puzzle.split('').filter((c) => c !== '0').length;
+        return `
+        <div class="sudoku-daily-row">
+            <span class="sudoku-daily-id">#${p.id}</span>
+            <span class="status-pill ${p.difficulty}">${p.difficulty}</span>
+            <span class="sudoku-daily-meta">${prefilled} Pre-Filled Cells</span>
+            <button class="btn" data-edit-classic-puzzle="${p.id}" type="button">Edit</button>
+        </div>
+    `;
+    }).join('');
+
+    container.querySelectorAll('[data-edit-classic-puzzle]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+            const id = btn.dataset.editClassicPuzzle;
+            const current = puzzles.find((p) => String(p.id) === id);
+            const nextPuzzle = window.prompt('Puzzle (81 digits, 0 = blank):', current.puzzle);
+            if (nextPuzzle === null) return;
+            const nextSolution = window.prompt('Solution (81 digits, 1-9):', current.solution);
+            if (nextSolution === null) return;
+            const nextDifficulty = window.prompt('Difficulty (easy, medium, or hard):', current.difficulty);
+            if (nextDifficulty === null) return;
+            try {
+                await updateClassicSudokuPuzzle(id, nextPuzzle.trim(), nextSolution.trim(), nextDifficulty.trim());
+                showToast(`Puzzle #${id} updated`);
+                renderSudokuClassicTable();
+            } catch (err) {
+                showToast(err.message || "Couldn't save -- check Firestore rules are deployed");
+            }
+        });
+    });
+}
+
+function wireSudokuClassicAdd() {
+    document.getElementById('sudoku-classic-add-btn').addEventListener('click', async () => {
+        const puzzleInput = document.getElementById('sudoku-classic-puzzle-input');
+        const solutionInput = document.getElementById('sudoku-classic-solution-input');
+        const difficultySelect = document.getElementById('sudoku-classic-difficulty-select');
+        const puzzle = puzzleInput.value.trim();
+        const solution = solutionInput.value.trim();
+        const difficulty = difficultySelect.value;
+        try {
+            const id = await addClassicSudokuPuzzle(puzzle, solution, difficulty);
+            puzzleInput.value = '';
+            solutionInput.value = '';
+            showToast(`Puzzle #${id} added`);
+            renderSudokuClassicTable();
+        } catch (err) {
+            showToast(err.message || "Couldn't save -- check Firestore rules are deployed");
+        }
+    });
+}
+
+function parsePuzzleLines(raw) {
+    return raw.split('\n').map((s) => s.trim()).filter(Boolean);
+}
+
+async function renderSudokuTournamentsTable() {
+    const container = document.getElementById('sudoku-tournaments-table');
+    let tournaments;
+    try {
+        tournaments = await listSudokuTournaments();
+    } catch {
+        container.innerHTML = `<div class="empty-state">Couldn't load tournaments &mdash; check Firestore rules are deployed and try again.</div>`;
+        return;
+    }
+
+    if (tournaments.length === 0) {
+        container.innerHTML = `<div class="empty-state">No tournaments yet. Create one below.</div>`;
+        return;
+    }
+
+    container.innerHTML = tournaments.map((t) => `
+        <div class="tournament-row">
+            <span class="tournament-row-name">${escapeHtml(t.name)}</span>
+            <span class="tournament-row-meta">${t.puzzles.length} puzzles &bull; +${t.completionBonus} bonus</span>
+            <span class="status-pill ${t.active ? 'on' : ''}">${t.active ? 'Active' : 'Inactive'}</span>
+            <div class="tournament-row-actions">
+                <button class="btn" data-toggle-sudoku-tournament="${t.id}" data-active="${t.active}" type="button">${t.active ? 'Deactivate' : 'Activate'}</button>
+                <button class="btn danger" data-delete-sudoku-tournament="${t.id}" type="button">Delete</button>
+            </div>
+        </div>
+    `).join('');
+
+    container.querySelectorAll('[data-toggle-sudoku-tournament]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+            const id = btn.dataset.toggleSudokuTournament;
+            const isActive = btn.dataset.active === 'true';
+            try {
+                await setSudokuTournamentActive(id, !isActive);
+                renderSudokuTournamentsTable();
+            } catch {
+                showToast("Couldn't save -- check Firestore rules are deployed");
+            }
+        });
+    });
+
+    container.querySelectorAll('[data-delete-sudoku-tournament]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+            if (!window.confirm('Delete this tournament? Players\' progress on it will be orphaned.')) return;
+            try {
+                await deleteSudokuTournament(btn.dataset.deleteSudokuTournament);
+                showToast('Tournament deleted');
+                renderSudokuTournamentsTable();
+            } catch {
+                showToast("Couldn't delete -- check Firestore rules are deployed");
+            }
+        });
+    });
+}
+
+function wireSudokuTournamentCreate() {
+    document.getElementById('sudoku-tournament-create-btn').addEventListener('click', async () => {
+        const name = document.getElementById('sudoku-tournament-name-input').value.trim();
+        const puzzleLines = parsePuzzleLines(document.getElementById('sudoku-tournament-puzzles-input').value);
+        const solutionLines = parsePuzzleLines(document.getElementById('sudoku-tournament-solutions-input').value);
+        const completionBonus = Number(document.getElementById('sudoku-tournament-bonus-input').value);
+
+        if (!name) {
+            showToast('Enter a tournament name');
+            return;
+        }
+        if (puzzleLines.length === 0) {
+            showToast('Enter at least one puzzle');
+            return;
+        }
+        if (puzzleLines.length !== solutionLines.length) {
+            showToast(`Puzzle count (${puzzleLines.length}) doesn't match solution count (${solutionLines.length})`);
+            return;
+        }
+
+        const puzzles = puzzleLines.map((puzzle, i) => ({ puzzle, solution: solutionLines[i] }));
+
+        try {
+            await createSudokuTournament({ name, puzzles, completionBonus });
+            document.getElementById('sudoku-tournament-name-input').value = '';
+            document.getElementById('sudoku-tournament-puzzles-input').value = '';
+            document.getElementById('sudoku-tournament-solutions-input').value = '';
+            document.getElementById('sudoku-tournament-bonus-input').value = '250';
+            showToast('Tournament created');
+            renderSudokuTournamentsTable();
+        } catch (err) {
+            showToast(err.message || "Couldn't save -- check Firestore rules are deployed");
+        }
+    });
+}
+
 function renderModResult(user) {
     const el = document.getElementById('mod-result');
     if (!user) {
@@ -409,6 +654,12 @@ async function init() {
     await renderDailyWordsTable();
     wireTournamentCreate();
     await renderTournamentsTable();
+    wireSudokuDailyAdd();
+    await renderSudokuDailyTable();
+    wireSudokuClassicAdd();
+    await renderSudokuClassicTable();
+    wireSudokuTournamentCreate();
+    await renderSudokuTournamentsTable();
 }
 
 init();

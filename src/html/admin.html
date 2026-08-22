@@ -117,6 +117,90 @@
                 </div>
             </div>
         </div>
+
+        <div class="admin-section" data-collapsible>
+            <button class="admin-section-header" type="button">Sudoku</button>
+            <div class="admin-section-body">
+                <div class="section">
+                    <div class="section-title">Daily Puzzles</div>
+                    <div class="card">
+                        <p class="config-form-desc">Today's puzzle is picked automatically by date from this list. Add-only &mdash; editing a puzzle's content is fine, but the order determines which day it's used, so don't reorder or remove entries.</p>
+                        <div class="sudoku-puzzle-form">
+                            <div class="form-field">
+                                <label for="sudoku-daily-puzzle-input">Puzzle (81 digits, 0 = blank)</label>
+                                <input type="text" id="sudoku-daily-puzzle-input" maxlength="81" placeholder="500000100001300000...">
+                            </div>
+                            <div class="form-field">
+                                <label for="sudoku-daily-solution-input">Solution (81 digits, 1-9)</label>
+                                <input type="text" id="sudoku-daily-solution-input" maxlength="81" placeholder="539764182281359476...">
+                            </div>
+                            <button class="btn primary" id="sudoku-daily-add-btn" type="button">Add Puzzle</button>
+                        </div>
+                        <div id="sudoku-daily-table">
+                            <div class="loading-text">Loading&hellip;</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Classic Puzzles</div>
+                    <div class="card">
+                        <p class="config-form-desc">Players pick a difficulty and get a random puzzle from that pool each round &mdash; unlimited replays, so order doesn't matter here.</p>
+                        <div class="sudoku-puzzle-form">
+                            <div class="form-field">
+                                <label for="sudoku-classic-puzzle-input">Puzzle (81 digits, 0 = blank)</label>
+                                <input type="text" id="sudoku-classic-puzzle-input" maxlength="81" placeholder="500000100001300000...">
+                            </div>
+                            <div class="form-field">
+                                <label for="sudoku-classic-solution-input">Solution (81 digits, 1-9)</label>
+                                <input type="text" id="sudoku-classic-solution-input" maxlength="81" placeholder="539764182281359476...">
+                            </div>
+                            <div class="form-field">
+                                <label for="sudoku-classic-difficulty-select">Difficulty</label>
+                                <select id="sudoku-classic-difficulty-select">
+                                    <option value="easy">Easy</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="hard">Hard</option>
+                                </select>
+                            </div>
+                            <button class="btn primary" id="sudoku-classic-add-btn" type="button">Add Puzzle</button>
+                        </div>
+                        <div id="sudoku-classic-table">
+                            <div class="loading-text">Loading&hellip;</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Tournaments</div>
+                    <div class="card">
+                        <p class="config-form-desc">Time limit per puzzle and errors allowed come from the "Sudoku Tournament Settings" form above, applied to every tournament &mdash; enter the same number of puzzles as that form's "Puzzles per tournament" here. The completion bonus is set per tournament below.</p>
+                        <div id="sudoku-tournaments-table">
+                            <div class="loading-text">Loading&hellip;</div>
+                        </div>
+                        <div class="tournament-form">
+                            <div class="form-field">
+                                <label for="sudoku-tournament-name-input">Name</label>
+                                <input type="text" id="sudoku-tournament-name-input" placeholder="e.g. Weekend Sprint">
+                            </div>
+                            <div class="form-field">
+                                <label for="sudoku-tournament-puzzles-input">Puzzles (one 81-digit string per line, 0 = blank)</label>
+                                <textarea id="sudoku-tournament-puzzles-input" placeholder="500000100001300000...&#10;003000600900305001..."></textarea>
+                            </div>
+                            <div class="form-field">
+                                <label for="sudoku-tournament-solutions-input">Solutions (one 81-digit string per line, same order as puzzles)</label>
+                                <textarea id="sudoku-tournament-solutions-input" placeholder="539764182281359476...&#10;483091657967245381..."></textarea>
+                            </div>
+                            <div class="form-field">
+                                <label for="sudoku-tournament-bonus-input">Completion bonus</label>
+                                <input type="number" id="sudoku-tournament-bonus-input" value="250" min="0">
+                            </div>
+                            <button class="btn primary" id="sudoku-tournament-create-btn" type="button">Create Tournament</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div id="site-footer"></div>

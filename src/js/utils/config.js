@@ -33,6 +33,12 @@ export const CONFIG_DEFAULTS = {
         size: 10,
         description: 'Attempts shown per page in a Challenge a Friend\'s "More Info" detail view (Load More fetches this many at a time)',
     },
+    sudokuTournamentSettings: {
+        puzzleCount: 10,
+        timeLimitSeconds: 600,
+        maxErrors: 3,
+        description: 'Global rules applied to every Sudoku Tournament: puzzle count (a guideline for admins creating one), seconds allowed per puzzle, and errors allowed per puzzle before it\'s failed. The completion bonus is set per tournament when it\'s created.',
+    },
     wordValidationAPI: {
         // v2, not v1 -- v1 returns 502 (not 404) for a word that doesn't exist, which makes it
         // impossible to distinguish "not a real word" from "the API is down".

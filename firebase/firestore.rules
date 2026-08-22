@@ -60,14 +60,15 @@ service cloud.firestore {
                 && scoreId == request.auth.uid + '_' + request.resource.data.gameType + '_' + request.resource.data.gameDate
                 && request.resource.data.score >= 0 && request.resource.data.score <= maxCreateScore(request.resource.data.gameType);
             // Facebook-share update: the doc owner may add exactly +20 to their own already-created
-            // wordle score, once, in exchange for flipping sharedToFacebook false -> true -- nothing
-            // else about the doc is allowed to change. See wordle-daily-data.js#markSharedToFacebook.
+            // wordle/sudoku/sudoku-classic score, once, in exchange for flipping sharedToFacebook
+            // false -> true -- nothing else about the doc is allowed to change. See
+            // wordle-daily-data.js#markSharedToFacebook / utils/points.js#markSharedToFacebook.
             allow update: if isAdmin() || isFacebookShareUpdate();
             allow delete: if isAdmin();
 
             function isFacebookShareUpdate() {
                 return isSignedIn() && request.auth.uid == resource.data.userId
-                    && resource.data.gameType == 'wordle'
+                    && resource.data.gameType in ['wordle', 'sudoku', 'sudoku-classic']
                     && resource.data.sharedToFacebook != true
                     && request.resource.data.sharedToFacebook == true
                     && request.resource.data.score == resource.data.score + 20
@@ -75,18 +76,22 @@ service cloud.firestore {
             }
         }
 
-        // Everyday game scores (wordle/sudoku/wordsearch daily plays) stay capped at 10. The
-        // Wordle Daily Challenge's richer formula (play + attempts + speed bonuses, before the
-        // +20 Facebook share applied separately via update) can reach 30 on create. Tournament
-        // completions (30 + 15*numWords + bonusPoints, see wordle-tournament-data.js) are bounded
-        // generously since numWords/bonusPoints are admin-controlled, not player-controlled.
-        // Challenge a Friend plays (10 + 20 win bonus, see wordle-challenge-data.js) cap at 30
-        // like the Daily Challenge; the creator's separate +10-per-solver reward falls under the
-        // default 10 cap below.
+        // Everyday game scores (wordsearch daily plays) stay capped at 10. The Wordle/Sudoku Daily
+        // Challenge and Sudoku Classic richer formulas (before the +20 Facebook share applied
+        // separately via update) reach 30/100 on create. Tournament completions (see
+        // wordle-tournament-data.js / sudoku-tournament-data.js) are bounded generously since their
+        // inputs (numWords/bonusPoints, or the admin-configured sudokuTournamentSettings) are
+        // admin-controlled, not player-controlled. Challenge a Friend plays cap at 30 like the
+        // Daily Challenge; the creator's separate +10-per-solver reward falls under the default 10
+        // cap below.
         function maxCreateScore(gameType) {
             return gameType == 'wordle' ? 30
                 : gameType == 'wordle-tournament' ? 1000
                 : gameType == 'wordle-challenge' ? 30
+                : gameType == 'sudoku' ? 100
+                : gameType == 'sudoku-classic' ? 100
+                : gameType == 'sudoku-tournament' ? 50
+                : gameType == 'sudoku-tournament-bonus' ? 2000
                 : 10;
         }
 
@@ -161,6 +166,57 @@ service cloud.firestore {
         match /config/{configId} {
             allow read: if true;
             allow write: if isAdmin();
+        }
+
+        // Admin-managed pool of Daily Sudoku puzzles -- see src/js/admin/sudoku-admin.js.
+        // sudokuDailyPuzzles/_meta holds { totalCount } alongside the numbered puzzle docs.
+        match /sudokuDailyPuzzles/{id} {
+            allow read: if true;
+            allow write: if isAdmin();
+        }
+
+        // Admin-managed pool of Classic Sudoku puzzles -- one global numeric id sequence shared
+        // across all three difficulties (difficulty is just a field, not a separate counter).
+        match /sudokuClassicPuzzles/{id} {
+            allow read: if true;
+            allow write: if isAdmin();
+        }
+
+        // Admin-managed tournaments -- name + puzzles array only. Time limit / max errors /
+        // completion bonus are global (config/sudokuTournamentSettings, covered by the generic
+        // config rule above), unlike wordleTournaments which sets time/bonus per tournament.
+        match /sudokuTournaments/{id} {
+            allow read: if true;
+            allow write: if isAdmin();
+        }
+
+        // One progress doc per player per tournament, id = {tournamentId}_{uid}, exactly one
+        // attempt ever (see sudoku-tournament-data.js). currentPuzzleIndex/puzzlesPassed/
+        // puzzlesFailed only ever hold steady or advance by exactly 1 -- unlike
+        // wordleTournamentAttempts it never resets, since a failed puzzle here only ends that
+        // puzzle, not the run. Actual points are granted separately via the guarded gameScores
+        // create above.
+        match /sudokuTournamentAttempts/{attemptId} {
+            allow read: if true;
+            allow create: if isSignedIn()
+                && request.resource.data.uid == request.auth.uid
+                && attemptId == request.resource.data.tournamentId + '_' + request.auth.uid
+                && request.resource.data.currentPuzzleIndex == 0
+                && request.resource.data.puzzlesPassed == 0
+                && request.resource.data.puzzlesFailed == 0
+                && request.resource.data.completed == false
+                && request.resource.data.bonusAwarded == false;
+            allow update: if isSignedIn() && request.auth.uid == resource.data.uid
+                && request.resource.data.uid == resource.data.uid
+                && request.resource.data.tournamentId == resource.data.tournamentId
+                && (resource.data.completed == false || request.resource.data.completed == true)
+                && (request.resource.data.currentPuzzleIndex == resource.data.currentPuzzleIndex
+                    || request.resource.data.currentPuzzleIndex == resource.data.currentPuzzleIndex + 1)
+                && (request.resource.data.puzzlesPassed == resource.data.puzzlesPassed
+                    || request.resource.data.puzzlesPassed == resource.data.puzzlesPassed + 1)
+                && (request.resource.data.puzzlesFailed == resource.data.puzzlesFailed
+                    || request.resource.data.puzzlesFailed == resource.data.puzzlesFailed + 1);
+            allow delete: if isAdmin();
         }
     }
 }

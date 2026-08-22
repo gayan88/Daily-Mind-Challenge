@@ -151,6 +151,19 @@
     align-items: flex-start;
 }
 
+.config-form-field {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.config-form-field label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+}
+
 .config-form-row textarea {
     flex: 1;
     min-height: 70px;
@@ -280,6 +293,21 @@
     color: var(--color-danger);
 }
 
+.status-pill.easy {
+    background: #E3F5EE;
+    color: var(--color-success);
+}
+
+.status-pill.medium {
+    background: var(--color-primary-tint);
+    color: var(--color-primary);
+}
+
+.status-pill.hard {
+    background: #FCEBE9;
+    color: var(--color-danger);
+}
+
 .daily-word-row {
     display: flex;
     align-items: center;
@@ -306,6 +334,43 @@
 }
 
 .daily-word-row .btn {
+    flex: 0 0 auto;
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+.sudoku-puzzle-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.sudoku-daily-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 0.5px solid var(--color-border);
+    font-size: 14px;
+}
+
+.sudoku-daily-row:last-child {
+    border-bottom: none;
+}
+
+.sudoku-daily-id {
+    flex: 0 0 40px;
+    color: var(--color-text-muted);
+    font-weight: 600;
+}
+
+.sudoku-daily-meta {
+    flex: 1;
+    color: var(--color-text);
+}
+
+.sudoku-daily-row .btn {
     flex: 0 0 auto;
     padding: 6px 12px;
     font-size: 12px;
