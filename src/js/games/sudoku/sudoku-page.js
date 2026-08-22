@@ -15,6 +15,11 @@ import { showSudokuSummaryModal } from './sudoku-summary-modal.js';
 const DIFFICULTY_LABELS = { easy: 'Easy', medium: 'Medium', hard: 'Hard' };
 const DIFFICULTY_POINTS = { easy: 10, medium: 15, hard: 25 };
 
+// Outlined line icons (not this app's usual emoji set, see icons.js) -- used only on the
+// tournament list card, whose mockup called for a purple-outline look emoji can't reproduce.
+const ICON_PUZZLES = `<svg class="sudoku-tournament-meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>`;
+const ICON_BONUS = `<svg class="sudoku-tournament-meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+
 function renderAdminBlocked(mount) {
     mount.innerHTML = `<div class="empty-state">Admin accounts don't play games.</div>`;
 }
@@ -178,16 +183,15 @@ async function renderTournamentMode(mount, uid, profile, setActiveRound) {
 
                 return `
                     <div class="sudoku-tournament-card">
-                        <div class="sudoku-tournament-name">${escapeHtml(t.name)}</div>
-                        <div class="sudoku-tournament-divider"></div>
-                        <div class="sudoku-tournament-footer">
+                        <div class="sudoku-tournament-info">
+                            <div class="sudoku-tournament-name">${escapeHtml(t.name)}</div>
                             <div class="sudoku-tournament-meta-row">
-                                <span class="sudoku-tournament-meta-item">${icon('CLIPBOARD')} ${numPuzzles} puzzles</span>
+                                <span class="sudoku-tournament-meta-item">${ICON_PUZZLES} ${numPuzzles} Puzzles</span>
                                 <span class="sudoku-tournament-sep">|</span>
-                                <span class="sudoku-tournament-meta-item">${icon('STAR')} +${t.completionBonus} bonus</span>
+                                <span class="sudoku-tournament-meta-item">${ICON_BONUS} +${t.completionBonus} Bonus</span>
                             </div>
-                            <button class="btn primary" data-play-sudoku-tournament="${t.id}" ${attempt?.completed ? 'disabled' : ''} type="button">${statusLabel}</button>
                         </div>
+                        <button class="btn primary" data-play-sudoku-tournament="${t.id}" ${attempt?.completed ? 'disabled' : ''} type="button">${statusLabel}</button>
                     </div>
                 `;
             }).join('')}
