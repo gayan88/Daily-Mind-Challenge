@@ -36,7 +36,15 @@
     margin: 0 auto;
 }
 
-.game-intro {
+.wordle-title {
+    text-align: center;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: 4px;
+}
+
+.wordle-subtitle {
     text-align: center;
     color: var(--color-text-secondary);
     font-size: 14px;
@@ -462,15 +470,42 @@
     margin-top: 4px;
 }
 
-.wordle-timer {
-    text-align: center;
+.wordle-stats {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 20px;
+    background: var(--color-surface);
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    margin-bottom: 16px;
+}
+
+.wordle-stat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.wordle-stat-icon {
+    font-size: 18px;
+    line-height: 1;
+}
+
+.wordle-stat-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-primary);
+}
+
+.wordle-stat-value {
     font-size: 18px;
     font-weight: 700;
     color: var(--color-text);
-    margin-bottom: 12px;
 }
 
-.wordle-timer.urgent {
+.wordle-stat-value.urgent {
     color: var(--color-danger);
 }
 

@@ -58,7 +58,8 @@ async function renderDailyMode(mount, uid, profile) {
     }
 
     mount.innerHTML = `
-        <p class="game-intro">Daily Wordle #${challenge.challengeId} &mdash; guess the 5-letter word in 6 tries. Everyone gets the same word today.</p>
+        <h2 class="wordle-title">Daily Wordle #${challenge.challengeId}</h2>
+        <p class="wordle-subtitle">Guess the 5-letter word in 6 tries. Everyone gets the same word today.</p>
         <div id="wordle-round-mount"></div>
     `;
     const roundMount = document.getElementById('wordle-round-mount');
@@ -198,7 +199,8 @@ async function playTournamentRound(mount, uid, profile, tournament) {
     const word = tournament.words[wordIndex];
 
     mount.innerHTML = `
-        <p class="game-intro">${escapeHtml(tournament.name)} &mdash; word ${wordIndex + 1} of ${numWords}</p>
+        <h2 class="wordle-title">${escapeHtml(tournament.name)}</h2>
+        <p class="wordle-subtitle">Word ${wordIndex + 1} of ${numWords}</p>
         <div id="wordle-round-mount"></div>
     `;
     const roundMount = document.getElementById('wordle-round-mount');
@@ -558,7 +560,8 @@ async function renderChallengeSolve(mount, uid, profile, challengeId) {
     }
 
     mount.innerHTML = `
-        <p class="game-intro">${escapeHtml(challengeTitle(challenge))} &mdash; guess the ${challenge.word.length}-letter word in 6 tries.</p>
+        <h2 class="wordle-title">${escapeHtml(challengeTitle(challenge))}</h2>
+        <p class="wordle-subtitle">Guess the ${challenge.word.length}-letter word in 6 tries.</p>
         <div id="wordle-round-mount"></div>
     `;
     const roundMount = document.getElementById('wordle-round-mount');

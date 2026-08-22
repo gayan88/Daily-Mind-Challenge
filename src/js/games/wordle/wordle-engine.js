@@ -1,3 +1,5 @@
+import { icon } from '../../utils/icons.js';
+
 const KEYBOARD_ROWS = [
     ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
     ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
@@ -59,7 +61,15 @@ export function playWordleRound({ container, targetWord, maxGuesses = 6, timeLim
     const wordLength = target.length;
 
     container.innerHTML = `
-        ${timeLimitSeconds ? '<div class="wordle-timer" id="wordle-timer"></div>' : ''}
+        ${timeLimitSeconds ? `
+            <div class="wordle-stats" id="wordle-stats">
+                <span class="wordle-stat">
+                    <span class="wordle-stat-icon">${icon('STOPWATCH')}</span>
+                    <span class="wordle-stat-label">Time</span>
+                    <span class="wordle-stat-value" id="wordle-timer"></span>
+                </span>
+            </div>
+        ` : ''}
         <div class="wordle-board" id="wordle-board"></div>
         <div class="wordle-message" id="wordle-message" aria-live="polite"></div>
         <div class="wordle-keyboard" id="wordle-keyboard"></div>
