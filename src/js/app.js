@@ -36,6 +36,47 @@ function wireLogout(profile) {
     });
 }
 
+/** Highlights whichever header nav link matches the current page -- there's exactly one nav item
+ * per clean URL (`/`, `/leaderboard`, `/profile`, `/admin`), so a plain href match is enough. */
+function markActiveNavLink() {
+    const path = window.location.pathname;
+    document.querySelectorAll('.header-nav a').forEach((link) => {
+        link.classList.toggle('active', link.getAttribute('href') === path);
+    });
+}
+
+/** The header's user menu is a click-to-toggle dropdown (trigger button + panel), closed by
+ * clicking outside it, pressing Escape, or navigating away (the panel is torn down along with the
+ * rest of the page). Wired once per page load, right after the header partial is injected. */
+function wireUserDropdown() {
+    const trigger = document.getElementById('user-trigger');
+    const dropdown = document.getElementById('user-dropdown');
+    if (!trigger || !dropdown) return;
+
+    function close() {
+        dropdown.hidden = true;
+        trigger.setAttribute('aria-expanded', 'false');
+    }
+
+    function open() {
+        dropdown.hidden = false;
+        trigger.setAttribute('aria-expanded', 'true');
+    }
+
+    trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (dropdown.hidden) open(); else close();
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!dropdown.hidden && !dropdown.contains(e.target) && !trigger.contains(e.target)) close();
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !dropdown.hidden) close();
+    });
+}
+
 function wireFooterShare() {
     const link = document.getElementById('footer-share-fb');
     if (!link) return;
@@ -47,10 +88,14 @@ function wireFooterShare() {
 }
 
 function updateHeader(profile) {
-    const badge = document.getElementById('user-badge');
-    if (badge) {
-        badge.textContent = profile.kind === 'guest' ? `${profile.displayName} [Guest]` : profile.displayName;
-    }
+    // .user-name-text/.user-guest-badge each appear twice -- once in the compact trigger button,
+    // once in the dropdown's header -- so both stay in sync from a single call here.
+    document.querySelectorAll('.user-name-text').forEach((el) => {
+        el.textContent = profile.displayName;
+    });
+    document.querySelectorAll('.user-guest-badge').forEach((el) => {
+        el.hidden = profile.kind !== 'guest';
+    });
     const adminLink = document.getElementById('admin-nav-link');
     if (adminLink) {
         adminLink.hidden = !profile.isAdmin;
@@ -68,6 +113,8 @@ export async function loadHeaderFooter() {
         applyAdSlots(document),
     ]);
     applyIcons(document);
+    markActiveNavLink();
+    wireUserDropdown();
     wireFooterShare();
 }
 

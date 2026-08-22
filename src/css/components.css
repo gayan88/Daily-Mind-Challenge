@@ -1,81 +1,258 @@
 /* ---------- Header ---------- */
 .header {
-    background: var(--color-primary);
-    border-bottom: 0.5px solid var(--color-primary-dark);
-    padding: 16px 24px;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-primary-dark));
+    border-radius: var(--radius-lg);
+    margin: 12px 16px 0;
+    padding: 10px 24px;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 20px;
     box-shadow: var(--shadow-header);
     position: sticky;
-    top: 0;
+    top: 12px;
     z-index: 100;
 }
 
 .logo {
-    font-weight: 600;
+    font-weight: 700;
     font-size: 20px;
     color: white;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     text-decoration: none;
 }
 
 .logo-icon {
-    width: 32px;
-    height: 32px;
+    width: 38px;
+    height: 38px;
     object-fit: contain;
 }
 
 .header-nav {
     display: flex;
-    gap: 16px;
+    gap: 6px;
     align-items: center;
 }
 
 .header-nav a {
+    position: relative;
     color: rgba(255, 255, 255, 0.85);
     text-decoration: none;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
+    padding: 7px 16px;
+    border-radius: var(--radius-md);
+    transition: all 0.2s;
 }
 
 .header-nav a:hover {
     color: white;
-    text-decoration: underline;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.header-nav a.active {
+    color: white;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.header-nav a.active::after {
+    content: '';
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    bottom: 2px;
+    height: 2px;
+    background: white;
+    border-radius: 2px;
 }
 
 .user-menu {
+    position: relative;
     display: flex;
-    gap: 12px;
     align-items: center;
 }
 
-.user-badge {
-    font-size: 14px;
+/* ---------- User menu trigger + dropdown ---------- */
+.user-trigger {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 0.5px solid rgba(255, 255, 255, 0.25);
+    border-radius: 999px;
+    padding: 4px 14px 4px 4px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.2s;
+}
+
+.user-trigger:hover {
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.user-avatar {
+    flex: 0 0 auto;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.user-avatar svg {
+    width: 15px;
+    height: 15px;
+}
+
+.user-avatar-lg {
+    width: 48px;
+    height: 48px;
+    background: var(--color-primary-tint);
     color: var(--color-primary);
-    background: white;
-    padding: 6px 12px;
-    border-radius: var(--radius-sm);
-    font-weight: 500;
+}
+
+.user-avatar-lg svg {
+    width: 26px;
+    height: 26px;
+}
+
+.user-trigger .user-name-text {
+    font-size: 15px;
+    font-weight: 600;
+    color: white;
+}
+
+.user-guest-badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.user-trigger .user-guest-badge {
+    background: rgba(255, 255, 255, 0.25);
+    color: white;
+}
+
+.user-trigger-chevron {
+    display: flex;
+    color: rgba(255, 255, 255, 0.8);
+    transition: transform 0.2s;
+}
+
+.user-trigger-chevron svg {
+    width: 16px;
+    height: 16px;
+}
+
+.user-trigger[aria-expanded="true"] .user-trigger-chevron {
+    transform: rotate(180deg);
+}
+
+.user-dropdown {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    width: 260px;
+    max-width: calc(100vw - 32px);
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+    padding: 20px;
+    z-index: 200;
+}
+
+.user-dropdown-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 16px;
+}
+
+.user-dropdown-header .user-name-text {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: 4px;
+}
+
+.user-dropdown-header .user-guest-badge {
+    background: var(--color-primary-tint);
+    color: var(--color-primary);
+}
+
+.user-dropdown-divider {
+    border-top: 0.5px solid var(--color-border);
+    margin: 12px 0;
+}
+
+.user-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 10px 4px;
+    border: none;
+    background: none;
+    color: var(--color-text);
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+}
+
+.user-dropdown-item svg {
+    flex: 0 0 auto;
+    width: 20px;
+    height: 20px;
+    color: var(--color-text-secondary);
+}
+
+.user-dropdown-item:hover {
+    color: var(--color-primary);
+}
+
+.user-dropdown-item:hover svg {
+    color: var(--color-primary);
+}
+
+/* Overrides .user-dropdown-item:hover's primary-purple color above -- same specificity (one
+   class + :hover), so this wins purely by appearing later in the stylesheet. */
+.user-dropdown-item-danger,
+.user-dropdown-item-danger svg,
+.user-dropdown-item-danger:hover,
+.user-dropdown-item-danger:hover svg {
+    color: var(--color-danger);
+}
+
+.user-dropdown-item-danger:hover {
+    opacity: 0.8;
 }
 
 .menu-btn {
-    background: rgba(255, 255, 255, 0.2);
-    border: 0.5px solid rgba(255, 255, 255, 0.3);
-    padding: 6px 12px;
-    border-radius: var(--radius-sm);
+    background: white;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 999px;
     cursor: pointer;
-    font-size: 13px;
-    color: white;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-primary);
     text-decoration: none;
     transition: all 0.2s;
 }
 
 .menu-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
-    border-color: rgba(255, 255, 255, 0.4);
+    background: var(--color-primary-tint);
 }
 
 .menu-btn:active {
@@ -85,8 +262,10 @@
 @media (max-width: 640px) {
     .header {
         flex-wrap: wrap;
-        row-gap: 10px;
-        padding: 12px 16px;
+        row-gap: 8px;
+        margin: 8px 8px 0;
+        padding: 8px 14px;
+        top: 8px;
     }
 
     .logo {
@@ -107,18 +286,23 @@
            same line -- that squeeze was forcing the 3-word logo to wrap across 3 lines. */
         width: 100%;
         justify-content: center;
-        gap: 8px;
-        flex-wrap: wrap;
     }
 
-    .user-badge {
-        font-size: 12px;
-        padding: 5px 10px;
+    .user-trigger .user-name-text {
+        font-size: 13px;
+    }
+
+    /* The trigger is centered within the now-full-width .user-menu row, not pinned to its right
+       edge -- anchor the dropdown under the trigger itself instead of .user-menu's right edge. */
+    .user-dropdown {
+        right: auto;
+        left: 50%;
+        transform: translateX(-50%);
     }
 
     .menu-btn {
         font-size: 12px;
-        padding: 4px 8px;
+        padding: 6px 14px;
     }
 }
 
@@ -633,8 +817,8 @@
 /* ---------- Footer ---------- */
 .footer {
     display: flex;
-    gap: 24px;
-    padding: 24px;
+    gap: 20px;
+    padding: 14px 24px;
     font-size: 13px;
     color: rgba(255, 255, 255, 0.8);
     border-top: 0.5px solid var(--color-primary-dark);
