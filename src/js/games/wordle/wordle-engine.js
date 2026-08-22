@@ -43,6 +43,9 @@ function formatClock(totalSeconds) {
  *
  * `timeLimitSeconds` is optional (tournament mode) -- when set, a visible countdown is shown and
  * running out of time ends the round as a loss (`timedOut: true`) even with guesses remaining.
+ * `roundLabel` is an optional plain-text string (e.g. "Word 3 of 10") shown alongside Time inside
+ * that same stats box -- only rendered when `timeLimitSeconds` is also set, since that's the only
+ * box it can appear in.
  *
  * `validateGuess` is an optional `async (guess) => boolean` callback -- when provided, every guess
  * that isn't the exact target word is checked against it before being accepted (real Wordle rejects
@@ -56,13 +59,18 @@ function formatClock(totalSeconds) {
  * Shared by all of wordle.html's modes (Daily Challenge, Tournaments, Challenge a Friend) --
  * callers that only destructure `{ won, attempts }` are unaffected by the extra fields.
  */
-export function playWordleRound({ container, targetWord, maxGuesses = 6, timeLimitSeconds = null, validateGuess = null, onComplete }) {
+export function playWordleRound({ container, targetWord, maxGuesses = 6, timeLimitSeconds = null, roundLabel = null, validateGuess = null, onComplete }) {
     const target = targetWord.toUpperCase();
     const wordLength = target.length;
 
     container.innerHTML = `
         ${timeLimitSeconds ? `
             <div class="wordle-stats" id="wordle-stats">
+                ${roundLabel ? `
+                    <span class="wordle-stat">
+                        <span class="wordle-stat-value">${roundLabel}</span>
+                    </span>
+                ` : ''}
                 <span class="wordle-stat">
                     <span class="wordle-stat-icon">${icon('STOPWATCH')}</span>
                     <span class="wordle-stat-label">Time</span>

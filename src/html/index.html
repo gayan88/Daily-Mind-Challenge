@@ -44,12 +44,25 @@
         <div class="ad-space" data-ad-slot="home-3">Google AdSense - Ad Space #3 (300x250)</div>
 
         <div class="section">
-            <div class="section-title">Today's top players</div>
-            <div class="leaderboard-table" id="leaderboard-preview">
-                <div class="loading-text">Loading leaderboard&hellip;</div>
-            </div>
-            <div class="view-all">
-                <a href="/leaderboard">View full leaderboard <span data-icon="ARROW_RIGHT"></span></a>
+            <div class="hlb-card">
+                <div class="hlb-header">
+                    <div class="hlb-title">
+                        <span class="hlb-trophy">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M17 4h3a2 2 0 0 1 2 2v1a4 4 0 0 1-4 4"/><path d="M7 4H4a2 2 0 0 0-2 2v1a4 4 0 0 0 4 4"/></svg>
+                        </span>
+                        Today's Top Players
+                    </div>
+                    <a href="/leaderboard" class="hlb-view-all">View full leaderboard <span data-icon="ARROW_RIGHT"></span></a>
+                </div>
+                <div class="hlb-table" id="leaderboard-preview">
+                    <div class="loading-text">Loading leaderboard&hellip;</div>
+                </div>
+                <div class="hlb-footer">
+                    <span class="hlb-footer-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    </span>
+                    <span id="hlb-footer-message">Keep playing to climb the leaderboard!</span>
+                </div>
             </div>
         </div>
     </div>

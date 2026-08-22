@@ -1,6 +1,7 @@
 import { initShell } from '../app.js';
 import { getOverallLeaderboard, getGameLeaderboard } from './leaderboard-data.js';
-import { escapeHtml, formatLeaderboardName } from '../utils/helpers.js';
+import { escapeHtml } from '../utils/helpers.js';
+import { icon } from '../utils/icons.js';
 import { getConfig } from '../utils/config.js';
 
 const EMPTY_MESSAGES = {
@@ -17,12 +18,30 @@ const EMPTY_MESSAGES = {
 // Pagination below only controls how many of these already-fetched rows are revealed per page.
 const FETCH_CAP = 500;
 
+/** Gold/silver/bronze medal emoji for the top 3, a plain rank number below that -- same treatment
+ * as the home page's top-5 preview (src/js/pages/home.js), duplicated here rather than shared
+ * since it's two small pure functions, not worth a cross-page module for. */
+function rankMarkerHtml(rank) {
+    if (rank === 1) return `<span class="hlb-medal">${icon('GOLD_MEDAL')}</span>`;
+    if (rank === 2) return `<span class="hlb-medal">${icon('SILVER_MEDAL')}</span>`;
+    if (rank === 3) return `<span class="hlb-medal">${icon('BRONZE_MEDAL')}</span>`;
+    return `<span class="hlb-rank-number">${rank}</span>`;
+}
+
+function badgeHtml(row, uid) {
+    if (row.uid === uid) return '<span class="hlb-badge hlb-badge-you">You</span>';
+    if (row.isGuest) return '<span class="hlb-badge hlb-badge-guest">Guest</span>';
+    return '';
+}
+
 function rowHtml(row, uid) {
     return `
-        <div class="lb-row ${row.uid === uid ? 'lb-you' : ''}">
-            <div class="lb-rank">${row.rank}</div>
-            <div class="lb-name">${escapeHtml(formatLeaderboardName(row.displayName, row.isGuest))}</div>
-            <div class="lb-score">${row.points} pts</div>
+        <div class="hlb-row ${row.uid === uid ? 'hlb-you' : ''}">
+            <div class="hlb-rank">${rankMarkerHtml(row.rank)}</div>
+            <div class="hlb-divider"></div>
+            <div class="hlb-name">${escapeHtml(row.displayName)}</div>
+            ${badgeHtml(row, uid)}
+            <div class="hlb-score"><span class="hlb-score-num">${row.points}</span><span class="hlb-score-label">pts</span></div>
         </div>
     `;
 }

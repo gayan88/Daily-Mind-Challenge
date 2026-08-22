@@ -17,6 +17,9 @@ export const ICONS = {
     WORDS: '\u{1F524}',       // 🔤
     STOPWATCH: '\u{23F1}\u{FE0F}', // ⏱️
     WARNING: '\u{26A0}\u{FE0F}',   // ⚠️
+    GOLD_MEDAL: '\u{1F947}',       // 🥇
+    SILVER_MEDAL: '\u{1F948}',     // 🥈
+    BRONZE_MEDAL: '\u{1F949}',     // 🥉
 };
 
 export function icon(name) {

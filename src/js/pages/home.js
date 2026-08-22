@@ -1,9 +1,9 @@
 import { loadHeaderFooter, trySession } from '../app.js';
-import { applyIcons } from '../utils/icons.js';
+import { applyIcons, icon } from '../utils/icons.js';
 import { getOverallLeaderboard, findUserInLeaderboard } from '../leaderboard/leaderboard-data.js';
-import { checkPlayedTodayAll } from '../utils/points.js';
+import { checkPlayedTodayAll, getUserLifetimeStats } from '../utils/points.js';
 import { getConfig } from '../utils/config.js';
-import { escapeHtml, formatLeaderboardName, getQueryParam, getTodayDateString } from '../utils/helpers.js';
+import { escapeHtml, getQueryParam, getTodayDateString } from '../utils/helpers.js';
 import {
     signInAsGuest,
     signUpWithUsername,
@@ -166,6 +166,35 @@ function wireGameTileGate() {
 
 /* ---------- Dashboard (rendered for every visitor, logged in or not) ---------- */
 
+// Outlined line icons (not this app's usual emoji set, see icons.js) -- used only on the status
+// card's stat tiles, matching a monochrome-purple mockup emoji can't reproduce.
+const ICON_STAR = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+const ICON_TROPHY = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M17 4h3a2 2 0 0 1 2 2v1a4 4 0 0 1-4 4"/><path d="M7 4H4a2 2 0 0 0-2 2v1a4 4 0 0 0 4 4"/></svg>`;
+const ICON_CHART = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="14" width="4" height="6" rx="1"/><rect x="10" y="9" width="4" height="11" rx="1"/><rect x="16" y="4" width="4" height="16" rx="1"/></svg>`;
+const ICON_MEDAL = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>`;
+
+function statTile(iconSvg, label, value, valueId) {
+    return `
+        <div class="status-stat-card">
+            <div class="status-stat-icon-wrap">${iconSvg}</div>
+            <div class="status-stat-label">${label}</div>
+            <div class="status-stat-value"${valueId ? ` id="${valueId}"` : ''}>${value}</div>
+        </div>
+    `;
+}
+
+/** The highlighted callout at the bottom of the status card -- generalizes the old plain-text
+ * rank row into three states: leading today, ranked but not leading, and not played yet. */
+function highlightForTodayRank(todayRank) {
+    if (todayRank === 1) {
+        return { title: "You're leading today's leaderboard", desc: 'Keep it up! Play more puzzles to stay on top.' };
+    }
+    if (todayRank) {
+        return { title: `You're #${todayRank} on today's leaderboard`, desc: 'Play more puzzles to climb higher.' };
+    }
+    return { title: "You haven't played today yet", desc: 'Play a game today to join the leaderboard!' };
+}
+
 function renderStatusCardLoggedOut() {
     const card = document.getElementById('status-card');
     card.innerHTML = `
@@ -175,11 +204,8 @@ function renderStatusCardLoggedOut() {
     applyIcons(card);
 }
 
-function renderStatusCard(profile, todayRank, todayPoints, bonusApplied) {
+function renderStatusCard(profile, todayRank, todayPoints, bonusApplied, totalPoints) {
     const card = document.getElementById('status-card');
-    const rankRow = todayRank
-        ? `<div class="status-row"><span class="status-icon" data-icon="TROPHY"></span>You are <strong>#${todayRank}</strong> on today's leaderboard</div>`
-        : `<div class="status-row"><span class="status-icon" data-icon="STAR"></span>Play a game today to join the leaderboard!</div>`;
 
     const bonusRow = bonusApplied
         ? `<div class="status-row"><span class="status-icon" data-icon="CHECK"></span>You visited today! <strong>+login points</strong></div>`
@@ -187,12 +213,24 @@ function renderStatusCard(profile, todayRank, todayPoints, bonusApplied) {
             ? `<div class="status-row"><span class="status-icon" data-icon="CHECK"></span>Welcome, guest! Sign up to earn daily login points.</div>`
             : '';
 
+    const highlight = highlightForTodayRank(todayRank);
+
     card.innerHTML = `
         <div class="status-welcome">Welcome back, ${escapeHtml(profile.displayName)}!</div>
         ${bonusRow}
-        ${rankRow}
-        <div class="points-display">
-            Today's points: <span class="points-number">${todayPoints}</span>
+        <div class="status-stats-grid">
+            ${statTile(ICON_STAR, "Today's Points", todayPoints)}
+            ${statTile(ICON_TROPHY, "Today's Rank", todayRank ? `#${todayRank}` : '&mdash;')}
+            ${statTile(ICON_CHART, 'Total Points', totalPoints.toLocaleString())}
+            ${statTile(ICON_MEDAL, 'Overall Rank', '&hellip;', 'status-overall-rank')}
+        </div>
+        <div class="status-divider"></div>
+        <div class="status-highlight">
+            <div class="status-highlight-icon-wrap">${ICON_TROPHY}</div>
+            <div>
+                <div class="status-highlight-title">${highlight.title}</div>
+                <div class="status-highlight-desc">${highlight.desc}</div>
+            </div>
         </div>
     `;
     applyIcons(card);
@@ -205,6 +243,22 @@ function markTileCompleted(game, played) {
     tile.title = 'Completed today';
 }
 
+/** Gold/silver/bronze medal emoji for the top 3, a plain rank number below that. */
+function rankMarkerHtml(rank) {
+    if (rank === 1) return `<span class="hlb-medal">${icon('GOLD_MEDAL')}</span>`;
+    if (rank === 2) return `<span class="hlb-medal">${icon('SILVER_MEDAL')}</span>`;
+    if (rank === 3) return `<span class="hlb-medal">${icon('BRONZE_MEDAL')}</span>`;
+    return `<span class="hlb-rank-number">${rank}</span>`;
+}
+
+/** "You" only ever applies to a row that's already within the displayed top 5 -- this preview
+ * never inserts an extra row to surface the current player if they're ranked lower than that. */
+function badgeHtml(row, uid) {
+    if (row.uid === uid) return '<span class="hlb-badge hlb-badge-you">You</span>';
+    if (row.isGuest) return '<span class="hlb-badge hlb-badge-guest">Guest</span>';
+    return '';
+}
+
 function renderLeaderboardPreview(rows, uid) {
     const el = document.getElementById('leaderboard-preview');
     if (rows.length === 0) {
@@ -215,10 +269,12 @@ function renderLeaderboardPreview(rows, uid) {
     el.innerHTML = rows
         .slice(0, 5)
         .map((row) => `
-            <div class="lb-row ${row.uid === uid ? 'lb-you' : ''}">
-                <div class="lb-rank">${row.rank}</div>
-                <div class="lb-name">${escapeHtml(formatLeaderboardName(row.displayName, row.isGuest))}</div>
-                <div class="lb-score">${row.points} pts</div>
+            <div class="hlb-row ${row.uid === uid ? 'hlb-you' : ''}">
+                <div class="hlb-rank">${rankMarkerHtml(row.rank)}</div>
+                <div class="hlb-divider"></div>
+                <div class="hlb-name">${escapeHtml(row.displayName)}</div>
+                ${badgeHtml(row, uid)}
+                <div class="hlb-score"><span class="hlb-score-num">${row.points}</span><span class="hlb-score-label">pts</span></div>
             </div>
         `)
         .join('');
@@ -237,22 +293,42 @@ async function renderLoggedInDashboard(uid, profile, bonusApplied) {
     // player's own "today's points" -- otherwise the login toast promises points that never show up.
     const needsBonusConfig = profile.kind === 'registered' && profile.lastLoginDate === getTodayDateString();
 
-    const [leaderboardRows, playedToday, dailyRewardConfig] = await Promise.all([
+    const [leaderboardRows, playedToday, dailyRewardConfig, lifetimeStats] = await Promise.all([
         getOverallLeaderboard('today', 20),
         checkPlayedTodayAll(uid),
         needsBonusConfig ? getConfig('dailyLoginReward') : Promise.resolve(null),
+        getUserLifetimeStats(uid),
     ]);
 
     const userRow = findUserInLeaderboard(leaderboardRows, uid);
     const todayPoints = (userRow?.points ?? 0) + (needsBonusConfig ? dailyRewardConfig.points : 0);
+    const totalPoints = profile.kind === 'registered' ? profile.loginPoints + lifetimeStats.totalScore : lifetimeStats.totalScore;
 
-    renderStatusCard(profile, userRow?.rank ?? null, todayPoints, bonusApplied);
+    renderStatusCard(profile, userRow?.rank ?? null, todayPoints, bonusApplied, totalPoints);
 
     markTileCompleted('wordle', !!playedToday.wordle);
     markTileCompleted('sudoku', !!playedToday.sudoku);
     markTileCompleted('wordsearch', !!playedToday.wordsearch);
 
     renderLeaderboardPreview(leaderboardRows, uid);
+
+    // Overall Rank requires aggregating the entire all-time gameScores collection (the same
+    // unbounded-read cost leaderboard.html's All-time tab already accepts -- see its CLAUDE.md's
+    // "Known limitation") just to find this one user's position. Deliberately not awaited above
+    // so it can't slow down the rest of the dashboard; the tile shows "…" until this fills it in.
+    loadOverallRank(uid);
+}
+
+async function loadOverallRank(uid) {
+    let overallRank = null;
+    try {
+        const allTimeLeaderboardRows = await getOverallLeaderboard('all', 500);
+        overallRank = findUserInLeaderboard(allTimeLeaderboardRows, uid)?.rank ?? null;
+    } catch {
+        // leave overallRank null -- shown as an em dash below, same as "not ranked yet"
+    }
+    const el = document.getElementById('status-overall-rank');
+    if (el) el.textContent = overallRank ? `#${overallRank}` : '—';
 }
 
 /* ---------- Entry point ---------- */

@@ -42,3 +42,107 @@
     background: var(--color-bg);
     color: var(--color-text);
 }
+
+/* ---------- Home page leaderboard preview card ----------
+   The row-level classes (.hlb-row, .hlb-medal, .hlb-badge, etc.) now live in components.css --
+   leaderboard.html's full table reuses them too, inside its own .leaderboard-table wrapper. What
+   stays here is just the home-only "card" chrome around the top-5 preview: the header (trophy +
+   title + "View full leaderboard" link) and the "keep playing" footer, neither of which the full
+   leaderboard page has. */
+.hlb-card {
+    background: var(--color-surface);
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+}
+
+.hlb-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.hlb-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--color-text);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.hlb-trophy {
+    color: var(--color-primary);
+    display: flex;
+}
+
+.hlb-trophy svg {
+    width: 26px;
+    height: 26px;
+}
+
+.hlb-view-all {
+    font-size: 15px;
+    color: var(--color-primary);
+    text-decoration: none;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.hlb-view-all:hover {
+    text-decoration: underline;
+}
+
+.hlb-table {
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.hlb-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.hlb-footer-icon {
+    flex: 0 0 auto;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--color-primary-tint);
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hlb-footer-icon svg {
+    width: 16px;
+    height: 16px;
+}
+
+#hlb-footer-message {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+}
+
+@media (max-width: 640px) {
+    .hlb-card {
+        padding: 20px;
+    }
+
+    .hlb-footer {
+        text-align: center;
+    }
+}

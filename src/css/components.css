@@ -138,8 +138,8 @@
 }
 
 .status-welcome {
-    font-size: 20px;
-    font-weight: 600;
+    font-size: 28px;
+    font-weight: 700;
     color: var(--color-primary);
     margin-bottom: 16px;
 }
@@ -180,6 +180,103 @@
     font-weight: 700;
     color: var(--color-primary);
     display: inline-block;
+}
+
+.status-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-top: 16px;
+}
+
+@media (max-width: 900px) {
+    .status-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 420px) {
+    .status-stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.status-stat-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 10px;
+    padding: 24px 16px;
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-lg);
+}
+
+.status-stat-icon-wrap {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--color-primary-tint);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-primary);
+}
+
+.status-stat-icon-wrap svg {
+    width: 26px;
+    height: 26px;
+}
+
+.status-stat-label {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+}
+
+.status-stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--color-primary);
+}
+
+.status-divider {
+    border-top: 0.5px solid var(--color-border);
+    margin: 24px 0;
+}
+
+.status-highlight {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.status-highlight-icon-wrap {
+    flex: 0 0 auto;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--color-primary-tint);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-primary);
+}
+
+.status-highlight-icon-wrap svg {
+    width: 26px;
+    height: 26px;
+}
+
+.status-highlight-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: 2px;
+}
+
+.status-highlight-desc {
+    font-size: 14px;
+    color: var(--color-text-secondary);
 }
 
 /* ---------- Ad slot (placeholder by default, admin-configurable via config/ads) ---------- */
@@ -420,7 +517,10 @@
     color: var(--color-danger);
 }
 
-/* ---------- Leaderboard table ---------- */
+/* ---------- Leaderboard rows ----------
+   Shared by the home page's top-5 preview (its own .hlb-card wrapper, see pages/home.css) and
+   leaderboard.html's full paginated table (.leaderboard-table wrapper, same row classes) -- both
+   want the identical medal/badge/score treatment, so the row-level styling lives here once. */
 .leaderboard-table {
     width: 100%;
     background: var(--color-surface);
@@ -429,83 +529,104 @@
     overflow: hidden;
 }
 
-.lb-row {
+.hlb-row {
     display: flex;
-    padding: 14px 16px;
-    border-bottom: 0.5px solid var(--color-border);
     align-items: center;
-    gap: 14px;
-    font-size: 15px;
-    transition: all 0.2s;
+    gap: 12px;
+    padding: 10px 20px;
+    border-bottom: 0.5px solid var(--color-border);
 }
 
-.lb-row:last-child {
+.hlb-row:last-child {
     border-bottom: none;
 }
 
-.lb-row:hover:not(.lb-you) {
-    background: var(--color-bg);
-}
-
-.lb-rank {
-    width: 36px;
-    font-weight: 700;
-    color: var(--color-primary);
-    text-align: center;
-}
-
-.lb-name {
-    flex: 1;
-    color: var(--color-text);
-    font-weight: 500;
-}
-
-.lb-score {
-    font-weight: 600;
-    color: var(--color-text-secondary);
-    text-align: right;
-    min-width: 60px;
-}
-
-.lb-you {
+.hlb-you {
     background: var(--color-primary-tint);
 }
 
-.lb-you .lb-rank,
-.lb-you .lb-name,
-.lb-you .lb-score {
-    color: var(--color-primary);
-}
-
-.lb-you .lb-name {
-    font-weight: 600;
-}
-
-.view-all {
-    text-align: center;
-    margin-top: 16px;
-    padding: 12px;
-}
-
-.view-all a {
-    font-size: 15px;
-    color: var(--color-primary);
-    text-decoration: none;
-    font-weight: 600;
-    transition: all 0.2s;
-    display: inline-flex;
+.hlb-rank {
+    flex: 0 0 40px;
+    display: flex;
     align-items: center;
+    justify-content: center;
+}
+
+.hlb-medal {
+    font-size: 22px;
+    line-height: 1;
+}
+
+.hlb-rank-number {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.hlb-divider {
+    flex: 0 0 auto;
+    width: 1px;
+    height: 18px;
+    background: var(--color-border-strong);
+}
+
+.hlb-name {
+    flex: 0 1 auto;
+    min-width: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.hlb-badge {
+    flex: 0 0 auto;
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: var(--color-primary-tint);
+    color: var(--color-primary);
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.hlb-score {
+    margin-left: auto;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: baseline;
     gap: 6px;
 }
 
-.view-all a:hover {
-    text-decoration: underline;
+.hlb-score-num {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--color-primary);
+}
+
+.hlb-score-label {
+    font-size: 13px;
+    color: var(--color-text-secondary);
 }
 
 @media (max-width: 640px) {
-    .lb-row {
-        padding: 12px 14px;
+    .hlb-row {
+        padding: 8px 14px;
         gap: 10px;
+    }
+
+    .hlb-name {
+        font-size: 15px;
+    }
+
+    .hlb-medal {
+        font-size: 20px;
+    }
+
+    .hlb-score-num {
+        font-size: 18px;
     }
 }
 

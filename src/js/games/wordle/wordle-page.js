@@ -200,7 +200,6 @@ async function playTournamentRound(mount, uid, profile, tournament) {
 
     mount.innerHTML = `
         <h2 class="wordle-title">${escapeHtml(tournament.name)}</h2>
-        <p class="wordle-subtitle">Word ${wordIndex + 1} of ${numWords}</p>
         <div id="wordle-round-mount"></div>
     `;
     const roundMount = document.getElementById('wordle-round-mount');
@@ -210,6 +209,7 @@ async function playTournamentRound(mount, uid, profile, tournament) {
         targetWord: word,
         maxGuesses: MAX_GUESSES,
         timeLimitSeconds: tournament.timePerWordSeconds,
+        roundLabel: `Word ${wordIndex + 1} of ${numWords}`,
         validateGuess: isRealWord,
         onComplete: async ({ won }) => {
             const updated = await recordWordResult(tournament.id, uid, won);

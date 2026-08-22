@@ -55,10 +55,6 @@ export function formatDuration(ms) {
     return hours > 0 ? `${hours}:${pad(minutes)}:${pad(seconds)}` : `${minutes}:${pad(seconds)}`;
 }
 
-export function formatLeaderboardName(displayName, isGuest) {
-    return isGuest ? `${displayName} [Guest]` : displayName;
-}
-
 export function showToast(message, duration = 2200) {
     let toast = document.querySelector('.toast');
     if (!toast) {

@@ -472,7 +472,7 @@
 
 .wordle-stats {
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
     gap: 16px;
     padding: 14px 20px;
