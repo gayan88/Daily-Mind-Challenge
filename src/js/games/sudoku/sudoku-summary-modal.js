@@ -1,4 +1,4 @@
-import { escapeHtml } from '../../utils/helpers.js';
+import { escapeHtml, shareUrl } from '../../utils/helpers.js';
 
 /**
  * Shared post-round popup for Sudoku's Daily Challenge and Classic modes: points breakdown and
@@ -85,8 +85,8 @@ export function showSudokuSummaryModal({
     const shareBtn = overlay.querySelector('#sudoku-summary-share-btn');
     if (shareBtn && onShare) {
         shareBtn.addEventListener('click', async () => {
-            const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}&quote=${encodeURIComponent(shareText)}`;
-            window.open(url, '_blank', 'noopener,noreferrer,width=600,height=500');
+            const shared = await shareUrl(window.location.href, shareText);
+            if (!shared) return;
             const result = await onShare();
             if (result && result.applied) {
                 shareBtn.disabled = true;

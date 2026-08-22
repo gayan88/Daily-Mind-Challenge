@@ -1,8 +1,6 @@
 /* ---------- Header ---------- */
 .header {
     background: linear-gradient(90deg, var(--color-primary), var(--color-primary-dark));
-    border-radius: var(--radius-lg);
-    margin: 12px 16px 0;
     padding: 10px 24px;
     display: flex;
     align-items: center;
@@ -10,7 +8,7 @@
     gap: 20px;
     box-shadow: var(--shadow-header);
     position: sticky;
-    top: 12px;
+    top: 0;
     z-index: 100;
 }
 
@@ -261,11 +259,8 @@
 
 @media (max-width: 640px) {
     .header {
-        flex-wrap: wrap;
-        row-gap: 8px;
-        margin: 8px 8px 0;
         padding: 8px 14px;
-        top: 8px;
+        top: 0;
     }
 
     .logo {
@@ -281,23 +276,17 @@
         display: none;
     }
 
-    .user-menu {
-        /* Full width so it drops to its own row below the logo instead of squeezing onto the
-           same line -- that squeeze was forcing the 3-word logo to wrap across 3 lines. */
-        width: 100%;
-        justify-content: center;
+    /* Collapse the trigger down to just the avatar + chevron -- name and Guest badge already
+       show prominently at the top of the dropdown once it's opened, so hiding them here loses
+       nothing, and it's what keeps the header on a single row instead of wrapping. */
+    .user-trigger {
+        gap: 4px;
+        padding: 4px 8px 4px 4px;
     }
 
-    .user-trigger .user-name-text {
-        font-size: 13px;
-    }
-
-    /* The trigger is centered within the now-full-width .user-menu row, not pinned to its right
-       edge -- anchor the dropdown under the trigger itself instead of .user-menu's right edge. */
-    .user-dropdown {
-        right: auto;
-        left: 50%;
-        transform: translateX(-50%);
+    .user-trigger .user-name-text,
+    .user-trigger .user-guest-badge {
+        display: none;
     }
 
     .menu-btn {
@@ -376,12 +365,30 @@
 @media (max-width: 900px) {
     .status-stats-grid {
         grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
     }
-}
 
-@media (max-width: 420px) {
-    .status-stats-grid {
-        grid-template-columns: 1fr;
+    .status-stat-card {
+        padding: 16px 10px;
+        gap: 8px;
+    }
+
+    .status-stat-icon-wrap {
+        width: 44px;
+        height: 44px;
+    }
+
+    .status-stat-icon-wrap svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .status-stat-label {
+        font-size: 13px;
+    }
+
+    .status-stat-value {
+        font-size: 22px;
     }
 }
 

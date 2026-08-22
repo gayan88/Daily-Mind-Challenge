@@ -3,7 +3,7 @@ import { loadSessionProfile } from './auth/user-profile.js';
 import { applyDailyLoginBonus } from './utils/points.js';
 import { applyIcons } from './utils/icons.js';
 import { applyAdSlots } from './utils/ads.js';
-import { showToast, getTodayDateString } from './utils/helpers.js';
+import { showToast, getTodayDateString, shareUrl } from './utils/helpers.js';
 
 async function injectPartial(placeholderId, path) {
     const el = document.getElementById(placeholderId);
@@ -82,8 +82,7 @@ function wireFooterShare() {
     if (!link) return;
     link.addEventListener('click', (e) => {
         e.preventDefault();
-        const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`;
-        window.open(url, '_blank', 'noopener,noreferrer,width=600,height=500');
+        shareUrl(window.location.href);
     });
 }
 

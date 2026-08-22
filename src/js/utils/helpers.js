@@ -87,3 +87,34 @@ export function stringToSeed(str) {
     }
     return hash;
 }
+
+/**
+ * Shares a URL via the native Web Share API when the browser supports it (the OS's own share
+ * sheet -- user picks Facebook, Messages, WhatsApp, copy link, etc.), falling back to the classic
+ * facebook.com/sharer.php popup when it doesn't (most desktop browsers).
+ *
+ * The popup approach alone doesn't work reliably on mobile: opening a facebook.com URL there gets
+ * intercepted by the OS and handed to the Facebook app if it's installed, but sharer.php is a
+ * web-only dialog the app has no way to open, so the app just opens to the feed and nothing
+ * happens. The Web Share API sidesteps that entirely since it hands off to whatever app the user
+ * actually picks, rather than trying to force a specific facebook.com URL open.
+ *
+ * Returns `true` if a share was actually initiated (native share completed, or the popup was
+ * opened), `false` if the user explicitly cancelled the native share sheet -- callers that award
+ * points for sharing should skip that on `false` rather than treating a cancel as a share.
+ */
+export async function shareUrl(url, text = '', title = document.title) {
+    if (navigator.share) {
+        try {
+            await navigator.share({ title, text, url });
+            return true;
+        } catch (err) {
+            if (err.name === 'AbortError') return false;
+            // any other failure (e.g. an unsupported combination of fields) -- fall through to
+            // the popup below rather than leaving the user with no way to share at all.
+        }
+    }
+    const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}${text ? `&quote=${encodeURIComponent(text)}` : ''}`;
+    window.open(fbUrl, '_blank', 'noopener,noreferrer,width=600,height=500');
+    return true;
+}
