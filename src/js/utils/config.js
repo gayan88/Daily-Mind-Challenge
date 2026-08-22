@@ -39,6 +39,13 @@ export const CONFIG_DEFAULTS = {
         maxErrors: 3,
         description: 'Global rules applied to every Sudoku Tournament: puzzle count (a guideline for admins creating one), seconds allowed per puzzle, and errors allowed per puzzle before it\'s failed. The completion bonus is set per tournament when it\'s created.',
     },
+    wordsearchTournamentSettings: {
+        puzzleCount: 10,
+        timeLimitSeconds: 300,
+        completedPoints: 50,
+        failedPoints: 10,
+        description: 'Global rules applied to every Word Search Tournament: puzzle count (a guideline for admins creating one), seconds allowed per puzzle, and points awarded for completing/failing a puzzle. The completion bonus is set per tournament when it\'s created.',
+    },
     wordValidationAPI: {
         // v2, not v1 -- v1 returns 502 (not 404) for a word that doesn't exist, which makes it
         // impossible to distinguish "not a real word" from "the API is down".

@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/assets/images/logo-header.png">
     <title>Word Search - Daily Mind Challenge</title>
     <link rel="stylesheet" href="/css/base.css">
     <link rel="stylesheet" href="/css/components.css">
@@ -15,9 +16,13 @@
         <div class="ad-space" data-ad-slot="wordsearch-top">Google AdSense - Ad Space (300x250)</div>
 
         <div class="section">
-            <div class="section-title" id="ws-theme-title">Today's Word Search</div>
+            <div class="section-title">Word Search</div>
+            <div class="wordsearch-mode-tabs">
+                <button class="wordsearch-mode-tab active" data-mode="daily" type="button">Daily Challenge</button>
+                <button class="wordsearch-mode-tab" data-mode="classic" type="button">Classic</button>
+                <button class="wordsearch-mode-tab" data-mode="tournament" type="button">Tournament</button>
+            </div>
             <div class="game-container">
-                <p class="game-intro">Drag across letters to select a straight line and find every word.</p>
                 <div id="game-mount">
                     <div class="loading-text">Loading&hellip;</div>
                 </div>

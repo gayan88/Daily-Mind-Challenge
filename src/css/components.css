@@ -556,7 +556,8 @@
 }
 
 .form-field input,
-.form-field select {
+.form-field select,
+.form-field textarea {
     width: 100%;
     padding: 10px 12px;
     border: 0.5px solid var(--color-border);
@@ -567,8 +568,18 @@
     background: white;
 }
 
+/* Plain <textarea> defaults to a ~2-row browser sizing with no width/resize behavior --
+   .form-field never had to account for one until admin forms started collecting word lists
+   (Word Search's Daily/Classic puzzle words), so this fills that gap for every .form-field
+   textarea going forward. */
+.form-field textarea {
+    min-height: 90px;
+    resize: vertical;
+}
+
 .form-field input:focus,
-.form-field select:focus {
+.form-field select:focus,
+.form-field textarea:focus {
     outline: 2px solid var(--color-primary-light);
     outline-offset: 1px;
 }

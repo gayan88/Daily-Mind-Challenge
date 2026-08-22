@@ -1,13 +1,131 @@
+.wordsearch-mode-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    max-width: 460px;
+    margin: 0 auto 20px;
+}
+
+.wordsearch-mode-tab {
+    flex: 1;
+    min-width: 140px;
+    padding: 10px 14px;
+    border: 0.5px solid var(--color-border);
+    background: white;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.wordsearch-mode-tab.active {
+    background: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+}
+
+.wordsearch-mode-tab:not(.active):hover {
+    background: var(--color-bg);
+    border-color: var(--color-border-strong);
+}
+
 .game-container {
     max-width: 700px;
     margin: 0 auto;
 }
 
-.game-intro {
+.wordsearch-title {
+    text-align: center;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: 4px;
+}
+
+.wordsearch-subtitle {
     text-align: center;
     color: var(--color-text-secondary);
     font-size: 14px;
     margin-bottom: 20px;
+}
+
+.wordsearch-stats {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    padding: 14px 20px;
+    background: var(--color-surface);
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    margin-bottom: 16px;
+}
+
+.wordsearch-stat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.wordsearch-stat-icon {
+    font-size: 18px;
+    line-height: 1;
+}
+
+.wordsearch-stat-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-primary);
+}
+
+.wordsearch-stat-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+#ws-time-stat.urgent {
+    color: var(--color-danger);
+}
+
+.wordsearch-difficulty-picker {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 460px;
+    margin: 0 auto;
+}
+
+.wordsearch-difficulty-btn {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 16px 20px;
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: white;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.wordsearch-difficulty-btn:hover {
+    border-color: var(--color-primary);
+    background: var(--color-primary-tint);
+}
+
+.wordsearch-difficulty-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.wordsearch-difficulty-points {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-primary);
 }
 
 .wordsearch-layout {
@@ -56,8 +174,13 @@
 }
 
 .ws-cell.found {
-    background: var(--color-sudoku-start);
+    background: var(--color-success);
     color: white;
+}
+
+.ws-cell.revealed {
+    background: #FCEBE9;
+    color: var(--color-danger);
 }
 
 .wordsearch-words {
@@ -90,6 +213,183 @@
     color: var(--color-primary);
     text-decoration: line-through;
     opacity: 0.7;
+}
+
+.ws-word.revealed {
+    background: #FCEBE9;
+    color: var(--color-danger);
+}
+
+.wordsearch-tournament-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.wordsearch-tournament-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 20px 24px;
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+}
+
+.wordsearch-tournament-info {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.wordsearch-tournament-name {
+    font-weight: 800;
+    font-size: 22px;
+    color: var(--color-text);
+}
+
+.wordsearch-tournament-meta-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 15px;
+    color: var(--color-text-secondary);
+}
+
+.wordsearch-tournament-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.wordsearch-tournament-meta-icon {
+    width: 20px;
+    height: 20px;
+    color: var(--color-primary);
+    flex-shrink: 0;
+}
+
+.wordsearch-tournament-sep {
+    color: var(--color-border-strong);
+}
+
+.wordsearch-tournament-card .btn {
+    flex: 0 0 auto;
+    padding: 14px 32px;
+    font-size: 15px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.wordsearch-tournament-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 16px;
+}
+
+@media (max-width: 480px) {
+    .wordsearch-tournament-card {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .wordsearch-tournament-card .btn {
+        width: 100%;
+    }
+}
+
+/* ---------- Post-round summary modal ----------
+   Same overlay/dialog/close pattern as index.html's sign-in modal / other games' summary modals,
+   duplicated here rather than shared since only one page's CSS loads at a time. */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(44, 44, 42, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 300;
+}
+
+.modal-dialog {
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    padding: 52px 24px 24px;
+    width: 100%;
+    max-width: 400px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+}
+
+.modal-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    color: var(--color-text-muted);
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    z-index: 1;
+}
+
+.modal-close:hover {
+    background: var(--color-bg);
+    color: var(--color-text);
+}
+
+.wordsearch-summary-title {
+    text-align: center;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: 4px;
+}
+
+.wordsearch-summary-subtitle {
+    text-align: center;
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin-bottom: 20px;
+}
+
+.wordsearch-summary-breakdown {
+    border-top: 0.5px solid var(--color-border);
+    padding-top: 12px;
+    margin-bottom: 16px;
+}
+
+.wordsearch-summary-line {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    padding: 4px 0;
+}
+
+.wordsearch-summary-total {
+    border-top: 0.5px solid var(--color-border);
+    margin-top: 6px;
+    padding-top: 10px;
+    font-weight: 700;
+    color: var(--color-text);
+    font-size: 16px;
+}
+
+.wordsearch-summary-share {
+    width: 100%;
 }
 
 @media (max-width: 420px) {

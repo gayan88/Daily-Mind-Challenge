@@ -68,7 +68,7 @@ service cloud.firestore {
 
             function isFacebookShareUpdate() {
                 return isSignedIn() && request.auth.uid == resource.data.userId
-                    && resource.data.gameType in ['wordle', 'sudoku', 'sudoku-classic']
+                    && resource.data.gameType in ['wordle', 'sudoku', 'sudoku-classic', 'wordsearch', 'wordsearch-classic']
                     && resource.data.sharedToFacebook != true
                     && request.resource.data.sharedToFacebook == true
                     && request.resource.data.score == resource.data.score + 20
@@ -76,14 +76,16 @@ service cloud.firestore {
             }
         }
 
-        // Everyday game scores (wordsearch daily plays) stay capped at 10. The Wordle/Sudoku Daily
-        // Challenge and Sudoku Classic richer formulas (before the +20 Facebook share applied
-        // separately via update) reach 30/100 on create. Tournament completions (see
-        // wordle-tournament-data.js / sudoku-tournament-data.js) are bounded generously since their
-        // inputs (numWords/bonusPoints, or the admin-configured sudokuTournamentSettings) are
-        // admin-controlled, not player-controlled. Challenge a Friend plays cap at 30 like the
-        // Daily Challenge; the creator's separate +10-per-solver reward falls under the default 10
-        // cap below.
+        // The Wordle/Sudoku/Word Search Daily Challenge, Classic, and Tournament formulas (before
+        // the +20 Facebook share applied separately via update) reach up to 70-100 on create.
+        // Tournament completions (see wordle-tournament-data.js / sudoku-tournament-data.js /
+        // wordsearch-tournament-data.js) are bounded generously since their inputs (numWords/
+        // bonusPoints, or the admin-configured *TournamentSettings) are admin-controlled, not
+        // player-controlled -- wordsearch-tournament's ceiling is higher than Sudoku's own
+        // tournament ceiling because its per-puzzle completed/failed points are themselves
+        // admin-configurable (config/wordsearchTournamentSettings), not hardcoded like Sudoku's.
+        // Challenge a Friend plays cap at 30 like the Daily Challenge; the creator's separate
+        // +10-per-solver reward falls under the default 10 cap below.
         function maxCreateScore(gameType) {
             return gameType == 'wordle' ? 30
                 : gameType == 'wordle-tournament' ? 1000
@@ -92,6 +94,10 @@ service cloud.firestore {
                 : gameType == 'sudoku-classic' ? 100
                 : gameType == 'sudoku-tournament' ? 50
                 : gameType == 'sudoku-tournament-bonus' ? 2000
+                : gameType == 'wordsearch' ? 100
+                : gameType == 'wordsearch-classic' ? 100
+                : gameType == 'wordsearch-tournament' ? 500
+                : gameType == 'wordsearch-tournament-bonus' ? 2000
                 : 10;
         }
 
@@ -197,6 +203,62 @@ service cloud.firestore {
         // puzzle, not the run. Actual points are granted separately via the guarded gameScores
         // create above.
         match /sudokuTournamentAttempts/{attemptId} {
+            allow read: if true;
+            allow create: if isSignedIn()
+                && request.resource.data.uid == request.auth.uid
+                && attemptId == request.resource.data.tournamentId + '_' + request.auth.uid
+                && request.resource.data.currentPuzzleIndex == 0
+                && request.resource.data.puzzlesPassed == 0
+                && request.resource.data.puzzlesFailed == 0
+                && request.resource.data.completed == false
+                && request.resource.data.bonusAwarded == false;
+            allow update: if isSignedIn() && request.auth.uid == resource.data.uid
+                && request.resource.data.uid == resource.data.uid
+                && request.resource.data.tournamentId == resource.data.tournamentId
+                && (resource.data.completed == false || request.resource.data.completed == true)
+                && (request.resource.data.currentPuzzleIndex == resource.data.currentPuzzleIndex
+                    || request.resource.data.currentPuzzleIndex == resource.data.currentPuzzleIndex + 1)
+                && (request.resource.data.puzzlesPassed == resource.data.puzzlesPassed
+                    || request.resource.data.puzzlesPassed == resource.data.puzzlesPassed + 1)
+                && (request.resource.data.puzzlesFailed == resource.data.puzzlesFailed
+                    || request.resource.data.puzzlesFailed == resource.data.puzzlesFailed + 1);
+            allow delete: if isAdmin();
+        }
+
+        // Admin-managed pool of Daily Word Search puzzles -- see src/js/admin/wordsearch-admin.js.
+        // wordsearchDailyPuzzles/_meta holds { totalCount } alongside the numbered puzzle docs.
+        // Puzzle docs hold a word list only ({ theme, words }) -- the grid itself is generated at
+        // play time by wordsearch-engine.js, not admin-authored like Sudoku's puzzle+solution pairs.
+        match /wordsearchDailyPuzzles/{id} {
+            allow read: if true;
+            allow write: if isAdmin();
+        }
+
+        // Admin-managed pool of Classic Word Search puzzles -- one global numeric id sequence
+        // shared across all three difficulties (difficulty is just a field, not a separate counter).
+        match /wordsearchClassicPuzzles/{id} {
+            allow read: if true;
+            allow write: if isAdmin();
+        }
+
+        // Admin-managed tournaments -- name + puzzles array (word lists) + completionBonus, set
+        // per tournament at creation time. Puzzle count / time limit / completed-puzzle points /
+        // failed-puzzle points are global (config/wordsearchTournamentSettings, covered by the
+        // generic config rule above) -- unlike wordleTournaments (time/bonus per tournament) and
+        // unlike sudokuTournaments (bonus per tournament, but points-per-puzzle hardcoded in code,
+        // not configurable at all).
+        match /wordsearchTournaments/{id} {
+            allow read: if true;
+            allow write: if isAdmin();
+        }
+
+        // One progress doc per player per tournament, id = {tournamentId}_{uid}, exactly one
+        // attempt ever (see wordsearch-tournament-data.js) -- byte-for-byte the same
+        // bounded-progression shape as sudokuTournamentAttempts. currentPuzzleIndex/puzzlesPassed/
+        // puzzlesFailed only ever hold steady or advance by exactly 1; a failed puzzle here only
+        // ends that puzzle, not the run, so nothing ever resets. Actual points are granted
+        // separately via the guarded gameScores create above.
+        match /wordsearchTournamentAttempts/{attemptId} {
             allow read: if true;
             allow create: if isSignedIn()
                 && request.resource.data.uid == request.auth.uid

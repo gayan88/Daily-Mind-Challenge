@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/assets/images/logo-header.png">
     <title>Admin - Daily Mind Challenge</title>
     <link rel="stylesheet" href="/css/base.css">
     <link rel="stylesheet" href="/css/components.css">
@@ -196,6 +197,86 @@
                                 <input type="number" id="sudoku-tournament-bonus-input" value="250" min="0">
                             </div>
                             <button class="btn primary" id="sudoku-tournament-create-btn" type="button">Create Tournament</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-section" data-collapsible>
+            <button class="admin-section-header" type="button">Word Search</button>
+            <div class="admin-section-body">
+                <div class="section">
+                    <div class="section-title">Daily Puzzles</div>
+                    <div class="card">
+                        <p class="config-form-desc">Today's puzzle is picked automatically by date from this list. Add-only &mdash; editing a puzzle's words is fine, but the order determines which day it's used, so don't reorder or remove entries.</p>
+                        <div class="sudoku-puzzle-form">
+                            <div class="form-field">
+                                <label for="wordsearch-daily-theme-input">Theme (optional)</label>
+                                <input type="text" id="wordsearch-daily-theme-input" placeholder="e.g. Animals">
+                            </div>
+                            <div class="form-field">
+                                <label for="wordsearch-daily-words-input">Words (10, comma or newline-separated, 4-9 letters each)</label>
+                                <textarea id="wordsearch-daily-words-input" placeholder="TIGER, ZEBRA, RABBIT, PANDA, EAGLE, DOLPHIN, GIRAFFE, APPLE, MANGO, BANANA"></textarea>
+                            </div>
+                            <button class="btn primary" id="wordsearch-daily-add-btn" type="button">Add Puzzle</button>
+                        </div>
+                        <div id="wordsearch-daily-table">
+                            <div class="loading-text">Loading&hellip;</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Classic Puzzles</div>
+                    <div class="card">
+                        <p class="config-form-desc">Players pick a difficulty and get a random puzzle from that pool each round &mdash; unlimited replays, so order doesn't matter here. Easy needs exactly 6 words; Medium and Hard need exactly 10.</p>
+                        <div class="sudoku-puzzle-form">
+                            <div class="form-field">
+                                <label for="wordsearch-classic-theme-input">Theme (optional)</label>
+                                <input type="text" id="wordsearch-classic-theme-input" placeholder="e.g. Ocean">
+                            </div>
+                            <div class="form-field">
+                                <label for="wordsearch-classic-words-input">Words (comma or newline-separated, 4-9 letters each)</label>
+                                <textarea id="wordsearch-classic-words-input" placeholder="CORAL, SHARK, WHALE, OCTOPUS, TURTLE, OYSTER"></textarea>
+                            </div>
+                            <div class="form-field">
+                                <label for="wordsearch-classic-difficulty-select">Difficulty</label>
+                                <select id="wordsearch-classic-difficulty-select">
+                                    <option value="easy">Easy (6 words)</option>
+                                    <option value="medium">Medium (10 words)</option>
+                                    <option value="hard">Hard (10 words)</option>
+                                </select>
+                            </div>
+                            <button class="btn primary" id="wordsearch-classic-add-btn" type="button">Add Puzzle</button>
+                        </div>
+                        <div id="wordsearch-classic-table">
+                            <div class="loading-text">Loading&hellip;</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Tournaments</div>
+                    <div class="card">
+                        <p class="config-form-desc">Puzzle count, seconds per puzzle, and completed/failed points all come from the "Word Search Tournament Settings" form above, applied to every tournament &mdash; enter the same number of puzzles as that form's "Puzzles per tournament" here. The completion bonus is set per tournament below.</p>
+                        <div id="wordsearch-tournaments-table">
+                            <div class="loading-text">Loading&hellip;</div>
+                        </div>
+                        <div class="tournament-form">
+                            <div class="form-field">
+                                <label for="wordsearch-tournament-name-input">Name</label>
+                                <input type="text" id="wordsearch-tournament-name-input" placeholder="e.g. Weekend Sprint">
+                            </div>
+                            <div class="form-field">
+                                <label for="wordsearch-tournament-puzzles-input">Puzzles (one per line, 10 comma-separated words each, 4-9 letters)</label>
+                                <textarea id="wordsearch-tournament-puzzles-input" placeholder="TIGER, ZEBRA, RABBIT, PANDA, EAGLE, DOLPHIN, GIRAFFE, APPLE, MANGO, BANANA&#10;CORAL, SHARK, WHALE, OCTOPUS, TURTLE, OYSTER, ANCHOR, STORM, CLOUD, THUNDER"></textarea>
+                            </div>
+                            <div class="form-field">
+                                <label for="wordsearch-tournament-bonus-input">Completion bonus</label>
+                                <input type="number" id="wordsearch-tournament-bonus-input" value="250" min="0">
+                            </div>
+                            <button class="btn primary" id="wordsearch-tournament-create-btn" type="button">Create Tournament</button>
                         </div>
                     </div>
                 </div>

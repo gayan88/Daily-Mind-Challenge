@@ -11,6 +11,11 @@ import {
     listClassicSudokuPuzzles, addClassicSudokuPuzzle, updateClassicSudokuPuzzle,
     listSudokuTournaments, createSudokuTournament, setSudokuTournamentActive, deleteSudokuTournament,
 } from './sudoku-admin.js';
+import {
+    listDailyWordsearchPuzzles, addDailyWordsearchPuzzle, updateDailyWordsearchPuzzle,
+    listClassicWordsearchPuzzles, addClassicWordsearchPuzzle, updateClassicWordsearchPuzzle,
+    listWordsearchTournaments, createWordsearchTournament, setWordsearchTournamentActive, deleteWordsearchTournament,
+} from './wordsearch-admin.js';
 import { escapeHtml, showToast } from '../utils/helpers.js';
 
 const CONFIG_FORMS = [
@@ -51,6 +56,16 @@ const CONFIG_FORMS = [
             { key: 'puzzleCount', type: 'number', label: 'Puzzles per tournament' },
             { key: 'timeLimitSeconds', type: 'number', label: 'Seconds allowed per puzzle' },
             { key: 'maxErrors', type: 'number', label: 'Errors allowed per puzzle' },
+        ],
+    },
+    {
+        id: 'wordsearchTournamentSettings',
+        title: 'Word Search Tournament Settings',
+        fields: [
+            { key: 'puzzleCount', type: 'number', label: 'Puzzles per tournament' },
+            { key: 'timeLimitSeconds', type: 'number', label: 'Seconds allowed per puzzle' },
+            { key: 'completedPoints', type: 'number', label: 'Points for completing a puzzle' },
+            { key: 'failedPoints', type: 'number', label: 'Points for failing a puzzle' },
         ],
     },
     {
@@ -587,6 +602,218 @@ function wireSudokuTournamentCreate() {
     });
 }
 
+async function renderWordsearchDailyTable() {
+    const container = document.getElementById('wordsearch-daily-table');
+    let puzzles;
+    try {
+        puzzles = await listDailyWordsearchPuzzles();
+    } catch {
+        container.innerHTML = `<div class="empty-state">Couldn't load daily puzzles &mdash; check Firestore rules are deployed and try again.</div>`;
+        return;
+    }
+
+    if (puzzles.length === 0) {
+        container.innerHTML = `<div class="empty-state">No puzzles seeded yet. Add one above to activate the Daily Challenge.</div>`;
+        return;
+    }
+
+    container.innerHTML = puzzles.map((p) => `
+        <div class="sudoku-daily-row">
+            <span class="sudoku-daily-id">#${p.id}</span>
+            <span class="sudoku-daily-meta">${p.theme ? `${escapeHtml(p.theme)} &bull; ` : ''}${p.words.length} words</span>
+            <button class="btn" data-edit-ws-daily="${p.id}" type="button">Edit</button>
+        </div>
+    `).join('');
+
+    container.querySelectorAll('[data-edit-ws-daily]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+            const id = btn.dataset.editWsDaily;
+            const current = puzzles.find((p) => String(p.id) === id);
+            const nextTheme = window.prompt('Theme (optional):', current.theme || '');
+            if (nextTheme === null) return;
+            const nextWords = window.prompt('Words (comma or newline-separated):', current.words.join(', '));
+            if (nextWords === null) return;
+            try {
+                await updateDailyWordsearchPuzzle(id, { theme: nextTheme, words: parseWordsInput(nextWords) });
+                showToast(`Puzzle #${id} updated`);
+                renderWordsearchDailyTable();
+            } catch (err) {
+                showToast(err.message || "Couldn't save -- check Firestore rules are deployed");
+            }
+        });
+    });
+}
+
+function wireWordsearchDailyAdd() {
+    document.getElementById('wordsearch-daily-add-btn').addEventListener('click', async () => {
+        const themeInput = document.getElementById('wordsearch-daily-theme-input');
+        const wordsInput = document.getElementById('wordsearch-daily-words-input');
+        try {
+            const id = await addDailyWordsearchPuzzle({ theme: themeInput.value, words: parseWordsInput(wordsInput.value) });
+            themeInput.value = '';
+            wordsInput.value = '';
+            showToast(`Puzzle #${id} added`);
+            renderWordsearchDailyTable();
+        } catch (err) {
+            showToast(err.message || "Couldn't save -- check Firestore rules are deployed");
+        }
+    });
+}
+
+async function renderWordsearchClassicTable() {
+    const container = document.getElementById('wordsearch-classic-table');
+    let puzzles;
+    try {
+        puzzles = await listClassicWordsearchPuzzles();
+    } catch {
+        container.innerHTML = `<div class="empty-state">Couldn't load classic puzzles &mdash; check Firestore rules are deployed and try again.</div>`;
+        return;
+    }
+
+    if (puzzles.length === 0) {
+        container.innerHTML = `<div class="empty-state">No puzzles seeded yet. Add one above for each difficulty you want to offer.</div>`;
+        return;
+    }
+
+    container.innerHTML = puzzles.map((p) => `
+        <div class="sudoku-daily-row">
+            <span class="sudoku-daily-id">#${p.id}</span>
+            <span class="status-pill ${p.difficulty}">${p.difficulty}</span>
+            <span class="sudoku-daily-meta">${p.theme ? `${escapeHtml(p.theme)} &bull; ` : ''}${p.words.length} words</span>
+            <button class="btn" data-edit-ws-classic="${p.id}" type="button">Edit</button>
+        </div>
+    `).join('');
+
+    container.querySelectorAll('[data-edit-ws-classic]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+            const id = btn.dataset.editWsClassic;
+            const current = puzzles.find((p) => String(p.id) === id);
+            const nextTheme = window.prompt('Theme (optional):', current.theme || '');
+            if (nextTheme === null) return;
+            const nextWords = window.prompt('Words (comma or newline-separated):', current.words.join(', '));
+            if (nextWords === null) return;
+            const nextDifficulty = window.prompt('Difficulty (easy, medium, or hard):', current.difficulty);
+            if (nextDifficulty === null) return;
+            try {
+                await updateClassicWordsearchPuzzle(id, { theme: nextTheme, words: parseWordsInput(nextWords), difficulty: nextDifficulty.trim() });
+                showToast(`Puzzle #${id} updated`);
+                renderWordsearchClassicTable();
+            } catch (err) {
+                showToast(err.message || "Couldn't save -- check Firestore rules are deployed");
+            }
+        });
+    });
+}
+
+function wireWordsearchClassicAdd() {
+    document.getElementById('wordsearch-classic-add-btn').addEventListener('click', async () => {
+        const themeInput = document.getElementById('wordsearch-classic-theme-input');
+        const wordsInput = document.getElementById('wordsearch-classic-words-input');
+        const difficultySelect = document.getElementById('wordsearch-classic-difficulty-select');
+        try {
+            const id = await addClassicWordsearchPuzzle({
+                theme: themeInput.value,
+                words: parseWordsInput(wordsInput.value),
+                difficulty: difficultySelect.value,
+            });
+            themeInput.value = '';
+            wordsInput.value = '';
+            showToast(`Puzzle #${id} added`);
+            renderWordsearchClassicTable();
+        } catch (err) {
+            showToast(err.message || "Couldn't save -- check Firestore rules are deployed");
+        }
+    });
+}
+
+function parseWordsearchTournamentPuzzlesInput(raw) {
+    return raw.split('\n').map((line) => line.trim()).filter(Boolean).map((line) => ({
+        words: line.split(',').map((w) => w.trim()).filter(Boolean),
+    }));
+}
+
+async function renderWordsearchTournamentsTable() {
+    const container = document.getElementById('wordsearch-tournaments-table');
+    let tournaments;
+    try {
+        tournaments = await listWordsearchTournaments();
+    } catch {
+        container.innerHTML = `<div class="empty-state">Couldn't load tournaments &mdash; check Firestore rules are deployed and try again.</div>`;
+        return;
+    }
+
+    if (tournaments.length === 0) {
+        container.innerHTML = `<div class="empty-state">No tournaments yet. Create one below.</div>`;
+        return;
+    }
+
+    container.innerHTML = tournaments.map((t) => `
+        <div class="tournament-row">
+            <span class="tournament-row-name">${escapeHtml(t.name)}</span>
+            <span class="tournament-row-meta">${t.puzzles.length} puzzles &bull; +${t.completionBonus} bonus</span>
+            <span class="status-pill ${t.active ? 'on' : ''}">${t.active ? 'Active' : 'Inactive'}</span>
+            <div class="tournament-row-actions">
+                <button class="btn" data-toggle-ws-tournament="${t.id}" data-active="${t.active}" type="button">${t.active ? 'Deactivate' : 'Activate'}</button>
+                <button class="btn danger" data-delete-ws-tournament="${t.id}" type="button">Delete</button>
+            </div>
+        </div>
+    `).join('');
+
+    container.querySelectorAll('[data-toggle-ws-tournament]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+            const id = btn.dataset.toggleWsTournament;
+            const isActive = btn.dataset.active === 'true';
+            try {
+                await setWordsearchTournamentActive(id, !isActive);
+                renderWordsearchTournamentsTable();
+            } catch {
+                showToast("Couldn't save -- check Firestore rules are deployed");
+            }
+        });
+    });
+
+    container.querySelectorAll('[data-delete-ws-tournament]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+            if (!window.confirm('Delete this tournament? Players\' progress on it will be orphaned.')) return;
+            try {
+                await deleteWordsearchTournament(btn.dataset.deleteWsTournament);
+                showToast('Tournament deleted');
+                renderWordsearchTournamentsTable();
+            } catch {
+                showToast("Couldn't delete -- check Firestore rules are deployed");
+            }
+        });
+    });
+}
+
+function wireWordsearchTournamentCreate() {
+    document.getElementById('wordsearch-tournament-create-btn').addEventListener('click', async () => {
+        const name = document.getElementById('wordsearch-tournament-name-input').value.trim();
+        const puzzles = parseWordsearchTournamentPuzzlesInput(document.getElementById('wordsearch-tournament-puzzles-input').value);
+        const completionBonus = Number(document.getElementById('wordsearch-tournament-bonus-input').value);
+
+        if (!name) {
+            showToast('Enter a tournament name');
+            return;
+        }
+        if (puzzles.length === 0) {
+            showToast('Enter at least one puzzle');
+            return;
+        }
+
+        try {
+            await createWordsearchTournament({ name, puzzles, completionBonus });
+            document.getElementById('wordsearch-tournament-name-input').value = '';
+            document.getElementById('wordsearch-tournament-puzzles-input').value = '';
+            document.getElementById('wordsearch-tournament-bonus-input').value = '250';
+            showToast('Tournament created');
+            renderWordsearchTournamentsTable();
+        } catch (err) {
+            showToast(err.message || "Couldn't save -- check Firestore rules are deployed");
+        }
+    });
+}
+
 function renderModResult(user) {
     const el = document.getElementById('mod-result');
     if (!user) {
@@ -660,6 +887,12 @@ async function init() {
     await renderSudokuClassicTable();
     wireSudokuTournamentCreate();
     await renderSudokuTournamentsTable();
+    wireWordsearchDailyAdd();
+    await renderWordsearchDailyTable();
+    wireWordsearchClassicAdd();
+    await renderWordsearchClassicTable();
+    wireWordsearchTournamentCreate();
+    await renderWordsearchTournamentsTable();
 }
 
 init();
