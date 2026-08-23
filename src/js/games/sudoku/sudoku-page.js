@@ -1,24 +1,35 @@
 import { initShell } from '../../app.js';
 import { icon } from '../../utils/icons.js';
-import { getTodayDateString, showToast, escapeHtml } from '../../utils/helpers.js';
+import { getTodayDateString, showToast, escapeHtml, getQueryParam } from '../../utils/helpers.js';
 import { getConfig } from '../../utils/config.js';
-import { checkPlayedToday, markSharedToFacebook } from '../../utils/points.js';
+import { checkPlayedToday, markSharedToFacebook, markSharedWithFriends } from '../../utils/points.js';
 import { playSudokuRound } from './sudoku-engine.js';
 import { getTodayChallenge, recordDailyResult } from './sudoku-daily-data.js';
 import { getRandomClassicPuzzle, recordClassicResult } from './sudoku-classic-data.js';
 import {
     listActiveSudokuTournaments, getAttempt, getOrStartAttempt,
     recordPuzzleResult, completeTournamentIfNeeded,
+    markSharedToFacebook as markTournamentSharedToFacebook,
+    markSharedWithFriends as markTournamentSharedWithFriends,
 } from './sudoku-tournament-data.js';
 import { showSudokuSummaryModal } from './sudoku-summary-modal.js';
 
 const DIFFICULTY_LABELS = { easy: 'Easy', medium: 'Medium', hard: 'Hard' };
 const DIFFICULTY_POINTS = { easy: 10, medium: 15, hard: 25 };
+const FACEBOOK_GROUP_URL = 'https://www.facebook.com/groups/playdailymindchallenge';
+const TOURNAMENTS_TAB_URL = `${window.location.origin}/sudoku?tab=tournament`;
 
 // Outlined line icons (not this app's usual emoji set, see icons.js) -- used only on the
 // tournament list card, whose mockup called for a purple-outline look emoji can't reproduce.
 const ICON_PUZZLES = `<svg class="sudoku-tournament-meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>`;
 const ICON_BONUS = `<svg class="sudoku-tournament-meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+
+// Outlined line icons for the Daily/Classic points breakdown (mirrors wordle-page.js's own set) --
+// Tournament's breakdown lines reuse ICON_BONUS above for its completion-bonus line.
+const ICON_GRID = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>`;
+const ICON_STOPWATCH = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="1" x2="12" y2="4"/><line x1="9" y1="2.5" x2="15" y2="2.5"/></svg>`;
+const ICON_TARGET = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>`;
+const ICON_CHECK_SM = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
 
 function renderAdminBlocked(mount) {
     mount.innerHTML = `<div class="empty-state">Admin accounts don't play games.</div>`;
@@ -36,12 +47,21 @@ function renderAlreadyPlayedDaily(mount, played) {
     `;
 }
 
-function shareTextForDaily(challengeId, timeTaken, errors) {
-    return `Daily Mind Challenge Sudoku #${challengeId} — solved in ${timeTaken} with ${errors} error${errors === 1 ? '' : 's'}!`;
+function errorsLabel(errors) {
+    return `${errors} error${errors === 1 ? '' : 's'}`;
 }
 
-function shareTextForClassic(difficulty, timeTaken, errors) {
-    return `Daily Mind Challenge Sudoku (${DIFFICULTY_LABELS[difficulty]}) — solved in ${timeTaken} with ${errors} error${errors === 1 ? '' : 's'}!`;
+function shareTextForDaily(challengeId, timeTaken, errors, score) {
+    return `🧠 Daily Mind Challenge\n\n🔢 Daily Sudoku #${challengeId}\n🎉 Solved in ${timeTaken} with ${errorsLabel(errors)}\n⭐ Score: ${score} points\n\nCan you beat my result? 👀\n\nPlay today's challenge:\n${window.location.href}`;
+}
+
+function shareTextForClassic(difficulty, timeTaken, errors, score) {
+    return `🧩 Daily Mind Challenge\n\nClassic Sudoku — ${DIFFICULTY_LABELS[difficulty]}\n🎉 Solved in ${timeTaken} with ${errorsLabel(errors)}\n⭐ Score: ${score} points\n\nCan you beat my result? 👀\n\nPlay here:\n${window.location.href}`;
+}
+
+function shareTextForTournament(tournament, numPuzzles, score, puzzleResults) {
+    const puzzleLines = puzzleResults.map((passed, i) => `Puzzle ${i + 1} - ${passed ? 'Passed' : 'Failed'}`).join('\n');
+    return `🏆 Sudoku Tournament Complete!\n\nI completed ${tournament.name} 🎉\n\n🧩 Puzzles: ${numPuzzles}/${numPuzzles}\n⭐ Score: ${score} points\n\n${puzzleLines}\n\nThink you can beat my score? 👀\n\nJoin the tournament:\n${TOURNAMENTS_TAB_URL}`;
 }
 
 async function renderDailyMode(mount, uid, profile, setActiveRound) {
@@ -80,14 +100,17 @@ async function renderDailyMode(mount, uid, profile, setActiveRound) {
             showSudokuSummaryModal({
                 title: 'Solved!',
                 subtitle: `Daily Sudoku #${challenge.challengeId}`,
+                celebrate: true,
                 breakdown: [
-                    { label: 'Completing the puzzle', points: result.completionPoints },
-                    { label: 'Speed bonus', points: result.timeBonusPoints },
-                    { label: 'Accuracy bonus', points: result.errorBonusPoints },
+                    { label: 'Completing the puzzle', points: result.completionPoints, icon: ICON_GRID },
+                    { label: 'Speed bonus', points: result.timeBonusPoints, icon: ICON_STOPWATCH },
+                    { label: 'Accuracy bonus', points: result.errorBonusPoints, icon: ICON_TARGET },
                 ],
                 totalPoints: result.score,
-                shareText: shareTextForDaily(challenge.challengeId, result.timeTaken, errors),
-                onShare: () => markSharedToFacebook(uid, 'sudoku', getTodayDateString()),
+                shareText: shareTextForDaily(challenge.challengeId, result.timeTaken, errors, result.score),
+                communityUrl: FACEBOOK_GROUP_URL,
+                onShareCommunity: () => markSharedToFacebook(uid, 'sudoku', getTodayDateString()),
+                onShareFriends: () => markSharedWithFriends(uid, 'sudoku', getTodayDateString()),
             });
             showToast(`+${result.score} points!`);
         },
@@ -144,14 +167,17 @@ async function playClassicRound(mount, uid, profile, difficulty, setActiveRound)
             showSudokuSummaryModal({
                 title: 'Solved!',
                 subtitle: `Classic Sudoku — ${DIFFICULTY_LABELS[difficulty]}`,
+                celebrate: true,
                 breakdown: [
-                    { label: 'Completing the puzzle', points: result.completionPoints },
-                    { label: 'Speed bonus', points: result.timeBonusPoints },
-                    { label: 'Accuracy bonus', points: result.errorBonusPoints },
+                    { label: 'Completing the puzzle', points: result.completionPoints, icon: ICON_GRID },
+                    { label: 'Speed bonus', points: result.timeBonusPoints, icon: ICON_STOPWATCH },
+                    { label: 'Accuracy bonus', points: result.errorBonusPoints, icon: ICON_TARGET },
                 ],
                 totalPoints: result.score,
-                shareText: shareTextForClassic(difficulty, result.timeTaken, errors),
-                onShare: () => markSharedToFacebook(uid, 'sudoku-classic', result.gameDate),
+                shareText: shareTextForClassic(difficulty, result.timeTaken, errors, result.score),
+                communityUrl: FACEBOOK_GROUP_URL,
+                onShareCommunity: () => markSharedToFacebook(uid, 'sudoku-classic', result.gameDate),
+                onShareFriends: () => markSharedWithFriends(uid, 'sudoku-classic', result.gameDate),
                 onClose: () => renderDifficultyPicker(mount, (nextDifficulty) => playClassicRound(mount, uid, profile, nextDifficulty, setActiveRound)),
             });
             showToast(`+${result.score} points!`);
@@ -233,20 +259,39 @@ async function finishSudokuTournament(mount, uid, profile, tournament, setActive
         return;
     }
 
-    const totalPoints = result.puzzlesPassed * 50 + result.puzzlesFailed * 10 + tournament.completionBonus;
+    const numPuzzles = tournament.puzzles.length;
+    const puzzleResults = result.puzzleResults || [];
+    let currentTotal = result.puzzlesPassed * 50 + result.puzzlesFailed * 10 + tournament.completionBonus;
 
     showSudokuSummaryModal({
         title: 'Tournament complete!',
         subtitle: tournament.name,
+        celebrate: true,
         breakdown: [
-            { label: `${result.puzzlesPassed} puzzle${result.puzzlesPassed === 1 ? '' : 's'} passed`, points: result.puzzlesPassed * 50 },
-            { label: `${result.puzzlesFailed} puzzle${result.puzzlesFailed === 1 ? '' : 's'} failed`, points: result.puzzlesFailed * 10 },
-            { label: 'Completion bonus', points: tournament.completionBonus },
+            ...puzzleResults.map((passed, i) => ({
+                label: `Puzzle ${i + 1}: ${passed ? 'Passed' : 'Failed'}`,
+                points: passed ? 50 : 10,
+                icon: passed ? ICON_CHECK_SM : undefined,
+            })),
+            { label: 'Completion bonus', points: tournament.completionBonus, icon: ICON_BONUS },
         ],
-        totalPoints,
+        totalPoints: currentTotal,
+        shareText: shareTextForTournament(tournament, numPuzzles, currentTotal, puzzleResults),
+        communityUrl: FACEBOOK_GROUP_URL,
+        shareLink: TOURNAMENTS_TAB_URL,
+        onShareCommunity: async () => {
+            const r = await markTournamentSharedToFacebook(uid, tournament.id);
+            if (r.applied) currentTotal += 20;
+            return { applied: r.applied, newScore: currentTotal };
+        },
+        onShareFriends: async () => {
+            const r = await markTournamentSharedWithFriends(uid, tournament.id);
+            if (r.applied) currentTotal += 10;
+            return { applied: r.applied, newScore: currentTotal };
+        },
         onClose: () => renderTournamentMode(mount, uid, profile, setActiveRound),
     });
-    showToast(`Tournament complete! +${totalPoints} points`);
+    showToast(`Tournament complete! +${currentTotal} points`);
 }
 
 async function playSudokuTournamentRound(mount, uid, profile, tournament, setActiveRound) {
@@ -314,7 +359,7 @@ async function playSudokuTournamentRound(mount, uid, profile, tournament, setAct
     }));
 }
 
-function wireModeTabs(uid, profile) {
+function wireModeTabs(uid, profile, initialMode) {
     const tabs = Array.from(document.querySelectorAll('.sudoku-mode-tab'));
     const mount = document.getElementById('game-mount');
     let activeRound = null;
@@ -338,7 +383,7 @@ function wireModeTabs(uid, profile) {
     }
 
     tabs.forEach((tab) => tab.addEventListener('click', () => render(tab.dataset.mode)));
-    render('daily');
+    render(initialMode);
 }
 
 async function init() {
@@ -350,7 +395,8 @@ async function init() {
         return;
     }
 
-    wireModeTabs(uid, profile);
+    const initialMode = getQueryParam('tab') === 'tournament' ? 'tournament' : 'daily';
+    wireModeTabs(uid, profile, initialMode);
 }
 
 init();

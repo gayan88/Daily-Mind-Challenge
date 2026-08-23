@@ -112,12 +112,16 @@ export async function getUserLifetimeStats(uid) {
 }
 
 /**
- * Guarded, one-time +20 for sharing a game result to Facebook -- generic across any gameType
- * covered by firestore.rules' isFacebookShareUpdate() (currently wordle/sudoku/sudoku-classic).
- * A client-verifiable-only signal (no proof a share actually happened), same "v1-pragmatic, not
+ * Guarded, one-time +20 for "Copy Result & Share with Community" -- generic across any gameType
+ * covered by firestore.rules' isCommunityShareUpdate() (currently wordle/sudoku/sudoku-classic/
+ * wordsearch/wordsearch-classic, plus wordle-tournament/wordle-challenge via their own per-mode
+ * copies of this pattern in wordle-tournament-data.js/wordle-challenge-data.js). A
+ * client-verifiable-only signal (no proof a share actually happened), same "v1-pragmatic, not
  * fully cheat-proof" philosophy as the rest of this app's points. `gameDate` must match whatever
  * value the target gameScores doc's ID was built from (a calendar date for daily-style docs, or
  * a repurposed unique key for non-daily ones like sudoku-classic). Returns { applied, newScore }.
+ * Independent from markSharedWithFriends() below -- see wordle-daily-data.js's equivalent pair for
+ * the full rationale (two separate, stackable bonuses, not alternatives).
  */
 export async function markSharedToFacebook(uid, gameType, gameDate) {
     const ref = doc(db, 'gameScores', gameScoreDocId(uid, gameType, gameDate));
@@ -128,6 +132,21 @@ export async function markSharedToFacebook(uid, gameType, gameDate) {
         }
         const newScore = snap.data().score + 20;
         tx.update(ref, { score: newScore, sharedToFacebook: true, updatedAt: serverTimestamp() });
+        return { applied: true, newScore };
+    });
+}
+
+/** Guarded, one-time +10 for "Share with Friends" -- independent from markSharedToFacebook()
+ * above, generic across any gameType covered by firestore.rules' isFriendsShareUpdate(). */
+export async function markSharedWithFriends(uid, gameType, gameDate) {
+    const ref = doc(db, 'gameScores', gameScoreDocId(uid, gameType, gameDate));
+    return runTransaction(db, async (tx) => {
+        const snap = await tx.get(ref);
+        if (!snap.exists() || snap.data().sharedWithFriends) {
+            return { applied: false, newScore: snap.exists() ? snap.data().score : 0 };
+        }
+        const newScore = snap.data().score + 10;
+        tx.update(ref, { score: newScore, sharedWithFriends: true, updatedAt: serverTimestamp() });
         return { applied: true, newScore };
     });
 }

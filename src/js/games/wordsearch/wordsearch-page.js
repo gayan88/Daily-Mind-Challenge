@@ -1,8 +1,8 @@
 import { initShell } from '../../app.js';
 import { icon } from '../../utils/icons.js';
-import { getTodayDateString, showToast, escapeHtml, stringToSeed } from '../../utils/helpers.js';
+import { getTodayDateString, showToast, escapeHtml, stringToSeed, getQueryParam } from '../../utils/helpers.js';
 import { getConfig } from '../../utils/config.js';
-import { checkPlayedToday, markSharedToFacebook } from '../../utils/points.js';
+import { checkPlayedToday, markSharedToFacebook, markSharedWithFriends } from '../../utils/points.js';
 import { playWordSearchRound } from './wordsearch-engine.js';
 import { DAILY_MODE, CLASSIC_MODES, TOURNAMENT_MODE } from './wordsearch-modes.js';
 import { getTodayChallenge, recordDailyResult } from './wordsearch-daily-data.js';
@@ -10,16 +10,25 @@ import { getRandomClassicPuzzle, recordClassicResult } from './wordsearch-classi
 import {
     listActiveWordsearchTournaments, getAttempt, getOrStartAttempt,
     recordPuzzleResult, completeTournamentIfNeeded,
+    markSharedToFacebook as markTournamentSharedToFacebook,
+    markSharedWithFriends as markTournamentSharedWithFriends,
 } from './wordsearch-tournament-data.js';
 import { showWordSearchSummaryModal } from './wordsearch-summary-modal.js';
 
 const DIFFICULTY_LABELS = { easy: 'Easy', medium: 'Medium', hard: 'Hard' };
 const DIFFICULTY_POINTS = { easy: 10, medium: 15, hard: 25 };
+const FACEBOOK_GROUP_URL = 'https://www.facebook.com/groups/playdailymindchallenge';
+const TOURNAMENTS_TAB_URL = `${window.location.origin}/wordsearch?tab=tournament`;
 
 // Outlined line icons (not this app's usual emoji set, see icons.js) -- used only on the
 // tournament list card, matching the treatment sudoku-page.js's own tournament card uses.
 const ICON_PUZZLES = `<svg class="wordsearch-tournament-meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>`;
 const ICON_BONUS = `<svg class="wordsearch-tournament-meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+
+// Outlined line icons for the Daily/Classic points breakdown (mirrors sudoku-page.js's own set).
+const ICON_GRID = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>`;
+const ICON_STOPWATCH = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="1" x2="12" y2="4"/><line x1="9" y1="2.5" x2="15" y2="2.5"/></svg>`;
+const ICON_CHECK_SM = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
 
 function renderAdminBlocked(mount) {
     mount.innerHTML = `<div class="empty-state">Admin accounts don't play games.</div>`;
@@ -37,12 +46,17 @@ function renderAlreadyPlayedDaily(mount, played) {
     `;
 }
 
-function shareTextForDaily(challengeId, timeTaken, wordsFound, totalWords) {
-    return `Daily Mind Challenge Word Search #${challengeId} — found ${wordsFound}/${totalWords} words in ${timeTaken}!`;
+function shareTextForDaily(challengeId, timeTaken, wordsFound, totalWords, score) {
+    return `🧠 Daily Mind Challenge\n\n🔍 Daily Word Search #${challengeId}\n🎉 Found ${wordsFound}/${totalWords} words in ${timeTaken}\n⭐ Score: ${score} points\n\nCan you beat my result? 👀\n\nPlay today's challenge:\n${window.location.href}`;
 }
 
-function shareTextForClassic(difficulty, timeTaken, wordsFound, totalWords) {
-    return `Daily Mind Challenge Word Search (${DIFFICULTY_LABELS[difficulty]}) — found ${wordsFound}/${totalWords} words in ${timeTaken}!`;
+function shareTextForClassic(difficulty, timeTaken, wordsFound, totalWords, score) {
+    return `🧩 Daily Mind Challenge\n\nClassic Word Search — ${DIFFICULTY_LABELS[difficulty]}\n🎉 Found ${wordsFound}/${totalWords} words in ${timeTaken}\n⭐ Score: ${score} points\n\nCan you beat my result? 👀\n\nPlay here:\n${window.location.href}`;
+}
+
+function shareTextForTournament(tournament, numPuzzles, score, puzzleResults) {
+    const puzzleLines = puzzleResults.map((passed, i) => `Puzzle ${i + 1} - ${passed ? 'Passed' : 'Failed'}`).join('\n');
+    return `🏆 Word Search Tournament Complete!\n\nI completed ${tournament.name} 🎉\n\n🧩 Puzzles: ${numPuzzles}/${numPuzzles}\n⭐ Score: ${score} points\n\n${puzzleLines}\n\nThink you can beat my score? 👀\n\nJoin the tournament:\n${TOURNAMENTS_TAB_URL}`;
 }
 
 async function renderDailyMode(mount, uid, profile, setActiveRound) {
@@ -85,13 +99,16 @@ async function renderDailyMode(mount, uid, profile, setActiveRound) {
             showWordSearchSummaryModal({
                 title: 'Solved!',
                 subtitle: `Daily Word Search #${challenge.challengeId}`,
+                celebrate: true,
                 breakdown: [
-                    { label: 'Completing the puzzle', points: result.completionPoints },
-                    { label: 'Speed bonus', points: result.timeBonusPoints },
+                    { label: 'Completing the puzzle', points: result.completionPoints, icon: ICON_GRID },
+                    { label: 'Speed bonus', points: result.timeBonusPoints, icon: ICON_STOPWATCH },
                 ],
                 totalPoints: result.score,
-                shareText: shareTextForDaily(challenge.challengeId, result.timeTaken, wordsFound, totalWords),
-                onShare: () => markSharedToFacebook(uid, 'wordsearch', getTodayDateString()),
+                shareText: shareTextForDaily(challenge.challengeId, result.timeTaken, wordsFound, totalWords, result.score),
+                communityUrl: FACEBOOK_GROUP_URL,
+                onShareCommunity: () => markSharedToFacebook(uid, 'wordsearch', getTodayDateString()),
+                onShareFriends: () => markSharedWithFriends(uid, 'wordsearch', getTodayDateString()),
             });
             showToast(`+${result.score} points!`);
         },
@@ -155,13 +172,16 @@ async function playClassicRound(mount, uid, profile, difficulty, setActiveRound)
             showWordSearchSummaryModal({
                 title: 'Solved!',
                 subtitle: `Classic Word Search — ${DIFFICULTY_LABELS[difficulty]}`,
+                celebrate: true,
                 breakdown: [
-                    { label: 'Completing the puzzle', points: result.completionPoints },
-                    { label: 'Speed bonus', points: result.timeBonusPoints },
+                    { label: 'Completing the puzzle', points: result.completionPoints, icon: ICON_GRID },
+                    { label: 'Speed bonus', points: result.timeBonusPoints, icon: ICON_STOPWATCH },
                 ],
                 totalPoints: result.score,
-                shareText: shareTextForClassic(difficulty, result.timeTaken, wordsFound, totalWords),
-                onShare: () => markSharedToFacebook(uid, 'wordsearch-classic', result.gameDate),
+                shareText: shareTextForClassic(difficulty, result.timeTaken, wordsFound, totalWords, result.score),
+                communityUrl: FACEBOOK_GROUP_URL,
+                onShareCommunity: () => markSharedToFacebook(uid, 'wordsearch-classic', result.gameDate),
+                onShareFriends: () => markSharedWithFriends(uid, 'wordsearch-classic', result.gameDate),
                 onClose: () => renderDifficultyPicker(mount, (nextDifficulty) => playClassicRound(mount, uid, profile, nextDifficulty, setActiveRound)),
             });
             showToast(`+${result.score} points!`);
@@ -242,22 +262,41 @@ async function finishWordsearchTournament(mount, uid, profile, tournament, setAc
     }
 
     const settings = await getConfig('wordsearchTournamentSettings');
-    const totalPoints = result.puzzlesPassed * settings.completedPoints
+    const numPuzzles = tournament.puzzles.length;
+    const puzzleResults = result.puzzleResults || [];
+    let currentTotal = result.puzzlesPassed * settings.completedPoints
         + result.puzzlesFailed * settings.failedPoints
         + tournament.completionBonus;
 
     showWordSearchSummaryModal({
         title: 'Tournament complete!',
         subtitle: tournament.name,
+        celebrate: true,
         breakdown: [
-            { label: `${result.puzzlesPassed} puzzle${result.puzzlesPassed === 1 ? '' : 's'} passed`, points: result.puzzlesPassed * settings.completedPoints },
-            { label: `${result.puzzlesFailed} puzzle${result.puzzlesFailed === 1 ? '' : 's'} failed`, points: result.puzzlesFailed * settings.failedPoints },
-            { label: 'Completion bonus', points: tournament.completionBonus },
+            ...puzzleResults.map((passed, i) => ({
+                label: `Puzzle ${i + 1}: ${passed ? 'Passed' : 'Failed'}`,
+                points: passed ? settings.completedPoints : settings.failedPoints,
+                icon: passed ? ICON_CHECK_SM : undefined,
+            })),
+            { label: 'Completion bonus', points: tournament.completionBonus, icon: ICON_BONUS },
         ],
-        totalPoints,
+        totalPoints: currentTotal,
+        shareText: shareTextForTournament(tournament, numPuzzles, currentTotal, puzzleResults),
+        communityUrl: FACEBOOK_GROUP_URL,
+        shareLink: TOURNAMENTS_TAB_URL,
+        onShareCommunity: async () => {
+            const r = await markTournamentSharedToFacebook(uid, tournament.id);
+            if (r.applied) currentTotal += 20;
+            return { applied: r.applied, newScore: currentTotal };
+        },
+        onShareFriends: async () => {
+            const r = await markTournamentSharedWithFriends(uid, tournament.id);
+            if (r.applied) currentTotal += 10;
+            return { applied: r.applied, newScore: currentTotal };
+        },
         onClose: () => renderTournamentMode(mount, uid, profile, setActiveRound),
     });
-    showToast(`Tournament complete! +${totalPoints} points`);
+    showToast(`Tournament complete! +${currentTotal} points`);
 }
 
 async function playWordsearchTournamentRound(mount, uid, profile, tournament, setActiveRound) {
@@ -336,7 +375,7 @@ async function playWordsearchTournamentRound(mount, uid, profile, tournament, se
     }));
 }
 
-function wireModeTabs(uid, profile) {
+function wireModeTabs(uid, profile, initialMode) {
     const tabs = Array.from(document.querySelectorAll('.wordsearch-mode-tab'));
     const mount = document.getElementById('game-mount');
     let activeRound = null;
@@ -360,7 +399,7 @@ function wireModeTabs(uid, profile) {
     }
 
     tabs.forEach((tab) => tab.addEventListener('click', () => render(tab.dataset.mode)));
-    render('daily');
+    render(initialMode);
 }
 
 async function init() {
@@ -372,7 +411,8 @@ async function init() {
         return;
     }
 
-    wireModeTabs(uid, profile);
+    const initialMode = getQueryParam('tab') === 'tournament' ? 'tournament' : 'daily';
+    wireModeTabs(uid, profile, initialMode);
 }
 
 init();

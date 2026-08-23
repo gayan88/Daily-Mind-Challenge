@@ -51,6 +51,7 @@ export async function getOrStartAttempt(tournamentId, uid, profile) {
         currentPuzzleIndex: 0,
         puzzlesPassed: 0,
         puzzlesFailed: 0,
+        puzzleResults: [],
         startedAt: serverTimestamp(),
         completed: false,
         completedAt: null,
@@ -109,6 +110,7 @@ export async function recordPuzzleResult(tournament, uid, profile, { puzzleIndex
             currentPuzzleIndex: attemptData.currentPuzzleIndex + 1,
             puzzlesPassed: attemptData.puzzlesPassed + (passed ? 1 : 0),
             puzzlesFailed: attemptData.puzzlesFailed + (passed ? 0 : 1),
+            puzzleResults: [...(attemptData.puzzleResults || []), passed],
         };
         tx.update(attemptRef, patch);
         return { ...attemptData, ...patch };
@@ -146,6 +148,8 @@ export async function completeTournamentIfNeeded(uid, profile, tournament) {
                 gameDate: tournament.id, // repurposed as the deterministic key, not a calendar date
                 tournamentId: tournament.id,
                 tournamentName: tournament.name,
+                sharedToFacebook: false,
+                sharedWithFriends: false,
                 createdAt: serverTimestamp(),
             });
         }
@@ -153,5 +157,41 @@ export async function completeTournamentIfNeeded(uid, profile, tournament) {
         const patch = { bonusAwarded: true, completed: true, completedAt: serverTimestamp() };
         tx.update(attemptRef, patch);
         return { ...attemptData, ...patch };
+    });
+}
+
+/**
+ * Guarded, one-time +20/+10 for sharing a completed tournament run, applied to the one-time
+ * completion-bonus doc (bonusScoreDocId) rather than a single combined tournament score doc --
+ * a Word Search Tournament run's total is split across many per-puzzle gameScores docs plus this
+ * bonus doc, so there's no single doc whose own `score` field is "the tournament total" for these
+ * to add to. Callers (wordsearch-page.js) track the running total themselves and use these only
+ * for their `applied` flag, not their returned `newScore`. Independent from each other -- see
+ * wordle-daily-data.js's equivalent pair for the full rationale (two separate, stackable bonuses,
+ * not alternatives).
+ */
+export async function markSharedToFacebook(uid, tournamentId) {
+    const ref = doc(db, 'gameScores', bonusScoreDocId(uid, tournamentId));
+    return runTransaction(db, async (tx) => {
+        const snap = await tx.get(ref);
+        if (!snap.exists() || snap.data().sharedToFacebook) {
+            return { applied: false, newScore: snap.exists() ? snap.data().score : 0 };
+        }
+        const newScore = snap.data().score + 20;
+        tx.update(ref, { score: newScore, sharedToFacebook: true, updatedAt: serverTimestamp() });
+        return { applied: true, newScore };
+    });
+}
+
+export async function markSharedWithFriends(uid, tournamentId) {
+    const ref = doc(db, 'gameScores', bonusScoreDocId(uid, tournamentId));
+    return runTransaction(db, async (tx) => {
+        const snap = await tx.get(ref);
+        if (!snap.exists() || snap.data().sharedWithFriends) {
+            return { applied: false, newScore: snap.exists() ? snap.data().score : 0 };
+        }
+        const newScore = snap.data().score + 10;
+        tx.update(ref, { score: newScore, sharedWithFriends: true, updatedAt: serverTimestamp() });
+        return { applied: true, newScore };
     });
 }
