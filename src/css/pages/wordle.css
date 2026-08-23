@@ -557,18 +557,81 @@
     color: var(--color-text);
 }
 
+.wordle-summary-celebrate {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    height: 64px;
+    margin-bottom: 8px;
+}
+
+.wordle-summary-trophy-wrap {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--color-primary-tint);
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.wordle-summary-trophy-wrap svg {
+    width: 30px;
+    height: 30px;
+}
+
+.wordle-summary-confetti {
+    position: absolute;
+    top: 8px;
+    width: 7px;
+    height: 7px;
+    border-radius: 2px;
+}
+
+.wordle-summary-confetti-1 {
+    left: calc(50% - 92px);
+    background: #F2B705;
+    transform: rotate(20deg);
+}
+
+.wordle-summary-confetti-2 {
+    left: calc(50% - 68px);
+    top: 34px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--color-danger);
+}
+
+.wordle-summary-confetti-3 {
+    right: calc(50% - 92px);
+    background: var(--color-primary);
+    transform: rotate(-20deg);
+}
+
+.wordle-summary-confetti-4 {
+    right: calc(50% - 68px);
+    top: 34px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--color-success);
+}
+
 .wordle-summary-title {
     text-align: center;
-    font-size: 20px;
-    font-weight: 700;
+    font-size: 22px;
+    font-weight: 800;
     color: var(--color-text);
     margin-bottom: 4px;
 }
 
 .wordle-summary-subtitle {
     text-align: center;
-    font-size: 13px;
-    color: var(--color-text-secondary);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-primary);
     margin-bottom: 20px;
 }
 
@@ -600,6 +663,10 @@
     background: #D8A030;
 }
 
+.wordle-summary-cell.empty {
+    background: var(--color-border);
+}
+
 .wordle-summary-breakdown {
     border-top: 0.5px solid var(--color-border);
     padding-top: 12px;
@@ -609,9 +676,27 @@
 .wordle-summary-line {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     font-size: 14px;
     color: var(--color-text-secondary);
     padding: 4px 0;
+}
+
+.wordle-summary-line-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.wordle-summary-line-icon {
+    display: flex;
+    flex: 0 0 auto;
+    color: var(--color-primary);
+}
+
+.wordle-summary-line-icon svg {
+    width: 16px;
+    height: 16px;
 }
 
 .wordle-summary-total {
@@ -623,8 +708,143 @@
     font-size: 16px;
 }
 
-.wordle-summary-share {
+/* ---------- Daily Challenge share options ---------- */
+.wordle-share-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.wordle-share-option {
+    display: flex;
+    align-items: center;
+    gap: 14px;
     width: 100%;
+    padding: 14px 16px;
+    border: 1.5px solid var(--color-primary);
+    border-radius: var(--radius-lg);
+    background: var(--color-primary-tint);
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    transition: filter 0.15s;
+}
+
+.wordle-share-option:hover {
+    filter: brightness(0.97);
+}
+
+.wordle-share-friends {
+    border-color: var(--color-success);
+    background: #E3F5EE;
+}
+
+.wordle-share-option-icon {
+    flex: 0 0 auto;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: white;
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.wordle-share-friends .wordle-share-option-icon {
+    color: var(--color-success);
+}
+
+.wordle-share-option-icon svg {
+    width: 22px;
+    height: 22px;
+}
+
+.wordle-share-option-body {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.wordle-share-option-title {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--color-primary);
+}
+
+.wordle-share-friends .wordle-share-option-title {
+    color: var(--color-success);
+}
+
+.wordle-share-option-desc {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    line-height: 1.4;
+}
+
+/* Badge + chevron live in their own column on the right, out of the title's text flow, so a long
+   title never pushes the badge onto its own visual row underneath. */
+.wordle-share-option-side {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    color: var(--color-primary);
+}
+
+.wordle-share-friends .wordle-share-option-side {
+    color: var(--color-success);
+}
+
+.wordle-share-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: var(--color-primary);
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.wordle-share-badge-green {
+    background: var(--color-success);
+}
+
+.wordle-share-option-side svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* Set by markClaimed() once this specific option's bonus has been awarded -- the other option
+   stays fully interactive regardless. */
+.wordle-share-option-claimed {
+    cursor: default;
+    opacity: 0.7;
+}
+
+.wordle-share-option-claimed:hover {
+    filter: none;
+}
+
+.wordle-share-or {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--color-primary);
+    font-weight: 700;
+    font-size: 12px;
+}
+
+.wordle-share-or::before,
+.wordle-share-or::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--color-border);
 }
 
 @media (max-width: 420px) {

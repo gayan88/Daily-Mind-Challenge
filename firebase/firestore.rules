@@ -59,20 +59,36 @@ service cloud.firestore {
                 && request.resource.data.userId == request.auth.uid
                 && scoreId == request.auth.uid + '_' + request.resource.data.gameType + '_' + request.resource.data.gameDate
                 && request.resource.data.score >= 0 && request.resource.data.score <= maxCreateScore(request.resource.data.gameType);
-            // Facebook-share update: the doc owner may add exactly +20 to their own already-created
-            // wordle/sudoku/sudoku-classic score, once, in exchange for flipping sharedToFacebook
-            // false -> true -- nothing else about the doc is allowed to change. See
-            // wordle-daily-data.js#markSharedToFacebook / utils/points.js#markSharedToFacebook.
-            allow update: if isAdmin() || isFacebookShareUpdate();
+            // Share updates: the doc owner may add points to their own already-created score, in
+            // exchange for flipping one of two independent share flags false -> true -- nothing
+            // else about the doc is allowed to change per update. `sharedToFacebook` (+20, "Copy
+            // Result & Share with Community") and `sharedWithFriends` (+10, "Share with Friends",
+            // Wordle Daily Challenge only) are separate, stackable bonuses, not alternatives for a
+            // single bonus -- a player can claim both, one time each, in two separate update
+            // calls. Every other game only ever triggers the +20 path. See
+            // wordle-daily-data.js#markSharedToFacebook / #markSharedWithFriends /
+            // utils/points.js#markSharedToFacebook.
+            allow update: if isAdmin() || isCommunityShareUpdate() || isFriendsShareUpdate();
             allow delete: if isAdmin();
 
-            function isFacebookShareUpdate() {
+            function isCommunityShareUpdate() {
                 return isSignedIn() && request.auth.uid == resource.data.userId
-                    && resource.data.gameType in ['wordle', 'sudoku', 'sudoku-classic', 'wordsearch', 'wordsearch-classic']
+                    && resource.data.gameType in ['wordle', 'wordle-tournament', 'wordle-challenge', 'sudoku', 'sudoku-classic', 'wordsearch', 'wordsearch-classic']
                     && resource.data.sharedToFacebook != true
                     && request.resource.data.sharedToFacebook == true
                     && request.resource.data.score == resource.data.score + 20
                     && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['score', 'sharedToFacebook', 'updatedAt']);
+            }
+
+            // "Share with Friends" (+10) is Wordle-only -- Daily Challenge, Tournament, and
+            // Challenge a Friend all offer it alongside the community share above.
+            function isFriendsShareUpdate() {
+                return isSignedIn() && request.auth.uid == resource.data.userId
+                    && resource.data.gameType in ['wordle', 'wordle-tournament', 'wordle-challenge']
+                    && resource.data.sharedWithFriends != true
+                    && request.resource.data.sharedWithFriends == true
+                    && request.resource.data.score == resource.data.score + 10
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['score', 'sharedWithFriends', 'updatedAt']);
             }
         }
 

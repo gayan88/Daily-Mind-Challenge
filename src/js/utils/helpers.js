@@ -105,8 +105,13 @@ export function stringToSeed(str) {
  */
 export async function shareUrl(url, text = '', title = document.title) {
     if (navigator.share) {
+        // Every caller here embeds `url` at the end of `text` already, so when both are given,
+        // pass only `text` to the native share sheet -- many share targets (WhatsApp, SMS, etc.)
+        // treat a separate `url` field as the sole payload and silently drop `text` alongside it,
+        // which left the shared message as just a bare link instead of the full formatted result.
+        const payload = text ? { title, text } : { title, url };
         try {
-            await navigator.share({ title, text, url });
+            await navigator.share(payload);
             return true;
         } catch (err) {
             if (err.name === 'AbortError') return false;

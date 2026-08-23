@@ -1,13 +1,19 @@
 import { initShell } from '../../app.js';
 import { icon } from '../../utils/icons.js';
-import { showToast, escapeHtml, getQueryParam } from '../../utils/helpers.js';
+import { showToast, escapeHtml, getQueryParam, getTodayDateString } from '../../utils/helpers.js';
 import { checkPlayedToday } from '../../utils/points.js';
 import { getConfig } from '../../utils/config.js';
 import { playWordleRound } from './wordle-engine.js';
 import { isRealWord } from './wordle-word-validation.js';
-import { getTodayChallenge, recordDailyResult, markSharedToFacebook } from './wordle-daily-data.js';
+import {
+    getTodayChallenge, recordDailyResult,
+    markSharedToFacebook as markDailySharedToFacebook,
+    markSharedWithFriends as markDailySharedWithFriends,
+} from './wordle-daily-data.js';
 import {
     listActiveTournaments, getAttempt, getOrStartAttempt, recordWordResult, finalizeTournament,
+    markSharedToFacebook as markTournamentSharedToFacebook,
+    markSharedWithFriends as markTournamentSharedWithFriends,
 } from './wordle-tournament-data.js';
 import {
     createWordleChallenge, getWordleChallenge, isWordleChallengeExpired,
@@ -15,11 +21,22 @@ import {
     listWordleChallengeCompletionsPage, getWordleChallengeCompletion,
     getWordleChallengeSolveCount, getWordleChallengeAttemptCount,
     recordWordleChallengeCompletion, syncCreatorRewards,
+    markSharedToFacebook as markChallengeSharedToFacebook,
+    markSharedWithFriends as markChallengeSharedWithFriends,
 } from './wordle-challenge-data.js';
 import { showWordleSummaryModal } from './wordle-summary-modal.js';
 
 const MAX_GUESSES = 6;
-const SHARE_EMOJI = { correct: '🟩', present: '🟨', absent: '⬛' };
+const SHARE_EMOJI = { correct: '🟩', present: '🟨', absent: '⬜' };
+const FACEBOOK_GROUP_URL = 'https://www.facebook.com/groups/playdailymindchallenge';
+const TOURNAMENTS_TAB_URL = `${window.location.origin}/wordle?tab=tournaments`;
+
+// Outlined line icons for the Daily Challenge points breakdown (not this app's usual emoji set,
+// see icons.js) -- Tournament/Challenge a Friend's breakdown lines don't pass an icon, so they're
+// unaffected.
+const ICON_CALENDAR = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
+const ICON_TARGET = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>`;
+const ICON_LIGHTNING = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></svg>`;
 
 function renderAdminBlocked(mount) {
     mount.innerHTML = `<div class="empty-state">Admin accounts don't play games.</div>`;
@@ -38,13 +55,14 @@ function renderAlreadyPlayedDaily(mount, played) {
     `;
 }
 
-function shareTextFor(challengeId, guessStates, won) {
-    const attemptsLabel = won ? `${guessStates.length}/${MAX_GUESSES}` : `X/${MAX_GUESSES}`;
+function shareTextForDaily(challengeId, guessStates, won, attempts, score) {
+    const attemptsLabel = won ? `${attempts}/${MAX_GUESSES}` : `X/${MAX_GUESSES}`;
+    const resultLine = won ? `🎉 Solved in ${attemptsLabel}` : `😅 ${attemptsLabel} — so close!`;
     const grid = guessStates.map((row) => row.map((state) => SHARE_EMOJI[state]).join('')).join('\n');
-    return `Daily Mind Challenge Wordle #${challengeId} ${attemptsLabel}\n\n${grid}`;
+    return `🧠 Daily Mind Challenge\n\n🟩 Daily Wordle #${challengeId}\n${resultLine}\n⭐ Score: ${score} points\n\n${grid}\n\nCan you beat my result? 👀\n\nPlay today's challenge:\n${window.location.href}`;
 }
 
-async function renderDailyMode(mount, uid, profile) {
+async function renderDailyMode(mount, uid, profile, setActiveRound) {
     const played = await checkPlayedToday(uid, 'wordle');
     if (played) {
         renderAlreadyPlayedDaily(mount, played);
@@ -65,7 +83,7 @@ async function renderDailyMode(mount, uid, profile) {
     const roundMount = document.getElementById('wordle-round-mount');
     const startTime = Date.now();
 
-    playWordleRound({
+    setActiveRound(playWordleRound({
         container: roundMount,
         targetWord: challenge.word,
         maxGuesses: MAX_GUESSES,
@@ -84,21 +102,24 @@ async function renderDailyMode(mount, uid, profile) {
                 title: won ? 'You solved it!' : `The word was ${challenge.word}`,
                 subtitle: `Daily Wordle #${challenge.challengeId}`,
                 guessStates,
+                celebrate: won,
                 breakdown: [
-                    { label: 'Playing today', points: result.playPoints },
-                    { label: 'Attempts bonus', points: result.attemptsPoints },
-                    { label: 'Speed bonus', points: result.timePoints },
+                    { label: 'Playing today', points: result.playPoints, icon: ICON_CALENDAR },
+                    { label: `Attempts bonus (${result.attempts}/${MAX_GUESSES})`, points: result.attemptsPoints, icon: ICON_TARGET },
+                    { label: `Speed bonus (${result.timeTaken})`, points: result.timePoints, icon: ICON_LIGHTNING },
                 ],
                 totalPoints: result.score,
-                shareText: shareTextFor(challenge.challengeId, guessStates, won),
-                onShare: () => markSharedToFacebook(uid),
+                shareText: shareTextForDaily(challenge.challengeId, guessStates, won, attempts, result.score),
+                communityUrl: FACEBOOK_GROUP_URL,
+                onShareCommunity: () => markDailySharedToFacebook(uid, getTodayDateString()),
+                onShareFriends: () => markDailySharedWithFriends(uid, getTodayDateString()),
             });
             showToast(`+${result.score} points!`);
         },
-    });
+    }));
 }
 
-async function renderTournamentsMode(mount, uid, profile) {
+async function renderTournamentsMode(mount, uid, profile, setActiveRound) {
     const tournaments = await listActiveTournaments();
     if (tournaments.length === 0) {
         mount.innerHTML = `<div class="empty-state">No tournaments running right now. Check back soon!</div>`;
@@ -139,12 +160,17 @@ async function renderTournamentsMode(mount, uid, profile) {
     mount.querySelectorAll('[data-play-tournament]').forEach((btn) => {
         btn.addEventListener('click', () => {
             const tournament = tournaments.find((t) => t.id === btn.dataset.playTournament);
-            playTournamentRound(mount, uid, profile, tournament);
+            playTournamentRound(mount, uid, profile, tournament, setActiveRound);
         });
     });
 }
 
-async function finishTournament(mount, uid, profile, tournament, numWords) {
+function shareTextForTournament(tournament, numWords, score, wordAttempts) {
+    const wordLines = wordAttempts.map((attempts, i) => `Word ${i + 1} - ${attempts}/${MAX_GUESSES}`).join('\n');
+    return `🏆 Wordle Tournament Complete!\n\nI completed ${tournament.name} 🎉\n\n🧩 Puzzles: ${numWords}/${numWords}\n⭐ Score: ${score} points\n\n${wordLines}\n\nThink you can beat my score? 👀\n\nJoin the tournament:\n${TOURNAMENTS_TAB_URL}`;
+}
+
+async function finishTournament(mount, uid, profile, tournament, numWords, setActiveRound) {
     const result = await finalizeTournament(uid, profile, tournament);
     if (!result) {
         mount.innerHTML = `
@@ -156,29 +182,40 @@ async function finishTournament(mount, uid, profile, tournament, numWords) {
         `;
         showToast("Couldn't save your tournament points");
         document.getElementById('tournament-finalize-retry-btn').addEventListener('click', () => {
-            finishTournament(mount, uid, profile, tournament, numWords);
+            finishTournament(mount, uid, profile, tournament, numWords, setActiveRound);
         });
         document.getElementById('tournament-back-btn').addEventListener('click', () => {
-            renderTournamentsMode(mount, uid, profile);
+            renderTournamentsMode(mount, uid, profile, setActiveRound);
         });
         return;
     }
 
+    const wordAttempts = result.wordAttempts || [];
+
     showWordleSummaryModal({
         title: 'Tournament complete!',
         subtitle: tournament.name,
+        celebrate: true,
         breakdown: [
             { label: 'Starting the tournament', points: 30 },
-            { label: `${numWords} words solved`, points: 15 * numWords },
+            ...wordAttempts.map((attempts, i) => ({
+                label: `Word ${i + 1}: solved in ${attempts}/${MAX_GUESSES}`,
+                points: 15,
+            })),
             { label: 'Tournament bonus', points: tournament.bonusPoints || 0 },
         ],
         totalPoints: result.score,
-        onClose: () => renderTournamentsMode(mount, uid, profile),
+        shareText: shareTextForTournament(tournament, numWords, result.score, wordAttempts),
+        communityUrl: FACEBOOK_GROUP_URL,
+        shareLink: TOURNAMENTS_TAB_URL,
+        onShareCommunity: () => markTournamentSharedToFacebook(uid, tournament.id),
+        onShareFriends: () => markTournamentSharedWithFriends(uid, tournament.id),
+        onClose: () => renderTournamentsMode(mount, uid, profile, setActiveRound),
     });
     showToast(`Tournament complete! +${result.score} points`);
 }
 
-async function playTournamentRound(mount, uid, profile, tournament) {
+async function playTournamentRound(mount, uid, profile, tournament, setActiveRound) {
     const attempt = await getOrStartAttempt(tournament.id, uid, profile);
     const numWords = tournament.words.length;
 
@@ -191,7 +228,7 @@ async function playTournamentRound(mount, uid, profile, tournament) {
         // Every word was already won on a prior run, but finalizing (saving points) failed --
         // retry that instead of trying to play a word index that doesn't exist.
         mount.innerHTML = `<div class="loading-text">Saving your points&hellip;</div>`;
-        await finishTournament(mount, uid, profile, tournament, numWords);
+        await finishTournament(mount, uid, profile, tournament, numWords, setActiveRound);
         return;
     }
 
@@ -204,15 +241,15 @@ async function playTournamentRound(mount, uid, profile, tournament) {
     `;
     const roundMount = document.getElementById('wordle-round-mount');
 
-    playWordleRound({
+    setActiveRound(playWordleRound({
         container: roundMount,
         targetWord: word,
         maxGuesses: MAX_GUESSES,
         timeLimitSeconds: tournament.timePerWordSeconds,
         roundLabel: `Word ${wordIndex + 1} of ${numWords}`,
         validateGuess: isRealWord,
-        onComplete: async ({ won }) => {
-            const updated = await recordWordResult(tournament.id, uid, won);
+        onComplete: async ({ won, attempts }) => {
+            const updated = await recordWordResult(tournament.id, uid, won, attempts);
 
             if (!won) {
                 mount.innerHTML = `
@@ -225,22 +262,22 @@ async function playTournamentRound(mount, uid, profile, tournament) {
                     </div>
                 `;
                 document.getElementById('tournament-retry-btn').addEventListener('click', () => {
-                    playTournamentRound(mount, uid, profile, tournament);
+                    playTournamentRound(mount, uid, profile, tournament, setActiveRound);
                 });
                 document.getElementById('tournament-back-btn').addEventListener('click', () => {
-                    renderTournamentsMode(mount, uid, profile);
+                    renderTournamentsMode(mount, uid, profile, setActiveRound);
                 });
                 return;
             }
 
             if (updated.currentWordIndex >= numWords) {
-                await finishTournament(mount, uid, profile, tournament, numWords);
+                await finishTournament(mount, uid, profile, tournament, numWords, setActiveRound);
             } else {
                 showToast(`Word ${wordIndex + 1} solved! On to the next one.`);
-                playTournamentRound(mount, uid, profile, tournament);
+                playTournamentRound(mount, uid, profile, tournament, setActiveRound);
             }
         },
-    });
+    }));
 }
 
 function shareLinkForChallenge(challengeId) {
@@ -537,7 +574,13 @@ async function renderChallengeMine(container, uid, profile) {
     await loadPage();
 }
 
-async function renderChallengeSolve(mount, uid, profile, challengeId) {
+function shareTextForChallenge(challenge, guessStates, won, attempts, score, challengeId) {
+    const resultLine = won ? `Solved in ${attempts}/${MAX_GUESSES} 🎉` : `😅 X/${MAX_GUESSES} — so close!`;
+    const grid = guessStates.map((row) => row.map((state) => SHARE_EMOJI[state]).join('')).join('\n');
+    return `🎯 Daily Mind Challenge\n\n${challengeTitle(challenge)}\n${resultLine}\nScore: ${score} points\n\n${grid}\n\nCan you beat my result? 👀\nPlay here:\n${shareLinkForChallenge(challengeId)}`;
+}
+
+async function renderChallengeSolve(mount, uid, profile, challengeId, setActiveRound) {
     const challenge = await getWordleChallenge(challengeId);
     if (!challenge) {
         mount.innerHTML = `<div class="empty-state">This challenge doesn't exist or was removed.</div>`;
@@ -567,7 +610,7 @@ async function renderChallengeSolve(mount, uid, profile, challengeId) {
     const roundMount = document.getElementById('wordle-round-mount');
     const startTime = Date.now();
 
-    playWordleRound({
+    setActiveRound(playWordleRound({
         container: roundMount,
         targetWord: challenge.word,
         maxGuesses: MAX_GUESSES,
@@ -584,21 +627,27 @@ async function renderChallengeSolve(mount, uid, profile, challengeId) {
                 title: won ? 'Challenge solved!' : `The word was ${challenge.word}`,
                 subtitle: challengeTitle(challenge),
                 guessStates,
+                celebrate: won,
                 breakdown: [
                     { label: 'Attempting the challenge', points: 10 },
                     { label: 'Solved it', points: won ? 20 : 0 },
                 ],
                 totalPoints: result.score,
+                shareText: shareTextForChallenge(challenge, guessStates, won, attempts, result.score, challengeId),
+                communityUrl: FACEBOOK_GROUP_URL,
+                shareLink: shareLinkForChallenge(challengeId),
+                onShareCommunity: () => markChallengeSharedToFacebook(uid, challengeId),
+                onShareFriends: () => markChallengeSharedWithFriends(uid, challengeId),
             });
             showToast(`+${result.score} points!`);
         },
-    });
+    }));
 }
 
-async function renderChallengeMode(mount, uid, profile, deepLinkChallengeId) {
+async function renderChallengeMode(mount, uid, profile, deepLinkChallengeId, setActiveRound) {
     if (deepLinkChallengeId) {
         mount.innerHTML = `<div id="wc-solve-mount"></div>`;
-        await renderChallengeSolve(document.getElementById('wc-solve-mount'), uid, profile, deepLinkChallengeId);
+        await renderChallengeSolve(document.getElementById('wc-solve-mount'), uid, profile, deepLinkChallengeId, setActiveRound);
         return;
     }
 
@@ -635,16 +684,20 @@ function wireModeTabs(uid, profile, initialMode, deepLinkChallengeId) {
     const tabs = Array.from(document.querySelectorAll('.wordle-mode-tab'));
     const mount = document.getElementById('game-mount');
     let pendingDeepLink = deepLinkChallengeId;
+    let activeRound = null;
+    const setActiveRound = (round) => { activeRound = round; };
 
     async function render(mode) {
+        activeRound?.destroy();
+        activeRound = null;
         tabs.forEach((tab) => tab.classList.toggle('active', tab.dataset.mode === mode));
         mount.innerHTML = `<div class="loading-text">Loading&hellip;</div>`;
         if (mode === 'daily') {
-            await renderDailyMode(mount, uid, profile);
+            await renderDailyMode(mount, uid, profile, setActiveRound);
         } else if (mode === 'tournaments') {
-            await renderTournamentsMode(mount, uid, profile);
+            await renderTournamentsMode(mount, uid, profile, setActiveRound);
         } else {
-            await renderChallengeMode(mount, uid, profile, pendingDeepLink);
+            await renderChallengeMode(mount, uid, profile, pendingDeepLink, setActiveRound);
             pendingDeepLink = null;
         }
     }
@@ -663,7 +716,8 @@ async function init() {
     }
 
     const deepLinkChallengeId = getQueryParam('challenge');
-    wireModeTabs(uid, profile, deepLinkChallengeId ? 'challenges' : 'daily', deepLinkChallengeId);
+    const initialMode = deepLinkChallengeId ? 'challenges' : (getQueryParam('tab') === 'tournaments' ? 'tournaments' : 'daily');
+    wireModeTabs(uid, profile, initialMode, deepLinkChallengeId);
 }
 
 init();

@@ -79,6 +79,7 @@ export async function recordDailyResult(uid, profile, { challengeId, won, attemp
         attemptsPoints: earnedAttemptsBonus,
         timePoints: earnedTimeBonus,
         sharedToFacebook: false,
+        sharedWithFriends: false,
         createdAt: serverTimestamp(),
     };
 
@@ -91,10 +92,13 @@ export async function recordDailyResult(uid, profile, { challengeId, won, attemp
 }
 
 /**
- * Guarded, one-time +20 for sharing today's result to Facebook. Like the rest of this app's
- * points system, this is a client-verifiable-only signal (no server-side proof a share actually
- * happened) -- consistent with the existing "v1-pragmatic, not fully cheat-proof" philosophy.
- * Returns { applied, newScore }.
+ * Guarded, one-time +20 for "Copy Result & Share with Community" (see wordle-summary-modal.js).
+ * Independent from markSharedWithFriends() below -- the two are separate, stackable bonuses, each
+ * claimable once, not alternatives for a single shared bonus. Like the rest of this app's points
+ * system, this is a client-verifiable-only signal (no server-side proof a share actually
+ * happened) -- consistent with the existing "v1-pragmatic, not fully cheat-proof" philosophy;
+ * firestore.rules' isFacebookShareUpdate() independently bounds this update to +20 on the
+ * `sharedToFacebook` field only. Returns { applied, newScore }.
  */
 export async function markSharedToFacebook(uid, dateString = getTodayDateString()) {
     const ref = doc(db, 'gameScores', dailyDocId(uid, dateString));
@@ -105,6 +109,24 @@ export async function markSharedToFacebook(uid, dateString = getTodayDateString(
         }
         const newScore = snap.data().score + 20;
         tx.update(ref, { score: newScore, sharedToFacebook: true, updatedAt: serverTimestamp() });
+        return { applied: true, newScore };
+    });
+}
+
+/**
+ * Guarded, one-time +10 for "Share with Friends" (native Web Share API / sharer.php fallback, see
+ * wordle-summary-modal.js). Independent from markSharedToFacebook() above -- a player can claim
+ * both, one time each. Returns { applied, newScore }.
+ */
+export async function markSharedWithFriends(uid, dateString = getTodayDateString()) {
+    const ref = doc(db, 'gameScores', dailyDocId(uid, dateString));
+    return runTransaction(db, async (tx) => {
+        const snap = await tx.get(ref);
+        if (!snap.exists() || snap.data().sharedWithFriends) {
+            return { applied: false, newScore: snap.exists() ? snap.data().score : 0 };
+        }
+        const newScore = snap.data().score + 10;
+        tx.update(ref, { score: newScore, sharedWithFriends: true, updatedAt: serverTimestamp() });
         return { applied: true, newScore };
     });
 }

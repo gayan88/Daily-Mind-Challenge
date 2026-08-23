@@ -208,6 +208,8 @@ export async function recordWordleChallengeCompletion(challengeId, uid, profile,
         gameType: 'wordle-challenge',
         score,
         gameDate: challengeId, // repurposed as the deterministic key, not a calendar date
+        sharedToFacebook: false,
+        sharedWithFriends: false,
         createdAt: serverTimestamp(),
     };
 
@@ -218,6 +220,39 @@ export async function recordWordleChallengeCompletion(challengeId, uid, profile,
         return null; // lost a race, or the write was rejected -- caller must not assume points landed
     }
     return data;
+}
+
+/**
+ * Guarded, one-time +20 for "Copy Result & Share with Community" on a solved/attempted
+ * challenge's score. Independent from markSharedWithFriends() below -- see
+ * wordle-daily-data.js's equivalent pair for the full rationale (two separate, stackable
+ * bonuses, not alternatives).
+ */
+export async function markSharedToFacebook(uid, challengeId) {
+    const ref = doc(db, 'gameScores', challengeScoreDocId(uid, challengeId));
+    return runTransaction(db, async (tx) => {
+        const snap = await tx.get(ref);
+        if (!snap.exists() || snap.data().sharedToFacebook) {
+            return { applied: false, newScore: snap.exists() ? snap.data().score : 0 };
+        }
+        const newScore = snap.data().score + 20;
+        tx.update(ref, { score: newScore, sharedToFacebook: true, updatedAt: serverTimestamp() });
+        return { applied: true, newScore };
+    });
+}
+
+/** Guarded, one-time +10 for "Share with Friends" -- independent from markSharedToFacebook() above. */
+export async function markSharedWithFriends(uid, challengeId) {
+    const ref = doc(db, 'gameScores', challengeScoreDocId(uid, challengeId));
+    return runTransaction(db, async (tx) => {
+        const snap = await tx.get(ref);
+        if (!snap.exists() || snap.data().sharedWithFriends) {
+            return { applied: false, newScore: snap.exists() ? snap.data().score : 0 };
+        }
+        const newScore = snap.data().score + 10;
+        tx.update(ref, { score: newScore, sharedWithFriends: true, updatedAt: serverTimestamp() });
+        return { applied: true, newScore };
+    });
 }
 
 /**

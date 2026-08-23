@@ -44,6 +44,7 @@ export async function getOrStartAttempt(tournamentId, uid, profile) {
         tournamentId,
         currentWordIndex: 0,
         wordsWon: 0,
+        wordAttempts: [],
         startedAt: serverTimestamp(),
         completed: false,
         completedAt: null,
@@ -59,7 +60,7 @@ export async function getOrStartAttempt(tournamentId, uid, profile) {
  * progress but never blocks trying again. Never touches points; see finalizeTournament() for that.
  * Returns the attempt's fields after the update.
  */
-export async function recordWordResult(tournamentId, uid, won) {
+export async function recordWordResult(tournamentId, uid, won, attempts) {
     const ref = doc(db, 'wordleTournamentAttempts', attemptDocId(tournamentId, uid));
     return runTransaction(db, async (tx) => {
         const snap = await tx.get(ref);
@@ -68,8 +69,12 @@ export async function recordWordResult(tournamentId, uid, won) {
         if (data.completed) return data;
 
         const patch = won
-            ? { currentWordIndex: data.currentWordIndex + 1, wordsWon: data.wordsWon + 1 }
-            : { currentWordIndex: 0, wordsWon: 0 };
+            ? {
+                currentWordIndex: data.currentWordIndex + 1,
+                wordsWon: data.wordsWon + 1,
+                wordAttempts: [...(data.wordAttempts || []), attempts],
+            }
+            : { currentWordIndex: 0, wordsWon: 0, wordAttempts: [] };
         tx.update(ref, patch);
         return { ...data, ...patch };
     });
@@ -93,6 +98,9 @@ export async function finalizeTournament(uid, profile, tournament) {
         return existingScore.data();
     }
 
+    const attemptSnap = await getDoc(attemptRef);
+    const wordAttempts = attemptSnap.exists() ? (attemptSnap.data().wordAttempts || []) : [];
+
     const numWords = tournament.words.length;
     const score = 30 + 15 * numWords + (tournament.bonusPoints || 0);
 
@@ -104,6 +112,9 @@ export async function finalizeTournament(uid, profile, tournament) {
         score,
         gameDate: tournament.id, // repurposed as the deterministic key, not a calendar date -- see gameScores create rule
         tournamentName: tournament.name,
+        wordAttempts,
+        sharedToFacebook: false,
+        sharedWithFriends: false,
         createdAt: serverTimestamp(),
     };
 
@@ -116,4 +127,36 @@ export async function finalizeTournament(uid, profile, tournament) {
 
     await updateDoc(attemptRef, { completed: true, completedAt: serverTimestamp(), pointsAwarded: true });
     return data;
+}
+
+/**
+ * Guarded, one-time +20 for "Copy Result & Share with Community" on a completed tournament's
+ * score. Independent from markSharedWithFriends() below -- see wordle-daily-data.js's equivalent
+ * pair for the full rationale (two separate, stackable bonuses, not alternatives).
+ */
+export async function markSharedToFacebook(uid, tournamentId) {
+    const ref = doc(db, 'gameScores', tournamentScoreDocId(uid, tournamentId));
+    return runTransaction(db, async (tx) => {
+        const snap = await tx.get(ref);
+        if (!snap.exists() || snap.data().sharedToFacebook) {
+            return { applied: false, newScore: snap.exists() ? snap.data().score : 0 };
+        }
+        const newScore = snap.data().score + 20;
+        tx.update(ref, { score: newScore, sharedToFacebook: true, updatedAt: serverTimestamp() });
+        return { applied: true, newScore };
+    });
+}
+
+/** Guarded, one-time +10 for "Share with Friends" -- independent from markSharedToFacebook() above. */
+export async function markSharedWithFriends(uid, tournamentId) {
+    const ref = doc(db, 'gameScores', tournamentScoreDocId(uid, tournamentId));
+    return runTransaction(db, async (tx) => {
+        const snap = await tx.get(ref);
+        if (!snap.exists() || snap.data().sharedWithFriends) {
+            return { applied: false, newScore: snap.exists() ? snap.data().score : 0 };
+        }
+        const newScore = snap.data().score + 10;
+        tx.update(ref, { score: newScore, sharedWithFriends: true, updatedAt: serverTimestamp() });
+        return { applied: true, newScore };
+    });
 }
