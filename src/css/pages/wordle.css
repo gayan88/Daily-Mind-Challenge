@@ -302,11 +302,18 @@
     outline: none;
 }
 
-.wc-copy-btn {
+.wc-copy-btn,
+.wc-share-btn {
     flex: 0 0 auto;
     padding: 8px 12px;
     font-size: 18px;
     line-height: 1;
+}
+
+.wc-share-btn svg {
+    width: 18px;
+    height: 18px;
+    display: block;
 }
 
 .wc-mine-item {

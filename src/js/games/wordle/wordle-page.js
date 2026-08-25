@@ -1,6 +1,6 @@
 import { initShell } from '../../app.js';
 import { icon } from '../../utils/icons.js';
-import { showToast, escapeHtml, getQueryParam, getTodayDateString } from '../../utils/helpers.js';
+import { showToast, escapeHtml, getQueryParam, getTodayDateString, shareUrl } from '../../utils/helpers.js';
 import { checkPlayedToday } from '../../utils/points.js';
 import { getConfig } from '../../utils/config.js';
 import { playWordleRound } from './wordle-engine.js';
@@ -37,6 +37,9 @@ const TOURNAMENTS_TAB_URL = `${window.location.origin}/wordle?tab=tournaments`;
 const ICON_CALENDAR = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
 const ICON_TARGET = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>`;
 const ICON_LIGHTNING = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></svg>`;
+// Same icon as wordle-summary-modal.js's "Share with Friends" option, reused here for visual
+// consistency across the app's two other Wordle-challenge-link share entry points.
+const ICON_SHARE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="10.6" x2="15.4" y2="6.4"/><line x1="8.6" y1="13.4" x2="15.4" y2="17.6"/></svg>`;
 
 function renderAdminBlocked(mount) {
     mount.innerHTML = `<div class="empty-state">Admin accounts don't play games.</div>`;
@@ -81,15 +84,13 @@ async function renderDailyMode(mount, uid, profile, setActiveRound) {
         <div id="wordle-round-mount"></div>
     `;
     const roundMount = document.getElementById('wordle-round-mount');
-    const startTime = Date.now();
 
     setActiveRound(playWordleRound({
         container: roundMount,
         targetWord: challenge.word,
         maxGuesses: MAX_GUESSES,
         validateGuess: isRealWord,
-        onComplete: async ({ won, attempts, guessStates }) => {
-            const timeTakenSeconds = Math.round((Date.now() - startTime) / 1000);
+        onComplete: async ({ won, attempts, guessStates, timeTakenSeconds }) => {
             const result = await recordDailyResult(uid, profile, {
                 challengeId: challenge.challengeId,
                 won,
@@ -296,17 +297,34 @@ function solveCountLabel(count) {
     return `${count} people solved it`;
 }
 
-const CHALLENGE_SHARE_MESSAGE = 'Daily Mind Challenge: I created a Wordle just for you! Can you crack it in 6 attempts?';
+function challengeShareText(link) {
+    return `🟪 I’ve got a Wordle challenge for you!\n\nThink you can crack my word in 6 attempts or fewer? 👀🧠\n\nGive it a try and see how quickly you can solve it:\n\n${link}\n\nCan you beat the challenge? 🔥`;
+}
 
 function wireCopyLink(btn, link) {
     btn.addEventListener('click', async () => {
         try {
-            await navigator.clipboard.writeText(`${CHALLENGE_SHARE_MESSAGE}\n${link}`);
+            await navigator.clipboard.writeText(challengeShareText(link));
             showToast('Link copied!');
         } catch {
             showToast('Copy failed — select and copy manually');
         }
     });
+}
+
+// Only rendered/wired when the native Web Share API exists (mobile browsers, mostly) -- desktop
+// browsers mostly lack it, and shareUrl()'s non-native fallback opens a Facebook popup rather
+// than copying to the clipboard, which would be a worse experience than the copy button already
+// sitting right next to this one.
+function shareButtonHtml(idAttr) {
+    return navigator.share
+        ? `<button class="btn wc-copy-btn wc-share-btn" ${idAttr} type="button" aria-label="Share" title="Share">${ICON_SHARE}</button>`
+        : '';
+}
+
+function wireShareLink(btn, link) {
+    if (!btn) return;
+    btn.addEventListener('click', () => shareUrl(link, challengeShareText(link)));
 }
 
 async function renderChallengeCreate(container, profile) {
@@ -342,10 +360,12 @@ async function renderChallengeCreate(container, profile) {
             document.getElementById('wc-share-result').innerHTML = `
                 <div class="share-box">
                     <input type="text" readonly value="${escapeHtml(link)}" id="wc-share-link-input">
+                    ${shareButtonHtml('id="wc-share-link-btn"')}
                     <button class="btn primary wc-copy-btn" id="wc-copy-link-btn" type="button" aria-label="Copy link" title="Copy link">${icon('CLIPBOARD')}</button>
                 </div>
             `;
             wireCopyLink(document.getElementById('wc-copy-link-btn'), link);
+            wireShareLink(document.getElementById('wc-share-link-btn'), link);
             showToast('Challenge created!');
         } catch (err) {
             showToast(err.message);
@@ -444,6 +464,7 @@ function renderDetailShell(c) {
         </div>
         <div class="share-box">
             <input type="text" readonly value="${escapeHtml(link)}">
+            ${shareButtonHtml('data-share-mine')}
             <button class="btn wc-copy-btn" data-copy-mine type="button" aria-label="Copy link" title="Copy link">${icon('CLIPBOARD')}</button>
         </div>
         <div class="wc-attempts-title">Attempts</div>
@@ -513,6 +534,7 @@ function wireMineDetailToggle(itemEl, c, attemptsPageSize) {
             loaded = true;
             detailEl.innerHTML = renderDetailShell(c);
             wireCopyLink(detailEl.querySelector('[data-copy-mine]'), shareLinkForChallenge(c.id));
+            wireShareLink(detailEl.querySelector('[data-share-mine]'), shareLinkForChallenge(c.id));
             detailEl.querySelector('[data-close-detail]').addEventListener('click', () => {
                 detailEl.hidden = true;
             });
@@ -608,15 +630,13 @@ async function renderChallengeSolve(mount, uid, profile, challengeId, setActiveR
         <div id="wordle-round-mount"></div>
     `;
     const roundMount = document.getElementById('wordle-round-mount');
-    const startTime = Date.now();
 
     setActiveRound(playWordleRound({
         container: roundMount,
         targetWord: challenge.word,
         maxGuesses: MAX_GUESSES,
         validateGuess: isRealWord,
-        onComplete: async ({ won, attempts, guessStates }) => {
-            const timeTakenSeconds = Math.round((Date.now() - startTime) / 1000);
+        onComplete: async ({ won, attempts, guessStates, timeTakenSeconds }) => {
             const result = await recordWordleChallengeCompletion(challengeId, uid, profile, { won, attempts, timeTakenSeconds });
             if (!result) {
                 showToast("Couldn't save your points -- check the browser console for the error");

@@ -61,7 +61,7 @@ function shareTextForClassic(difficulty, timeTaken, errors, score) {
 
 function shareTextForTournament(tournament, numPuzzles, score, puzzleResults) {
     const puzzleLines = puzzleResults
-        .map(({ errors, timeTakenSeconds }, i) => `Puzzle ${i + 1} - ${formatDuration(timeTakenSeconds * 1000)}, ${errors} error${errors === 1 ? '' : 's'}`)
+        .map(({ passed, errors, timeTakenSeconds }, i) => `Puzzle ${i + 1} - ${passed ? 'Passed' : 'Failed'} (${formatDuration(timeTakenSeconds * 1000)}, ${errors} error${errors === 1 ? '' : 's'})`)
         .join('\n');
     return `🏆 Sudoku Tournament Complete!\n\nI completed ${tournament.name} 🎉\n\n🧩 Puzzles: ${numPuzzles}/${numPuzzles}\n⭐ Score: ${score} points\n\n${puzzleLines}\n\nThink you can beat my score? 👀\n\nJoin the tournament:\n${TOURNAMENTS_TAB_URL}`;
 }

@@ -37,15 +37,22 @@ function formatClock(totalSeconds) {
 
 /**
  * Mounts a playable Wordle round into `container`. Calls `onComplete({ won, attempts, guessStates,
- * timedOut })` exactly once when the round ends (win, out of guesses, or time limit expiring).
- * `guessStates` is the per-guess correct/present/absent array for each submitted row, for callers
- * that want to render a shareable-style colored grid afterward.
+ * timeTakenSeconds, timedOut })` exactly once when the round ends (win, out of guesses, or time
+ * limit expiring). `guessStates` is the per-guess correct/present/absent array for each submitted
+ * row, for callers that want to render a shareable-style colored grid afterward.
  *
- * `timeLimitSeconds` is optional (tournament mode) -- when set, a visible countdown is shown and
- * running out of time ends the round as a loss (`timedOut: true`) even with guesses remaining.
+ * Always shows a live stats bar with Attempts (submitted guesses / `maxGuesses`, updated after
+ * each guess) and Time, like `sudoku-engine.js`/`wordsearch-engine.js`.
+ * `timeLimitSeconds` is optional (Tournament only) -- when set, the stats bar counts DOWN from it
+ * and running out of time ends the round as a loss (`timedOut: true`) even with guesses
+ * remaining, starting immediately since it's a real time-attack constraint. Without it (Daily
+ * Challenge, Challenge a Friend), the stats bar is a pure stopwatch counting UP from zero that
+ * doesn't start ticking until the player's first letter keystroke -- otherwise page-load/read
+ * time before their first move would silently eat into Daily Challenge's speed bonus -- and its
+ * final value is handed back as `timeTakenSeconds` for callers to use (Daily Challenge's own
+ * speed-bonus formula lives in `wordle-daily-data.js`, not here).
  * `roundLabel` is an optional plain-text string (e.g. "Word 3 of 10") shown alongside Time inside
- * that same stats box -- only rendered when `timeLimitSeconds` is also set, since that's the only
- * box it can appear in.
+ * that same stats box -- only ever passed by Tournament mode today.
  *
  * `validateGuess` is an optional `async (guess) => boolean` callback -- when provided, every guess
  * that isn't the exact target word is checked against it before being accepted (real Wordle rejects
@@ -64,26 +71,30 @@ export function playWordleRound({ container, targetWord, maxGuesses = 6, timeLim
     const wordLength = target.length;
 
     container.innerHTML = `
-        ${timeLimitSeconds ? `
-            <div class="wordle-stats" id="wordle-stats">
-                ${roundLabel ? `
-                    <span class="wordle-stat">
-                        <span class="wordle-stat-value">${roundLabel}</span>
-                    </span>
-                ` : ''}
+        <div class="wordle-stats" id="wordle-stats">
+            ${roundLabel ? `
                 <span class="wordle-stat">
-                    <span class="wordle-stat-icon">${icon('STOPWATCH')}</span>
-                    <span class="wordle-stat-label">Time</span>
-                    <span class="wordle-stat-value" id="wordle-timer"></span>
+                    <span class="wordle-stat-value">${roundLabel}</span>
                 </span>
-            </div>
-        ` : ''}
+            ` : ''}
+            <span class="wordle-stat">
+                <span class="wordle-stat-icon">${icon('TARGET')}</span>
+                <span class="wordle-stat-label">Attempts</span>
+                <span class="wordle-stat-value" id="wordle-attempts-stat">0/${maxGuesses}</span>
+            </span>
+            <span class="wordle-stat">
+                <span class="wordle-stat-icon">${icon('STOPWATCH')}</span>
+                <span class="wordle-stat-label">Time</span>
+                <span class="wordle-stat-value" id="wordle-timer">${timeLimitSeconds ? formatClock(timeLimitSeconds) : '0:00'}</span>
+            </span>
+        </div>
         <div class="wordle-board" id="wordle-board"></div>
         <div class="wordle-message" id="wordle-message" aria-live="polite"></div>
         <div class="wordle-keyboard" id="wordle-keyboard"></div>
     `;
 
     const timerEl = container.querySelector('#wordle-timer');
+    const attemptsStatEl = container.querySelector('#wordle-attempts-stat');
     const boardEl = container.querySelector('#wordle-board');
     const messageEl = container.querySelector('#wordle-message');
     const keyboardEl = container.querySelector('#wordle-keyboard');
@@ -125,6 +136,7 @@ export function playWordleRound({ container, targetWord, maxGuesses = 6, timeLim
     let submitting = false;
     const guessStates = [];
     let timerInterval = null;
+    let elapsedSeconds = 0;
 
     function setMessage(text) {
         messageEl.textContent = text;
@@ -194,6 +206,7 @@ export function playWordleRound({ container, targetWord, maxGuesses = 6, timeLim
 
             const won = guess === target;
             rowIndex++;
+            attemptsStatEl.textContent = `${rowIndex}/${maxGuesses}`;
 
             if (won) {
                 gameOver = true;
@@ -224,6 +237,7 @@ export function playWordleRound({ container, targetWord, maxGuesses = 6, timeLim
             return;
         }
         if (currentGuess.length < wordLength && /^[A-Z]$/.test(key)) {
+            startTimer();
             currentGuess += key;
             renderCurrentRow();
         }
@@ -238,24 +252,36 @@ export function playWordleRound({ container, targetWord, maxGuesses = 6, timeLim
 
     document.addEventListener('keydown', onPhysicalKeydown);
 
-    if (timeLimitSeconds) {
-        let remaining = timeLimitSeconds;
-        timerEl.textContent = formatClock(remaining);
-        timerInterval = setInterval(() => {
-            remaining -= 1;
-            if (remaining <= 0) {
-                clearInterval(timerInterval);
-                if (!gameOver) {
-                    gameOver = true;
-                    setMessage(`Time's up! The word was ${target}`);
-                    finish(false, rowIndex, { timedOut: true });
+    function startTimer() {
+        if (timerInterval) return;
+        if (timeLimitSeconds) {
+            let remaining = timeLimitSeconds;
+            timerInterval = setInterval(() => {
+                remaining -= 1;
+                if (remaining <= 0) {
+                    clearInterval(timerInterval);
+                    if (!gameOver) {
+                        gameOver = true;
+                        setMessage(`Time's up! The word was ${target}`);
+                        finish(false, rowIndex, { timedOut: true });
+                    }
+                    return;
                 }
-                return;
-            }
-            timerEl.textContent = formatClock(remaining);
-            timerEl.classList.toggle('urgent', remaining <= 10);
-        }, 1000);
+                timerEl.textContent = formatClock(remaining);
+                timerEl.classList.toggle('urgent', remaining <= 10);
+            }, 1000);
+        } else {
+            timerInterval = setInterval(() => {
+                elapsedSeconds += 1;
+                timerEl.textContent = formatClock(elapsedSeconds);
+            }, 1000);
+        }
     }
+
+    // Tournament's countdown is a real time-attack constraint, so it starts the instant the
+    // round mounts, same as before. Daily Challenge/Challenge a Friend's stopwatch instead only
+    // starts on the player's first letter keystroke (see `handleKey` above).
+    if (timeLimitSeconds) startTimer();
 
     function cleanup() {
         document.removeEventListener('keydown', onPhysicalKeydown);
@@ -264,7 +290,7 @@ export function playWordleRound({ container, targetWord, maxGuesses = 6, timeLim
 
     function finish(won, attempts, extra = {}) {
         cleanup();
-        onComplete({ won, attempts, guessStates: guessStates.slice(), timedOut: false, ...extra });
+        onComplete({ won, attempts, guessStates: guessStates.slice(), timeTakenSeconds: elapsedSeconds, timedOut: false, ...extra });
     }
 
     return {

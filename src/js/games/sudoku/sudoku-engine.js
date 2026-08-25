@@ -8,8 +8,10 @@ function formatClock(totalSeconds) {
 
 /**
  * Mounts a playable Sudoku round into `container`. Tap a cell, then tap a number to fill it
- * (mobile-friendly, avoids raw <input> zoom/keyboard issues). Correctness is checked by direct
- * comparison against `solution` -- no general constraint-solving engine needed for v1.
+ * (mobile-friendly, avoids raw <input> zoom/keyboard issues) -- or, once a cell is selected,
+ * type a digit 1-9 on a physical keyboard instead (Backspace/Delete clears it), same as clicking
+ * the on-screen palette. Correctness is checked by direct comparison against `solution` -- no
+ * general constraint-solving engine needed for v1.
  *
  * A live stats line (time + errors) is always shown, since all three Sudoku modes (Daily
  * Challenge, Classic, Tournament) display this per their spec -- unlike wordle-engine.js's
@@ -18,6 +20,12 @@ function formatClock(totalSeconds) {
  * `timeLimitSeconds` is optional (Tournament only) -- when set, the stats line counts DOWN from
  * it instead of counting up from zero, and reaching 0 ends the round as a loss (`timedOut: true`).
  * `maxErrors` is optional (Tournament only) -- exceeding it ends the round as a loss immediately.
+ *
+ * The stopwatch (no `timeLimitSeconds`, i.e. Daily/Classic) doesn't start ticking until the
+ * player's first cell selection -- otherwise page-load/read time before their first move would
+ * silently eat into the speed bonus. Tournament's countdown is a real time-attack constraint, so
+ * it starts immediately as before; delaying it too would let a player "pause" it indefinitely
+ * just by not touching the grid.
  *
  * Calls `onComplete({ won, errors, timeTakenSeconds, timedOut })` exactly once when the round
  * ends (win, or a Tournament loss via timeout/too many errors).
@@ -92,9 +100,15 @@ export function playSudokuRound({ container, puzzle, solution, timeLimitSeconds 
 
     function selectCell(index) {
         if (gameOver) return;
+        startTimer();
         if (selectedIndex !== null) cells[selectedIndex].classList.remove('selected');
         selectedIndex = index;
         cells[index].classList.add('selected');
+        // Explicit focus, not just relying on the click -- Safari in particular doesn't focus a
+        // <button> on a plain mouse click by default, which would otherwise stop the keydown
+        // listener below from ever seeing typed digits (it depends on focus being inside
+        // `container` for the event to bubble up to it).
+        cells[index].focus();
     }
 
     function updateErrorsStat() {
@@ -131,8 +145,31 @@ export function playSudokuRound({ container, puzzle, solution, timeLimitSeconds 
         }
     }
 
+    /**
+     * Physical-keyboard digit entry, once a cell is selected -- same effect as clicking the
+     * on-screen palette/Clear button. Attached to `container` rather than `document` (unlike
+     * wordle-engine.js's physical-keyboard listener, which has to be attached to `document` and
+     * explicitly removed on cleanup to avoid leaking into a later round after a mode-tab switch):
+     * `container` gets detached from the page entirely when a mode tab switches (its parent's
+     * innerHTML is replaced), and a detached node never receives real keydown events again, so
+     * this can never leak the same way -- removing it in cleanup() below is just tidiness, not a
+     * correctness requirement.
+     */
+    function onKeydown(e) {
+        if (gameOver || selectedIndex === null) return;
+        if (e.key >= '1' && e.key <= '9') {
+            e.preventDefault();
+            enterValue(e.key);
+        } else if (e.key === 'Backspace' || e.key === 'Delete') {
+            e.preventDefault();
+            enterValue('0');
+        }
+    }
+    container.addEventListener('keydown', onKeydown);
+
     function cleanup() {
         if (timerInterval) clearInterval(timerInterval);
+        container.removeEventListener('keydown', onKeydown);
     }
 
     function finish(won, { timedOut }) {
@@ -153,7 +190,9 @@ export function playSudokuRound({ container, puzzle, solution, timeLimitSeconds 
         onComplete({ won, errors: errorCount, timeTakenSeconds: elapsedSeconds, timedOut });
     }
 
-    let timerInterval = setInterval(() => {
+    let timerInterval = null;
+
+    function tick() {
         elapsedSeconds += 1;
 
         if (timeLimitSeconds != null) {
@@ -169,7 +208,18 @@ export function playSudokuRound({ container, puzzle, solution, timeLimitSeconds 
         } else {
             timeStatEl.textContent = formatClock(elapsedSeconds);
         }
-    }, 1000);
+    }
+
+    function startTimer() {
+        if (timerInterval) return;
+        timerInterval = setInterval(tick, 1000);
+    }
+
+    // Tournament's countdown is a real time-attack constraint against `timeLimitSeconds`, so it
+    // still starts the instant the round mounts. Daily/Classic's clock is a pure stopwatch used
+    // only for a speed-bonus tier, so it only starts once the player actually makes their first
+    // move (see `selectCell` above) -- page-load/read time no longer eats into their bonus.
+    if (timeLimitSeconds != null) startTimer();
 
     return {
         destroy: cleanup,

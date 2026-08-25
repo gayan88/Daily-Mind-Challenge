@@ -1,3 +1,5 @@
+import { setUserProperties } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js';
+import { analytics } from './api/firebase-init.js';
 import { getSessionUser, signOutSession } from './auth/auth.js';
 import { loadSessionProfile } from './auth/user-profile.js';
 import { applyDailyLoginBonus } from './utils/points.js';
@@ -132,6 +134,11 @@ async function resolveSession(user) {
     } catch {
         return null;
     }
+
+    // Lets Analytics reports be segmented by guest vs. registered (e.g. "Active Users" filtered by
+    // accountType) -- GA4 has no way to know this app's own guest/registered distinction on its
+    // own, so it has to be told explicitly, once per session, as soon as `profile.kind` is known.
+    if (analytics) setUserProperties(analytics, { accountType: profile.kind });
 
     // applyDailyLoginBonus() costs 2 Firestore reads (a config lookup + a transaction re-read of
     // the profile doc we just loaded). Skip it entirely once loadSessionProfile already told us

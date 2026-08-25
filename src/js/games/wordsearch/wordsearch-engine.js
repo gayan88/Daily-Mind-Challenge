@@ -113,7 +113,11 @@ function cellsInLine(start, end) {
  *
  * Always shows a live stats bar (Words Found + Time), like `sudoku-engine.js`. `timeLimitSeconds`
  * is optional (Tournament only) -- when set, the stats bar counts down instead of up, and hitting
- * zero ends the round as a loss (`timedOut: true`) with the un-found words revealed.
+ * zero ends the round as a loss (`timedOut: true`) with the un-found words revealed. The stopwatch
+ * (no `timeLimitSeconds`, i.e. Daily/Classic) doesn't start ticking until the player's first drag
+ * -- otherwise page-load/read time before their first move would silently eat into the speed
+ * bonus. Tournament's countdown starts immediately as before, same reasoning as
+ * `sudoku-engine.js`'s equivalent choice.
  *
  * Calls `onComplete({ won, wordsFound, totalWords, timeTakenSeconds, timedOut })` exactly once.
  */
@@ -264,6 +268,7 @@ export function playWordSearchRound({ container, words, seed, gridSize, directio
         if (gameOver) return;
         const cell = cellFromPoint(e.clientX, e.clientY);
         if (!cell) return;
+        startTimer();
         selecting = true;
         startCell = cell;
         previewLine([cell]);
@@ -280,6 +285,7 @@ export function playWordSearchRound({ container, words, seed, gridSize, directio
         const t = e.touches[0];
         const cell = cellFromPoint(t.clientX, t.clientY);
         if (!cell) return;
+        startTimer();
         selecting = true;
         startCell = cell;
         previewLine([cell]);
@@ -296,7 +302,9 @@ export function playWordSearchRound({ container, words, seed, gridSize, directio
         endSelection(cellFromPoint(t.clientX, t.clientY));
     });
 
-    let timerInterval = setInterval(() => {
+    let timerInterval = null;
+
+    function tick() {
         elapsedSeconds += 1;
 
         if (timeLimitSeconds != null) {
@@ -311,7 +319,18 @@ export function playWordSearchRound({ container, words, seed, gridSize, directio
         } else {
             timeStatEl.textContent = formatClock(elapsedSeconds);
         }
-    }, 1000);
+    }
+
+    function startTimer() {
+        if (timerInterval) return;
+        timerInterval = setInterval(tick, 1000);
+    }
+
+    // Tournament's countdown is a real time-attack constraint against `timeLimitSeconds`, so it
+    // still starts the instant the round mounts. Daily/Classic's clock is a pure stopwatch used
+    // only for a speed-bonus tier, so it only starts on the player's first drag (mousedown/
+    // touchstart above) -- page-load/read time no longer eats into their bonus.
+    if (timeLimitSeconds != null) startTimer();
 
     return {
         destroy: cleanup,

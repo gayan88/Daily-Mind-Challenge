@@ -22,7 +22,7 @@ The one file every page loads first (via `initShell()` for protected pages, or `
 1. Injects the shared header/footer partials (`src/partials/*.html`) via `fetch()`.
 2. Resolves the current session (`getSessionUser()` from `auth/auth.js` — **never** auto-creates a guest).
 3. For protected pages (`initShell()`): redirects to the home page (with a `?redirect=` param) if there's no valid session.
-4. Loads the session's profile, applies the daily login bonus if not already claimed today, and wires the header (display name, `[Guest]` badge, Admin nav link, Logout button).
+4. Loads the session's profile, sets the `accountType` Analytics user property (`'guest'`/`'registered'`, see `api/CLAUDE.md`), applies the daily login bonus if not already claimed today, and wires the header (display name, `[Guest]` badge, Admin nav link, Logout button).
 
 ## No client-side router
 

@@ -15,6 +15,7 @@ export const ICONS = {
     GLOBE: '\u{1F310}',       // 🌐
     CLIPBOARD: '\u{1F4CB}',   // 📋
     WORDS: '\u{1F524}',       // 🔤
+    TARGET: '\u{1F3AF}',      // 🎯
     STOPWATCH: '\u{23F1}\u{FE0F}', // ⏱️
     WARNING: '\u{26A0}\u{FE0F}',   // ⚠️
     GOLD_MEDAL: '\u{1F947}',       // 🥇

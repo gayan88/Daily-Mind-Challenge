@@ -153,6 +153,11 @@
     padding: 2px;
     width: min(100%, 468px);
     aspect-ratio: 1;
+    /* -webkit- prefix is required, not just decorative -- Safari doesn't reliably suppress its
+       own native drag-to-select with the unprefixed property alone, which let Safari's own
+       text-selection highlight a whole block of cells on top of the game's own .preview line
+       during a mouse drag (Chrome/Firefox never needed the prefix, so this only showed in Safari). */
+    -webkit-user-select: none;
     user-select: none;
     touch-action: none;
 }

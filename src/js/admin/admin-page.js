@@ -16,6 +16,7 @@ import {
     listClassicWordsearchPuzzles, addClassicWordsearchPuzzle, updateClassicWordsearchPuzzle,
     listWordsearchTournaments, createWordsearchTournament, setWordsearchTournamentActive, deleteWordsearchTournament,
 } from './wordsearch-admin.js';
+import { getDailyActivitySummary } from './activity-summary-data.js';
 import { escapeHtml, showToast, getTodayDateString } from '../utils/helpers.js';
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -106,6 +107,83 @@ const CONFIG_FORMS = [
         fields: [{ key: 'blockedWords', type: 'textarea', label: 'Blocked words (comma-separated)', isArray: true }],
     },
 ];
+
+// Outlined line icons (not this app's usual emoji set, see icons.js) -- used only on the Daily
+// Activity Summary's stat cards.
+const ICON_PEOPLE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
+const ICON_PERSON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+const ICON_PERSON_CHECK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>`;
+const ICON_GAMEPAD = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><circle cx="15" cy="13" r="1"/><circle cx="18" cy="11" r="1"/><rect x="2" y="6" width="20" height="12" rx="6"/></svg>`;
+
+function activityStatCard(iconSvg, label, value) {
+    return `
+        <div class="status-stat-card">
+            <div class="status-stat-icon-wrap">${iconSvg}</div>
+            <div class="status-stat-label">${label}</div>
+            <div class="status-stat-value">${value}</div>
+        </div>
+    `;
+}
+
+async function renderActivitySummary(dateString) {
+    const container = document.getElementById('activity-summary-content');
+    container.innerHTML = `<div class="loading-text">Loading&hellip;</div>`;
+
+    let summary;
+    try {
+        summary = await getDailyActivitySummary(dateString);
+    } catch {
+        container.innerHTML = `<div class="empty-state">Couldn't load activity for this date &mdash; check Firestore rules are deployed and try again.</div>`;
+        return;
+    }
+
+    const statsHtml = `
+        <div class="status-stats-grid activity-summary-stats">
+            ${activityStatCard(ICON_PEOPLE, 'Logged Users', summary.loggedUsers)}
+            ${activityStatCard(ICON_PERSON, 'Guest', summary.guestUsers)}
+            ${activityStatCard(ICON_PERSON_CHECK, 'Registered', summary.registeredUsers)}
+            ${activityStatCard(ICON_GAMEPAD, 'Total Plays', summary.totalPlays)}
+        </div>
+    `;
+
+    const tableHtml = `
+        <div class="activity-summary-table">
+            <div class="activity-summary-row activity-summary-header">
+                <span>Game / Activity</span>
+                <span>Guest</span>
+                <span>Registered</span>
+                <span>Total</span>
+            </div>
+            ${summary.games.map((g, i) => `
+                <div class="activity-summary-row activity-summary-game-row">
+                    <span class="activity-summary-game-name"><span class="activity-summary-badge">${i + 1}</span>${escapeHtml(g.game)}</span>
+                    <span>${g.guest}</span>
+                    <span>${g.registered}</span>
+                    <span>${g.total}</span>
+                </div>
+                ${g.rows.map((r) => `
+                    <div class="activity-summary-row activity-summary-sub-row">
+                        <span class="activity-summary-sub-label">${escapeHtml(r.label)}</span>
+                        <span>${r.guest}</span>
+                        <span>${r.registered}</span>
+                        <span>${r.total}</span>
+                    </div>
+                `).join('')}
+            `).join('')}
+        </div>
+    `;
+
+    container.innerHTML = statsHtml + tableHtml;
+}
+
+function wireActivitySummary() {
+    const input = document.getElementById('activity-summary-date-input');
+    input.value = getTodayDateString();
+    input.addEventListener('change', () => {
+        if (input.value) renderActivitySummary(input.value);
+    });
+    renderActivitySummary(input.value);
+}
 
 function wireCollapsibleSections() {
     document.querySelectorAll('[data-collapsible] > .admin-section-header, [data-collapsible] > .admin-subsection-header').forEach((btn) => {
@@ -1246,6 +1324,7 @@ async function init() {
     }
 
     wireCollapsibleSections();
+    wireActivitySummary();
     const gameSectionConfigIds = ['challengeExpiration', 'sudokuTournamentSettings', 'wordsearchTournamentSettings'];
     const generalConfigIds = CONFIG_FORMS
         .map((form) => form.id)
