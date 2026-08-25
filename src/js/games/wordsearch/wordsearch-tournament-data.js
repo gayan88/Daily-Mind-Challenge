@@ -10,6 +10,7 @@ import {
     getDocs,
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 import { db } from '../../api/firebase-init.js';
+import { getTodayDateString } from '../../utils/helpers.js';
 
 const ATTEMPTS_COLLECTION = 'wordsearchTournamentAttempts';
 
@@ -98,6 +99,7 @@ export async function recordPuzzleResult(tournament, uid, profile, { puzzleIndex
                 gameType: 'wordsearch-tournament',
                 score,
                 gameDate: `${tournament.id}_${puzzleIndex}`, // repurposed as the deterministic key, not a calendar date
+                scoreDate: getTodayDateString(),
                 tournamentId: tournament.id,
                 tournamentName: tournament.name,
                 puzzleIndex,
@@ -146,6 +148,7 @@ export async function completeTournamentIfNeeded(uid, profile, tournament) {
                 gameType: 'wordsearch-tournament-bonus',
                 score: tournament.completionBonus,
                 gameDate: tournament.id, // repurposed as the deterministic key, not a calendar date
+                scoreDate: getTodayDateString(),
                 tournamentId: tournament.id,
                 tournamentName: tournament.name,
                 sharedToFacebook: false,

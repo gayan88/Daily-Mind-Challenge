@@ -11,13 +11,17 @@ import { getTodayDateString, getDateDaysAgo } from '../utils/helpers.js';
 // simpler than computing calendar boundaries and avoids timezone edge cases.
 const PERIOD_WINDOW_DAYS = { week: 6, month: 29, year: 364 };
 
-/** Firestore `where` constraints for a given period ('today' | 'week' | 'month' | 'year' | 'all'). */
+/** Firestore `where` constraints for a given period ('today' | 'week' | 'month' | 'year' | 'all').
+ * Filters on `scoreDate`, not `gameDate` -- `gameDate` doubles as a deterministic doc-ID key for
+ * many modes (Tournament, Classic, Challenge a Friend) and isn't always a real calendar date, so
+ * it can't be used to filter by when a score was actually earned. `scoreDate` is always the real
+ * date, set on every gameScores doc regardless of gameType (see each game's data.js). */
 function periodConstraints() {
     return {
-        today: () => [where('gameDate', '==', getTodayDateString())],
-        week: () => [where('gameDate', '>=', getDateDaysAgo(PERIOD_WINDOW_DAYS.week))],
-        month: () => [where('gameDate', '>=', getDateDaysAgo(PERIOD_WINDOW_DAYS.month))],
-        year: () => [where('gameDate', '>=', getDateDaysAgo(PERIOD_WINDOW_DAYS.year))],
+        today: () => [where('scoreDate', '==', getTodayDateString())],
+        week: () => [where('scoreDate', '>=', getDateDaysAgo(PERIOD_WINDOW_DAYS.week))],
+        month: () => [where('scoreDate', '>=', getDateDaysAgo(PERIOD_WINDOW_DAYS.month))],
+        year: () => [where('scoreDate', '>=', getDateDaysAgo(PERIOD_WINDOW_DAYS.year))],
         all: () => [],
     };
 }

@@ -84,6 +84,7 @@ export async function recordDailyResult(uid, profile, { challengeId, errors, tim
         score,
         timeTaken: formatDuration(timeTakenSeconds * 1000),
         gameDate: today,
+        scoreDate: today,
         challengeId,
         errors,
         completionPoints,

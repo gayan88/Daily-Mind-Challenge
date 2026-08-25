@@ -10,6 +10,7 @@ import {
     getDocs,
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 import { db } from '../../api/firebase-init.js';
+import { getTodayDateString } from '../../utils/helpers.js';
 
 const ATTEMPTS_COLLECTION = 'sudokuTournamentAttempts';
 
@@ -69,13 +70,18 @@ export async function getOrStartAttempt(tournamentId, uid, profile) {
  * the run only ends once every puzzle has been attempted, pass or fail (see CLAUDE.md/the plan for
  * why this diverges from Wordle's "reset to word 1 on any loss" design).
  *
+ * `puzzleResults` stores one `{ passed, errors, timeTakenSeconds }` object per puzzle (not just a
+ * pass/fail boolean) so the completion modal/share text can show each puzzle's actual time and
+ * error count instead of just "Passed"/"Failed" -- since passing is the norm anyway, the time and
+ * errors are the more informative thing to show per puzzle.
+ *
  * Idempotent against a client-level retry (not just Firestore's own transaction-contention
  * retries): if `attemptData.currentPuzzleIndex` has already moved past `puzzleIndex` -- meaning
  * the transaction actually committed on an earlier call even though that call appeared to fail
  * (e.g. the network dropped before the success response arrived) -- this returns the current state
  * without writing again, rather than double-scoring the same puzzle.
  */
-export async function recordPuzzleResult(tournament, uid, profile, { puzzleIndex, passed }) {
+export async function recordPuzzleResult(tournament, uid, profile, { puzzleIndex, passed, errors, timeTakenSeconds }) {
     const attemptRef = doc(db, ATTEMPTS_COLLECTION, attemptDocId(tournament.id, uid));
     const scoreRef = doc(db, 'gameScores', puzzleScoreDocId(uid, tournament.id, puzzleIndex));
 
@@ -97,10 +103,13 @@ export async function recordPuzzleResult(tournament, uid, profile, { puzzleIndex
                 gameType: 'sudoku-tournament',
                 score,
                 gameDate: `${tournament.id}_${puzzleIndex}`, // repurposed as the deterministic key, not a calendar date
+                scoreDate: getTodayDateString(),
                 tournamentId: tournament.id,
                 tournamentName: tournament.name,
                 puzzleIndex,
                 passed,
+                errors,
+                timeTakenSeconds,
                 createdAt: serverTimestamp(),
             });
         }
@@ -109,7 +118,7 @@ export async function recordPuzzleResult(tournament, uid, profile, { puzzleIndex
             currentPuzzleIndex: attemptData.currentPuzzleIndex + 1,
             puzzlesPassed: attemptData.puzzlesPassed + (passed ? 1 : 0),
             puzzlesFailed: attemptData.puzzlesFailed + (passed ? 0 : 1),
-            puzzleResults: [...(attemptData.puzzleResults || []), passed],
+            puzzleResults: [...(attemptData.puzzleResults || []), { passed, errors, timeTakenSeconds }],
         };
         tx.update(attemptRef, patch);
         return { ...attemptData, ...patch };
@@ -148,6 +157,7 @@ export async function completeTournamentIfNeeded(uid, profile, tournament) {
                 gameType: 'sudoku-tournament-bonus',
                 score: tournament.completionBonus,
                 gameDate: tournament.id, // repurposed as the deterministic key, not a calendar date
+                scoreDate: getTodayDateString(),
                 tournamentId: tournament.id,
                 tournamentName: tournament.name,
                 sharedToFacebook: false,

@@ -8,7 +8,7 @@ import {
     serverTimestamp,
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 import { db } from '../../api/firebase-init.js';
-import { formatDuration } from '../../utils/helpers.js';
+import { formatDuration, getTodayDateString } from '../../utils/helpers.js';
 import { timeBonus, errorBonus } from './sudoku-daily-data.js';
 
 const PUZZLES_COLLECTION = 'sudokuClassicPuzzles';
@@ -57,6 +57,7 @@ export async function recordClassicResult(uid, profile, { puzzleId, difficulty, 
         score,
         timeTaken: formatDuration(timeTakenSeconds * 1000),
         gameDate: token,
+        scoreDate: getTodayDateString(),
         puzzleId,
         difficulty,
         errors,

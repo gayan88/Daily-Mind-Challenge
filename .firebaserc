@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "daily-mind-challenge"
+    "default": "playdailymindchallenge",
+    "old": "daily-mind-challenge"
   }
 }

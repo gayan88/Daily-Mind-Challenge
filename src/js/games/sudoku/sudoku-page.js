@@ -1,6 +1,6 @@
 import { initShell } from '../../app.js';
 import { icon } from '../../utils/icons.js';
-import { getTodayDateString, showToast, escapeHtml, getQueryParam } from '../../utils/helpers.js';
+import { getTodayDateString, showToast, escapeHtml, getQueryParam, formatDuration } from '../../utils/helpers.js';
 import { getConfig } from '../../utils/config.js';
 import { checkPlayedToday, markSharedToFacebook, markSharedWithFriends } from '../../utils/points.js';
 import { playSudokuRound } from './sudoku-engine.js';
@@ -60,7 +60,9 @@ function shareTextForClassic(difficulty, timeTaken, errors, score) {
 }
 
 function shareTextForTournament(tournament, numPuzzles, score, puzzleResults) {
-    const puzzleLines = puzzleResults.map((passed, i) => `Puzzle ${i + 1} - ${passed ? 'Passed' : 'Failed'}`).join('\n');
+    const puzzleLines = puzzleResults
+        .map(({ errors, timeTakenSeconds }, i) => `Puzzle ${i + 1} - ${formatDuration(timeTakenSeconds * 1000)}, ${errors} error${errors === 1 ? '' : 's'}`)
+        .join('\n');
     return `🏆 Sudoku Tournament Complete!\n\nI completed ${tournament.name} 🎉\n\n🧩 Puzzles: ${numPuzzles}/${numPuzzles}\n⭐ Score: ${score} points\n\n${puzzleLines}\n\nThink you can beat my score? 👀\n\nJoin the tournament:\n${TOURNAMENTS_TAB_URL}`;
 }
 
@@ -268,8 +270,8 @@ async function finishSudokuTournament(mount, uid, profile, tournament, setActive
         subtitle: tournament.name,
         celebrate: true,
         breakdown: [
-            ...puzzleResults.map((passed, i) => ({
-                label: `Puzzle ${i + 1}: ${passed ? 'Passed' : 'Failed'}`,
+            ...puzzleResults.map(({ passed, errors, timeTakenSeconds }, i) => ({
+                label: `Puzzle ${i + 1}: ${formatDuration(timeTakenSeconds * 1000)} • ${errors} error${errors === 1 ? '' : 's'}`,
                 points: passed ? 50 : 10,
                 icon: passed ? ICON_CHECK_SM : undefined,
             })),
@@ -329,9 +331,9 @@ async function playSudokuTournamentRound(mount, uid, profile, tournament, setAct
         solution: puzzleData.solution,
         timeLimitSeconds: settings.timeLimitSeconds,
         maxErrors: settings.maxErrors,
-        onComplete: async ({ won, timedOut }) => {
+        onComplete: async ({ won, errors, timeTakenSeconds, timedOut }) => {
             setActiveRound(null);
-            const updated = await recordPuzzleResult(tournament, uid, profile, { puzzleIndex, passed: won });
+            const updated = await recordPuzzleResult(tournament, uid, profile, { puzzleIndex, passed: won, errors, timeTakenSeconds });
             if (!updated) {
                 mount.innerHTML = `<div class="empty-state">Couldn't save this puzzle's result &mdash; check the browser console, then try again.</div>`;
                 showToast("Couldn't save this puzzle's result");

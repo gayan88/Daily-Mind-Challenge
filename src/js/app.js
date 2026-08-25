@@ -77,12 +77,17 @@ function wireUserDropdown() {
     });
 }
 
+const FOOTER_SHARE_TEXT = '🧠 Daily Mind Challenge\n\nPlay daily Wordle, Sudoku, and Word Search puzzles, earn points, and climb the leaderboard!\n\nJoin me:\nhttps://dailymindchallenge.com';
+
 function wireFooterShare() {
     const link = document.getElementById('footer-share-fb');
     if (!link) return;
     link.addEventListener('click', (e) => {
         e.preventDefault();
-        shareUrl(window.location.href);
+        // Always the home page, not window.location.href -- this is a site-wide "come join us"
+        // invite, not a per-page share, so a friend clicking it should never land on e.g. the
+        // sharer's own /settings or /profile page.
+        shareUrl(`${window.location.origin}/`, FOOTER_SHARE_TEXT);
     });
 }
 

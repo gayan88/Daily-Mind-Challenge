@@ -12,6 +12,14 @@
             "collectionGroup": "gameScores",
             "queryScope": "COLLECTION",
             "fields": [
+                { "fieldPath": "gameType", "order": "ASCENDING" },
+                { "fieldPath": "scoreDate", "order": "ASCENDING" }
+            ]
+        },
+        {
+            "collectionGroup": "gameScores",
+            "queryScope": "COLLECTION",
+            "fields": [
                 { "fieldPath": "userId", "order": "ASCENDING" },
                 { "fieldPath": "createdAt", "order": "DESCENDING" }
             ]

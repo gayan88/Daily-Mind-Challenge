@@ -23,8 +23,8 @@
 
 ## Points
 
-- **Daily Challenge**: `25` (completing) `+ timeBonus(timeTakenSeconds)` `+ 20` **and/or** `+10` (either outcome, two independent one-time bonuses, both claimable -- see Sharing below). `timeBonus`: `<300s(5min):25 / <600s(10min):15 / else:10`. Max pre-share: 70.
-- **Classic**: `{easy:10, medium:15, hard:25}` (completing) `+ timeBonus` `+ 20`/`+10` (share, see below). Same bonus tiers as Daily. Max pre-share: 70 (hard).
+- **Daily Challenge**: `25` (completing) `+ timeBonus(timeTakenSeconds)` `+ 20` **and/or** `+10` (either outcome, two independent one-time bonuses, both claimable -- see Sharing below). `timeBonus`: `<300s(5min):25 / <600s(10min):15 / else:10`. Max pre-share: 50.
+- **Classic**: `{easy:10, medium:15, hard:25}` (completing) `+ timeBonus` `+ 20`/`+10` (share, see below). Same bonus tiers as Daily. Max pre-share: 50 (hard).
 - **Tournament**: per puzzle, banked immediately — `config/wordsearchTournamentSettings.completedPoints` (default 50) if passed, `.failedPoints` (default 10) if the timer runs out. Plus a one-time `tournament.completionBonus` (admin-set per tournament, default suggestion 250) once every puzzle has been attempted. Plus `+20`/`+10` for sharing (see below), applied to the completion-bonus doc.
 - **Sharing** (all three modes alike): `+20` for "Copy Result & Share with Community" (`markSharedToFacebook()`) and `+10` for "Share with Friends" (`markSharedWithFriends()`) — two independent, one-time, **stackable** bonuses, not alternatives; a player can claim both. Daily and Classic use the generic `utils/points.js#markSharedToFacebook()`/`markSharedWithFriends()` (by `gameType`/`gameDate`, same functions Sudoku's Daily/Classic use too) since each has one single `gameScores` doc holding its true total; Tournament uses its own per-mode copies in `wordsearch-tournament-data.js` targeting the completion-bonus doc instead (see that file's entry above for why). `firestore.rules`' `isCommunityShareUpdate()`/`isFriendsShareUpdate()` independently bound each field's own delta across every gameType listed there.
 

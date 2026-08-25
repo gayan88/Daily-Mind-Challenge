@@ -2,10 +2,10 @@
 // (see firebase-init.js) instead of via npm/a bundler, so this file just exports the plain
 // config object -- no imports or initializeApp() call here.
 export const firebaseConfig = {
-    apiKey: 'AIzaSyCqHwYQet3K2NBuMyhVLAqFpeTbhqj5FD4',
-    authDomain: 'daily-mind-challenge.firebaseapp.com',
-    projectId: 'daily-mind-challenge',
-    storageBucket: 'daily-mind-challenge.firebasestorage.app',
-    messagingSenderId: '773955853986',
-    appId: '1:773955853986:web:ae70ce557fc963e6a941fb',
+    apiKey: 'AIzaSyAPrxAoeYKf-JezkYfGdCa5T1COgVWV_2Y',
+    authDomain: 'playdailymindchallenge.firebaseapp.com',
+    projectId: 'playdailymindchallenge',
+    storageBucket: 'playdailymindchallenge.firebasestorage.app',
+    messagingSenderId: '320339651948',
+    appId: '1:320339651948:web:9724dc7e522e8f4b529749',
 };

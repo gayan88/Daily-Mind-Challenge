@@ -16,6 +16,7 @@ import {
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 import { db } from '../../api/firebase-init.js';
 import { getConfig } from '../../utils/config.js';
+import { getTodayDateString } from '../../utils/helpers.js';
 import { isRealWord } from './wordle-word-validation.js';
 
 const COLLECTION = 'wordleChallenges';
@@ -208,6 +209,7 @@ export async function recordWordleChallengeCompletion(challengeId, uid, profile,
         gameType: 'wordle-challenge',
         score,
         gameDate: challengeId, // repurposed as the deterministic key, not a calendar date
+        scoreDate: getTodayDateString(),
         sharedToFacebook: false,
         sharedWithFriends: false,
         createdAt: serverTimestamp(),
@@ -282,6 +284,7 @@ async function awardCreatorPointsForChallenge(creatorUid, creatorProfile, challe
                 gameType: 'wordle-challenge-creator',
                 score: 10,
                 gameDate: `${challenge.id}_${completerUid}`,
+                scoreDate: getTodayDateString(),
                 challengeId: challenge.id,
                 completerUid,
                 createdAt: serverTimestamp(),

@@ -11,6 +11,7 @@ import {
     getDocs,
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 import { db } from '../../api/firebase-init.js';
+import { getTodayDateString } from '../../utils/helpers.js';
 
 function attemptDocId(tournamentId, uid) {
     return `${tournamentId}_${uid}`;
@@ -111,6 +112,7 @@ export async function finalizeTournament(uid, profile, tournament) {
         gameType: 'wordle-tournament',
         score,
         gameDate: tournament.id, // repurposed as the deterministic key, not a calendar date -- see gameScores create rule
+        scoreDate: getTodayDateString(),
         tournamentName: tournament.name,
         wordAttempts,
         sharedToFacebook: false,
