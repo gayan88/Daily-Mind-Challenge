@@ -5,7 +5,7 @@ import {
     serverTimestamp,
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 import { db } from '../../api/firebase-init.js';
-import { getTodayDateString, daysSinceEpoch, formatDuration } from '../../utils/helpers.js';
+import { getTodayDateString, formatDuration } from '../../utils/helpers.js';
 
 const PUZZLES_COLLECTION = 'sudokuDailyPuzzles';
 
@@ -14,22 +14,29 @@ function dailyDocId(uid, dateString) {
 }
 
 /**
- * Resolves today's numbered Daily Challenge puzzle: (daysSinceEpoch(date) % totalCount) + 1
- * indexes into the admin-managed sudokuDailyPuzzles pool (see src/js/admin/sudoku-admin.js) --
- * same deterministic-by-date approach as Wordle's Daily Challenge, with the position number
- * doubling as the shareable numeric ID. Returns null if no puzzles have been seeded yet.
+ * Resolves today's Daily Challenge puzzle by a direct date lookup -- each sudokuDailyPuzzles doc
+ * is keyed by the exact "YYYY-MM-DD" date it plays on (see src/js/admin/sudoku-admin.js#
+ * addDailySudokuPuzzle, which computes and stores that date at add time), rather than derived
+ * from a formula -- same scheme as wordle-daily-data.js#getTodayChallenge(), see its own doc
+ * comment for the full rationale (adding more puzzles later never shifts an existing date).
+ *
+ * Before `_meta.firstDate` (i.e. before launch), always resolves to the first puzzle (Challenge
+ * #1), so the Daily Challenge can be previewed ahead of the real launch date. This does NOT apply
+ * once launch has passed -- a seeded pool running dry still correctly returns null ("not ready
+ * yet") instead of silently repeating #1 forever.
  */
 export async function getTodayChallenge(dateString = getTodayDateString()) {
     const metaSnap = await getDoc(doc(db, PUZZLES_COLLECTION, '_meta'));
-    const totalCount = metaSnap.exists() ? (metaSnap.data().totalCount || 0) : 0;
-    if (!totalCount) return null;
+    if (!metaSnap.exists() || !metaSnap.data().totalCount) return null;
 
-    const challengeId = (daysSinceEpoch(dateString) % totalCount) + 1;
-    const puzzleSnap = await getDoc(doc(db, PUZZLES_COLLECTION, String(challengeId)));
+    const { firstDate } = metaSnap.data();
+    const lookupDate = dateString < firstDate ? firstDate : dateString;
+
+    const puzzleSnap = await getDoc(doc(db, PUZZLES_COLLECTION, lookupDate));
     if (!puzzleSnap.exists()) return null;
 
-    const { puzzle, solution } = puzzleSnap.data();
-    return { challengeId, puzzle, solution };
+    const { challengeNumber, puzzle, solution } = puzzleSnap.data();
+    return { challengeId: challengeNumber, puzzle, solution };
 }
 
 export function timeBonus(timeTakenSeconds) {

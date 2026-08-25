@@ -87,14 +87,30 @@
                 <div class="section">
                     <div class="section-title">Daily Words</div>
                     <div class="card">
-                        <p class="config-form-desc">Today's word is picked automatically by date from this list. Add-only &mdash; editing a word's text is fine, but the order determines which day it's used, so don't reorder or remove entries.</p>
+                        <p class="config-form-desc">Each word is stored under the exact date it plays on and looked up directly &mdash; no formula. Add-only, and each new word automatically gets the day right after the previous one, so don't reorder or remove entries once seeded.</p>
+                        <div class="form-field" id="daily-word-start-date-field" hidden>
+                            <label for="daily-word-start-date-input">Start date for Challenge #1</label>
+                            <input type="date" id="daily-word-start-date-input">
+                        </div>
                         <div class="mod-search-row">
                             <input type="text" id="daily-word-input" placeholder="5-letter word" maxlength="5">
                             <button class="btn primary" id="daily-word-add-btn" type="button">Add Word</button>
                         </div>
+                        <div class="mod-search-row">
+                            <input type="file" id="daily-word-import-input" accept=".csv,.txt,text/csv,text/plain">
+                            <button class="btn primary" id="daily-word-import-btn" type="button">Import Word List</button>
+                            <button class="btn" id="daily-word-export-btn" type="button">Download CSV</button>
+                        </div>
                         <div id="daily-words-table">
                             <div class="loading-text">Loading&hellip;</div>
                         </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Global Configs</div>
+                    <div class="card" id="wordle-challenge-expiration-form">
+                        <div class="loading-text">Loading&hellip;</div>
                     </div>
                 </div>
 
@@ -136,7 +152,11 @@
                 <div class="section">
                     <div class="section-title">Daily Puzzles</div>
                     <div class="card">
-                        <p class="config-form-desc">Today's puzzle is picked automatically by date from this list. Add-only &mdash; editing a puzzle's content is fine, but the order determines which day it's used, so don't reorder or remove entries.</p>
+                        <p class="config-form-desc">Each puzzle is stored under the exact date it plays on and looked up directly &mdash; no formula. Add-only, and each new puzzle automatically gets the day right after the previous one, so don't reorder or remove entries once seeded.</p>
+                        <div class="form-field" id="sudoku-daily-start-date-field" hidden>
+                            <label for="sudoku-daily-start-date-input">Start date for Challenge #1</label>
+                            <input type="date" id="sudoku-daily-start-date-input">
+                        </div>
                         <div class="sudoku-puzzle-form">
                             <div class="form-field">
                                 <label for="sudoku-daily-puzzle-input">Puzzle (81 digits, 0 = blank)</label>
@@ -147,6 +167,11 @@
                                 <input type="text" id="sudoku-daily-solution-input" maxlength="81" placeholder="539764182281359476...">
                             </div>
                             <button class="btn primary" id="sudoku-daily-add-btn" type="button">Add Puzzle</button>
+                        </div>
+                        <div class="mod-search-row">
+                            <input type="file" id="sudoku-daily-import-input" accept=".csv,.txt,text/csv,text/plain">
+                            <button class="btn primary" id="sudoku-daily-import-btn" type="button">Import Puzzle List</button>
+                            <button class="btn" id="sudoku-daily-export-btn" type="button">Download CSV</button>
                         </div>
                         <div id="sudoku-daily-table">
                             <div class="loading-text">Loading&hellip;</div>
@@ -180,6 +205,13 @@
                         <div id="sudoku-classic-table">
                             <div class="loading-text">Loading&hellip;</div>
                         </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Global Configs</div>
+                    <div class="card" id="sudoku-tournament-settings-form">
+                        <div class="loading-text">Loading&hellip;</div>
                     </div>
                 </div>
 
@@ -220,7 +252,11 @@
                 <div class="section">
                     <div class="section-title">Daily Puzzles</div>
                     <div class="card">
-                        <p class="config-form-desc">Today's puzzle is picked automatically by date from this list. Add-only &mdash; editing a puzzle's words is fine, but the order determines which day it's used, so don't reorder or remove entries.</p>
+                        <p class="config-form-desc">Each puzzle is stored under the exact date it plays on and looked up directly &mdash; no formula. Add-only, and each new puzzle automatically gets the day right after the previous one, so don't reorder or remove entries once seeded. Import file: one puzzle per line, 10 comma-separated words, with an optional leading theme (11 fields instead of 10).</p>
+                        <div class="form-field" id="wordsearch-daily-start-date-field" hidden>
+                            <label for="wordsearch-daily-start-date-input">Start date for Challenge #1</label>
+                            <input type="date" id="wordsearch-daily-start-date-input">
+                        </div>
                         <div class="sudoku-puzzle-form">
                             <div class="form-field">
                                 <label for="wordsearch-daily-theme-input">Theme (optional)</label>
@@ -231,6 +267,11 @@
                                 <textarea id="wordsearch-daily-words-input" placeholder="TIGER, ZEBRA, RABBIT, PANDA, EAGLE, DOLPHIN, GIRAFFE, APPLE, MANGO, BANANA"></textarea>
                             </div>
                             <button class="btn primary" id="wordsearch-daily-add-btn" type="button">Add Puzzle</button>
+                        </div>
+                        <div class="mod-search-row">
+                            <input type="file" id="wordsearch-daily-import-input" accept=".csv,.txt,text/csv,text/plain">
+                            <button class="btn primary" id="wordsearch-daily-import-btn" type="button">Import Puzzle List</button>
+                            <button class="btn" id="wordsearch-daily-export-btn" type="button">Download CSV</button>
                         </div>
                         <div id="wordsearch-daily-table">
                             <div class="loading-text">Loading&hellip;</div>
@@ -264,6 +305,13 @@
                         <div id="wordsearch-classic-table">
                             <div class="loading-text">Loading&hellip;</div>
                         </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Global Configs</div>
+                    <div class="card" id="wordsearch-tournament-settings-form">
+                        <div class="loading-text">Loading&hellip;</div>
                     </div>
                 </div>
 

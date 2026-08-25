@@ -6,7 +6,7 @@ import {
     serverTimestamp,
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 import { db } from '../../api/firebase-init.js';
-import { getTodayDateString, daysSinceEpoch, formatDuration } from '../../utils/helpers.js';
+import { getTodayDateString, formatDuration } from '../../utils/helpers.js';
 
 const WORDS_COLLECTION = 'wordleDailyWords';
 
@@ -15,22 +15,31 @@ function dailyDocId(uid, dateString) {
 }
 
 /**
- * Resolves today's numbered Daily Challenge word: (daysSinceEpoch(date) % totalCount) + 1 indexes
- * into the admin-managed wordleDailyWords pool (see src/js/admin/wordle-admin.js) -- the same
- * deterministic-by-date approach `words-wordle.js` used with a static list, just Firestore-backed
- * now, with the position number doubling as the shareable "Challenge ID". One extra getDoc for the
- * `_meta` count vs. the static list's zero reads. Returns null if no words have been seeded yet.
+ * Resolves today's Daily Challenge word by a direct date lookup -- each wordleDailyWords doc is
+ * keyed by the exact "YYYY-MM-DD" date it plays on (see src/js/admin/wordle-admin.js#addDailyWord,
+ * which computes and stores that date at add time), rather than derived from a formula. This
+ * means adding more words later never changes which date any existing word lands on.
+ *
+ * Before `_meta.firstDate` (i.e. before launch), always resolves to the first word (Challenge #1)
+ * -- lets the Daily Challenge be previewed/tested ahead of the real launch date without needing to
+ * fake the system clock. This deliberately does NOT apply once launch has passed: if the seeded
+ * calendar runs out (today is past the last word's date), this returns null like normal, so the
+ * "not ready yet" state stays visible rather than silently repeating word #1 forever.
+ *
+ * Returns null if no words have been seeded yet, or if today is between the seeded dates' first
+ * and last but has no word of its own (a gap, or the calendar's simply run dry).
  */
 export async function getTodayChallenge(dateString = getTodayDateString()) {
     const metaSnap = await getDoc(doc(db, WORDS_COLLECTION, '_meta'));
-    const totalCount = metaSnap.exists() ? (metaSnap.data().totalCount || 0) : 0;
-    if (!totalCount) return null;
+    if (!metaSnap.exists() || !metaSnap.data().totalCount) return null;
 
-    const challengeId = (daysSinceEpoch(dateString) % totalCount) + 1;
-    const wordSnap = await getDoc(doc(db, WORDS_COLLECTION, String(challengeId)));
+    const { firstDate } = metaSnap.data();
+    const lookupDate = dateString < firstDate ? firstDate : dateString;
+
+    const wordSnap = await getDoc(doc(db, WORDS_COLLECTION, lookupDate));
     if (!wordSnap.exists()) return null;
 
-    return { challengeId, word: wordSnap.data().word.toUpperCase() };
+    return { challengeId: wordSnap.data().challengeNumber, word: wordSnap.data().word.toUpperCase() };
 }
 
 function attemptsBonus(attempts) {

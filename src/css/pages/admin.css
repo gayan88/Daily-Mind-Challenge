@@ -322,9 +322,10 @@
 }
 
 .daily-word-id {
-    flex: 0 0 40px;
+    flex: 0 0 120px;
     color: var(--color-text-muted);
     font-weight: 600;
+    white-space: nowrap;
 }
 
 .daily-word-text {
@@ -360,9 +361,10 @@
 }
 
 .sudoku-daily-id {
-    flex: 0 0 40px;
+    flex: 0 0 120px;
     color: var(--color-text-muted);
     font-weight: 600;
+    white-space: nowrap;
 }
 
 .sudoku-daily-meta {

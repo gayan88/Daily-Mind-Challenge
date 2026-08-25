@@ -17,6 +17,14 @@ export function isConsecutiveDay(prevDateString, todayDateString) {
     return daysSinceEpoch(todayDateString) - daysSinceEpoch(prevDateString) === 1;
 }
 
+/** Returns the "YYYY-MM-DD" date `days` days after `dateString` (negative `days` goes backward).
+ * UTC-based, consistent with daysSinceEpoch(), so it never drifts a day off around DST changes. */
+export function addDaysToDateString(dateString, days) {
+    const [year, month, day] = dateString.split('-').map(Number);
+    const d = new Date(Date.UTC(year, month - 1, day) + days * 86400000);
+    return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+}
+
 /** Returns the "YYYY-MM-DD" date `daysAgo` days before today (0 = today itself). */
 export function getDateDaysAgo(daysAgo) {
     const d = new Date();

@@ -3,20 +3,47 @@ import { ensureConfigDefaults, updateConfig } from '../utils/config.js';
 import { AD_SLOTS, DEFAULT_ADS_CONFIG } from '../utils/ads.js';
 import { lookupUserByUsername, setUserBanned, setUserAdmin } from './moderation.js';
 import {
-    listDailyWords, addDailyWord, updateDailyWord,
+    listDailyWords, addDailyWord, updateDailyWord, bulkAddDailyWords,
     listTournaments, createTournament, setTournamentActive, deleteTournament,
 } from './wordle-admin.js';
 import {
-    listDailySudokuPuzzles, addDailySudokuPuzzle, updateDailySudokuPuzzle,
+    listDailySudokuPuzzles, addDailySudokuPuzzle, updateDailySudokuPuzzle, bulkAddDailySudokuPuzzles,
     listClassicSudokuPuzzles, addClassicSudokuPuzzle, updateClassicSudokuPuzzle,
     listSudokuTournaments, createSudokuTournament, setSudokuTournamentActive, deleteSudokuTournament,
 } from './sudoku-admin.js';
 import {
-    listDailyWordsearchPuzzles, addDailyWordsearchPuzzle, updateDailyWordsearchPuzzle,
+    listDailyWordsearchPuzzles, addDailyWordsearchPuzzle, updateDailyWordsearchPuzzle, bulkAddDailyWordsearchPuzzles,
     listClassicWordsearchPuzzles, addClassicWordsearchPuzzle, updateClassicWordsearchPuzzle,
     listWordsearchTournaments, createWordsearchTournament, setWordsearchTournamentActive, deleteWordsearchTournament,
 } from './wordsearch-admin.js';
-import { escapeHtml, showToast } from '../utils/helpers.js';
+import { escapeHtml, showToast, getTodayDateString } from '../utils/helpers.js';
+
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+function monthLabel(yearMonth) {
+    const [year, month] = yearMonth.split('-').map(Number);
+    return `${MONTH_NAMES[month - 1]} ${year}`;
+}
+
+/** Drops a leading "no,date,..." header line, if present -- lets a CSV downloaded from one of the
+ * "Download CSV" buttons below be re-uploaded through "Import" unchanged, rather than the header
+ * row itself getting misread as a malformed data row. */
+function stripCsvHeaderRow(lines) {
+    return lines[0]?.trim().toLowerCase().startsWith('no,date,') ? lines.slice(1) : lines;
+}
+
+/** Groups an already date-sorted word list by "YYYY-MM" -- a Map preserves insertion order, so
+ * the resulting groups come out in chronological order for free. */
+function groupWordsByMonth(words) {
+    const groups = new Map();
+    words.forEach((w) => {
+        const key = w.date.slice(0, 7);
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(w);
+    });
+    return groups;
+}
 
 const CONFIG_FORMS = [
     {
@@ -96,11 +123,16 @@ function blockNonAdminAccess() {
     `;
 }
 
-async function renderConfigForms() {
-    const container = document.getElementById('config-forms');
-    const docs = await Promise.all(CONFIG_FORMS.map((form) => ensureConfigDefaults(form.id)));
+// Renders a subset of CONFIG_FORMS (by id) into a given container -- called once for the General
+// section's remaining forms, and once more for each game section's own tournament-settings form
+// (moved there so admins find "Sudoku Tournament Settings" alongside Sudoku's other admin
+// controls, rather than buried in a General/Platform Config list of unrelated forms).
+async function renderConfigForms(containerId, formIds) {
+    const container = document.getElementById(containerId);
+    const forms = CONFIG_FORMS.filter((form) => formIds.includes(form.id));
+    const docs = await Promise.all(forms.map((form) => ensureConfigDefaults(form.id)));
 
-    container.innerHTML = CONFIG_FORMS.map((form, i) => {
+    container.innerHTML = forms.map((form, i) => {
         const data = docs[i];
         // Each field gets its own label -- with a single field per form (the common case so
         // far) the form title alone made this readable without one, but that breaks down once a
@@ -230,6 +262,7 @@ async function renderAdSlotForms() {
 
 async function renderDailyWordsTable() {
     const container = document.getElementById('daily-words-table');
+    const startDateField = document.getElementById('daily-word-start-date-field');
     let words;
     try {
         words = await listDailyWords();
@@ -238,31 +271,65 @@ async function renderDailyWordsTable() {
         return;
     }
 
+    // The start-date input only matters for the very first word (it sets Challenge #1's date) --
+    // hide it once a pool already exists, since every word after that is dated automatically.
+    startDateField.hidden = words.length > 0;
+
     if (words.length === 0) {
-        container.innerHTML = `<div class="empty-state">No words seeded yet. Add one above to activate the Daily Challenge.</div>`;
+        container.innerHTML = `<div class="empty-state">No words seeded yet. Pick a start date above and add one to activate the Daily Challenge.</div>`;
         return;
     }
 
-    container.innerHTML = words.map((w) => `
-        <div class="daily-word-row">
-            <span class="daily-word-id">#${w.id}</span>
-            <span class="daily-word-text">${escapeHtml(w.word)}</span>
-            <button class="btn" data-edit-word="${w.id}" type="button">Edit</button>
+    // Grouped by month so a large pool (hundreds of words) doesn't become one long flat scroll --
+    // each month is its own collapsible, defaulting to whichever one contains today (or the
+    // earliest seeded month, if today falls outside the seeded range entirely, e.g. pre-launch).
+    const monthGroups = groupWordsByMonth(words);
+    const monthKeys = Array.from(monthGroups.keys());
+    const currentMonthKey = getTodayDateString().slice(0, 7);
+    const defaultOpenKey = monthKeys.includes(currentMonthKey) ? currentMonthKey : monthKeys[0];
+
+    container.innerHTML = Array.from(monthGroups.entries()).map(([monthKey, monthWords]) => `
+        <div class="admin-subsection${monthKey === defaultOpenKey ? ' open' : ''}" data-collapsible>
+            <button class="admin-subsection-header" type="button">${monthLabel(monthKey)} (${monthWords.length})</button>
+            <div class="card">
+                ${monthWords.map((w) => `
+                    <div class="daily-word-row">
+                        <span class="daily-word-id">#${w.challengeNumber ?? '?'} &middot; ${w.date}</span>
+                        <span class="daily-word-text">${escapeHtml(w.word)}</span>
+                        <button class="btn" data-edit-word="${w.date}" type="button">Edit</button>
+                    </div>
+                `).join('')}
+            </div>
         </div>
     `).join('');
 
+    // Scoped to this container (not the whole document) so it never double-binds the page's
+    // other, statically-present collapsible sections that wireCollapsibleSections() already wired.
+    container.querySelectorAll('[data-collapsible] > .admin-subsection-header').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            btn.closest('[data-collapsible]').classList.toggle('open');
+        });
+    });
+
     container.querySelectorAll('[data-edit-word]').forEach((btn) => {
         btn.addEventListener('click', async () => {
-            const id = btn.dataset.editWord;
-            const current = words.find((w) => String(w.id) === id);
-            const next = window.prompt('Word text:', current.word);
-            if (next === null || !next.trim()) return;
+            const date = btn.dataset.editWord;
+            const current = words.find((w) => w.date === date);
+            const nextWord = window.prompt('Word text:', current.word);
+            if (nextWord === null || !nextWord.trim()) return;
+            const validCurrentDate = DATE_RE.test(date) ? date : '';
+            const nextDate = window.prompt('Date (YYYY-MM-DD):', validCurrentDate);
+            if (nextDate === null) return;
+            if (!DATE_RE.test(nextDate.trim())) {
+                showToast('Enter the date as YYYY-MM-DD');
+                return;
+            }
             try {
-                await updateDailyWord(id, next);
-                showToast(`Word #${id} updated`);
+                await updateDailyWord(date, { word: nextWord, date: nextDate.trim() });
+                showToast('Word updated');
                 renderDailyWordsTable();
-            } catch {
-                showToast("Couldn't save -- check Firestore rules are deployed");
+            } catch (err) {
+                showToast(err.message || "Couldn't save -- check Firestore rules are deployed");
             }
         });
     });
@@ -271,19 +338,91 @@ async function renderDailyWordsTable() {
 function wireDailyWordsAdd() {
     document.getElementById('daily-word-add-btn').addEventListener('click', async () => {
         const input = document.getElementById('daily-word-input');
+        const startDateField = document.getElementById('daily-word-start-date-field');
+        const startDateInput = document.getElementById('daily-word-start-date-input');
         const word = input.value.trim();
         if (!/^[A-Za-z]{5}$/.test(word)) {
             showToast('Enter a 5-letter word');
             return;
         }
-        try {
-            const id = await addDailyWord(word);
-            input.value = '';
-            showToast(`Word #${id} added`);
-            renderDailyWordsTable();
-        } catch {
-            showToast("Couldn't save -- check Firestore rules are deployed");
+        if (!startDateField.hidden && !startDateInput.value) {
+            showToast('Pick a start date for Challenge #1');
+            return;
         }
+        try {
+            const result = await addDailyWord(word, startDateInput.value || undefined);
+            input.value = '';
+            startDateInput.value = '';
+            showToast(`Word #${result.challengeNumber} added (${result.date})`);
+            renderDailyWordsTable();
+        } catch (err) {
+            showToast(err.message || "Couldn't save -- check Firestore rules are deployed");
+        }
+    });
+}
+
+/** Parses an uploaded word-list file: one word per line, ignoring blank lines and -- in case a
+ * real CSV with extra columns gets uploaded -- everything after the first comma on each line. */
+function parseWordListFile(text) {
+    return stripCsvHeaderRow(text.split(/\r?\n/))
+        .map((line) => line.split(',')[0].trim())
+        .filter(Boolean);
+}
+
+function wireDailyWordsImportExport() {
+    document.getElementById('daily-word-import-btn').addEventListener('click', async () => {
+        const fileInput = document.getElementById('daily-word-import-input');
+        const startDateField = document.getElementById('daily-word-start-date-field');
+        const startDateInput = document.getElementById('daily-word-start-date-input');
+        const file = fileInput.files[0];
+        if (!file) {
+            showToast('Choose a word-list file first');
+            return;
+        }
+        if (!startDateField.hidden && !startDateInput.value) {
+            showToast('Pick a start date for Challenge #1');
+            return;
+        }
+
+        const words = parseWordListFile(await file.text());
+        if (words.length === 0) {
+            showToast('No words found in that file');
+            return;
+        }
+        if (!window.confirm(`Import ${words.length} word${words.length === 1 ? '' : 's'}?`)) return;
+
+        try {
+            const result = await bulkAddDailyWords(words, startDateInput.value || undefined);
+            fileInput.value = '';
+            startDateInput.value = '';
+            showToast(`Imported ${result.count} word${result.count === 1 ? '' : 's'} (${result.firstDate} → ${result.lastDate})`);
+            renderDailyWordsTable();
+        } catch (err) {
+            showToast(err.message || "Couldn't import -- check Firestore rules are deployed");
+        }
+    });
+
+    document.getElementById('daily-word-export-btn').addEventListener('click', async () => {
+        let words;
+        try {
+            words = await listDailyWords();
+        } catch {
+            showToast("Couldn't load daily words to export");
+            return;
+        }
+        if (words.length === 0) {
+            showToast('No words seeded yet');
+            return;
+        }
+
+        const csvRows = ['no,date,word', ...words.map((w) => `${w.challengeNumber ?? ''},${w.date},${w.word}`)];
+        const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'wordle-daily-words.csv';
+        link.click();
+        URL.revokeObjectURL(url);
     });
 }
 
@@ -379,6 +518,7 @@ function wireTournamentCreate() {
 
 async function renderSudokuDailyTable() {
     const container = document.getElementById('sudoku-daily-table');
+    const startDateField = document.getElementById('sudoku-daily-start-date-field');
     let puzzles;
     try {
         puzzles = await listDailySudokuPuzzles();
@@ -387,33 +527,67 @@ async function renderSudokuDailyTable() {
         return;
     }
 
+    // The start-date input only matters for the very first puzzle (it sets Challenge #1's date)
+    // -- hide it once a pool already exists, since every puzzle after that is dated automatically.
+    startDateField.hidden = puzzles.length > 0;
+
     if (puzzles.length === 0) {
-        container.innerHTML = `<div class="empty-state">No puzzles seeded yet. Add one above to activate the Daily Challenge.</div>`;
+        container.innerHTML = `<div class="empty-state">No puzzles seeded yet. Pick a start date above and add one to activate the Daily Challenge.</div>`;
         return;
     }
 
-    container.innerHTML = puzzles.map((p) => {
-        const prefilled = p.puzzle.split('').filter((c) => c !== '0').length;
-        return `
-        <div class="sudoku-daily-row">
-            <span class="sudoku-daily-id">#${p.id}</span>
-            <span class="sudoku-daily-meta">${prefilled} Pre-Filled Cells</span>
-            <button class="btn" data-edit-puzzle="${p.id}" type="button">Edit</button>
+    // Grouped by month, same as the Daily Words table -- see groupWordsByMonth()'s doc comment.
+    const monthGroups = groupWordsByMonth(puzzles);
+    const monthKeys = Array.from(monthGroups.keys());
+    const currentMonthKey = getTodayDateString().slice(0, 7);
+    const defaultOpenKey = monthKeys.includes(currentMonthKey) ? currentMonthKey : monthKeys[0];
+
+    container.innerHTML = Array.from(monthGroups.entries()).map(([monthKey, monthPuzzles]) => `
+        <div class="admin-subsection${monthKey === defaultOpenKey ? ' open' : ''}" data-collapsible>
+            <button class="admin-subsection-header" type="button">${monthLabel(monthKey)} (${monthPuzzles.length})</button>
+            <div class="card">
+                ${monthPuzzles.map((p) => {
+                    const prefilled = p.puzzle.split('').filter((c) => c !== '0').length;
+                    return `
+                        <div class="sudoku-daily-row">
+                            <span class="sudoku-daily-id">#${p.challengeNumber ?? '?'} &middot; ${p.date}</span>
+                            <span class="sudoku-daily-meta">${prefilled} Pre-Filled Cells</span>
+                            <button class="btn" data-edit-puzzle="${p.date}" type="button">Edit</button>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
         </div>
-    `;
-    }).join('');
+    `).join('');
+
+    container.querySelectorAll('[data-collapsible] > .admin-subsection-header').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            btn.closest('[data-collapsible]').classList.toggle('open');
+        });
+    });
 
     container.querySelectorAll('[data-edit-puzzle]').forEach((btn) => {
         btn.addEventListener('click', async () => {
-            const id = btn.dataset.editPuzzle;
-            const current = puzzles.find((p) => String(p.id) === id);
+            const date = btn.dataset.editPuzzle;
+            const current = puzzles.find((p) => p.date === date);
             const nextPuzzle = window.prompt('Puzzle (81 digits, 0 = blank):', current.puzzle);
             if (nextPuzzle === null) return;
             const nextSolution = window.prompt('Solution (81 digits, 1-9):', current.solution);
             if (nextSolution === null) return;
+            const validCurrentDate = DATE_RE.test(date) ? date : '';
+            const nextDate = window.prompt('Date (YYYY-MM-DD):', validCurrentDate);
+            if (nextDate === null) return;
+            if (!DATE_RE.test(nextDate.trim())) {
+                showToast('Enter the date as YYYY-MM-DD');
+                return;
+            }
             try {
-                await updateDailySudokuPuzzle(id, nextPuzzle.trim(), nextSolution.trim());
-                showToast(`Puzzle #${id} updated`);
+                await updateDailySudokuPuzzle(date, {
+                    puzzle: nextPuzzle.trim(),
+                    solution: nextSolution.trim(),
+                    date: nextDate.trim(),
+                });
+                showToast('Puzzle updated');
                 renderSudokuDailyTable();
             } catch (err) {
                 showToast(err.message || "Couldn't save -- check Firestore rules are deployed");
@@ -426,17 +600,91 @@ function wireSudokuDailyAdd() {
     document.getElementById('sudoku-daily-add-btn').addEventListener('click', async () => {
         const puzzleInput = document.getElementById('sudoku-daily-puzzle-input');
         const solutionInput = document.getElementById('sudoku-daily-solution-input');
+        const startDateField = document.getElementById('sudoku-daily-start-date-field');
+        const startDateInput = document.getElementById('sudoku-daily-start-date-input');
         const puzzle = puzzleInput.value.trim();
         const solution = solutionInput.value.trim();
+        if (!startDateField.hidden && !startDateInput.value) {
+            showToast('Pick a start date for Challenge #1');
+            return;
+        }
         try {
-            const id = await addDailySudokuPuzzle(puzzle, solution);
+            const result = await addDailySudokuPuzzle(puzzle, solution, startDateInput.value || undefined);
             puzzleInput.value = '';
             solutionInput.value = '';
-            showToast(`Puzzle #${id} added`);
+            startDateInput.value = '';
+            showToast(`Puzzle #${result.challengeNumber} added (${result.date})`);
             renderSudokuDailyTable();
         } catch (err) {
             showToast(err.message || "Couldn't save -- check Firestore rules are deployed");
         }
+    });
+}
+
+/** Parses an uploaded puzzle-list file: one "puzzle,solution" pair per line, ignoring blank
+ * lines -- mirrors parseWordListFile() but keeps both comma-separated fields instead of just
+ * the first, since a puzzle needs both its own string and its solution string. */
+function parseSudokuPuzzleListFile(text) {
+    return stripCsvHeaderRow(text.split(/\r?\n/))
+        .map((line) => line.split(',').map((field) => field.trim()))
+        .filter(([puzzle]) => puzzle)
+        .map(([puzzle, solution]) => ({ puzzle, solution: solution || '' }));
+}
+
+function wireSudokuDailyImportExport() {
+    document.getElementById('sudoku-daily-import-btn').addEventListener('click', async () => {
+        const fileInput = document.getElementById('sudoku-daily-import-input');
+        const startDateField = document.getElementById('sudoku-daily-start-date-field');
+        const startDateInput = document.getElementById('sudoku-daily-start-date-input');
+        const file = fileInput.files[0];
+        if (!file) {
+            showToast('Choose a puzzle-list file first');
+            return;
+        }
+        if (!startDateField.hidden && !startDateInput.value) {
+            showToast('Pick a start date for Challenge #1');
+            return;
+        }
+
+        const pairs = parseSudokuPuzzleListFile(await file.text());
+        if (pairs.length === 0) {
+            showToast('No puzzles found in that file');
+            return;
+        }
+        if (!window.confirm(`Import ${pairs.length} puzzle${pairs.length === 1 ? '' : 's'}?`)) return;
+
+        try {
+            const result = await bulkAddDailySudokuPuzzles(pairs, startDateInput.value || undefined);
+            fileInput.value = '';
+            startDateInput.value = '';
+            showToast(`Imported ${result.count} puzzle${result.count === 1 ? '' : 's'} (${result.firstDate} → ${result.lastDate})`);
+            renderSudokuDailyTable();
+        } catch (err) {
+            showToast(err.message || "Couldn't import -- check Firestore rules are deployed");
+        }
+    });
+
+    document.getElementById('sudoku-daily-export-btn').addEventListener('click', async () => {
+        let puzzles;
+        try {
+            puzzles = await listDailySudokuPuzzles();
+        } catch {
+            showToast("Couldn't load daily puzzles to export");
+            return;
+        }
+        if (puzzles.length === 0) {
+            showToast('No puzzles seeded yet');
+            return;
+        }
+
+        const csvRows = ['no,date,puzzle,solution', ...puzzles.map((p) => `${p.challengeNumber ?? ''},${p.date},${p.puzzle},${p.solution}`)];
+        const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'sudoku-daily-puzzles.csv';
+        link.click();
+        URL.revokeObjectURL(url);
     });
 }
 
@@ -604,6 +852,7 @@ function wireSudokuTournamentCreate() {
 
 async function renderWordsearchDailyTable() {
     const container = document.getElementById('wordsearch-daily-table');
+    const startDateField = document.getElementById('wordsearch-daily-start-date-field');
     let puzzles;
     try {
         puzzles = await listDailyWordsearchPuzzles();
@@ -612,30 +861,64 @@ async function renderWordsearchDailyTable() {
         return;
     }
 
+    // The start-date input only matters for the very first puzzle (it sets Challenge #1's date)
+    // -- hide it once a pool already exists, since every puzzle after that is dated automatically.
+    startDateField.hidden = puzzles.length > 0;
+
     if (puzzles.length === 0) {
-        container.innerHTML = `<div class="empty-state">No puzzles seeded yet. Add one above to activate the Daily Challenge.</div>`;
+        container.innerHTML = `<div class="empty-state">No puzzles seeded yet. Pick a start date above and add one to activate the Daily Challenge.</div>`;
         return;
     }
 
-    container.innerHTML = puzzles.map((p) => `
-        <div class="sudoku-daily-row">
-            <span class="sudoku-daily-id">#${p.id}</span>
-            <span class="sudoku-daily-meta">${p.theme ? `${escapeHtml(p.theme)} &bull; ` : ''}${p.words.length} words</span>
-            <button class="btn" data-edit-ws-daily="${p.id}" type="button">Edit</button>
+    // Grouped by month, same as the Daily Words/Sudoku Daily Puzzles tables.
+    const monthGroups = groupWordsByMonth(puzzles);
+    const monthKeys = Array.from(monthGroups.keys());
+    const currentMonthKey = getTodayDateString().slice(0, 7);
+    const defaultOpenKey = monthKeys.includes(currentMonthKey) ? currentMonthKey : monthKeys[0];
+
+    container.innerHTML = Array.from(monthGroups.entries()).map(([monthKey, monthPuzzles]) => `
+        <div class="admin-subsection${monthKey === defaultOpenKey ? ' open' : ''}" data-collapsible>
+            <button class="admin-subsection-header" type="button">${monthLabel(monthKey)} (${monthPuzzles.length})</button>
+            <div class="card">
+                ${monthPuzzles.map((p) => `
+                    <div class="sudoku-daily-row">
+                        <span class="sudoku-daily-id">#${p.challengeNumber ?? '?'} &middot; ${p.date}</span>
+                        <span class="sudoku-daily-meta">${p.theme ? `${escapeHtml(p.theme)} &bull; ` : ''}${p.words.length} words</span>
+                        <button class="btn" data-edit-ws-daily="${p.date}" type="button">Edit</button>
+                    </div>
+                `).join('')}
+            </div>
         </div>
     `).join('');
 
+    container.querySelectorAll('[data-collapsible] > .admin-subsection-header').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            btn.closest('[data-collapsible]').classList.toggle('open');
+        });
+    });
+
     container.querySelectorAll('[data-edit-ws-daily]').forEach((btn) => {
         btn.addEventListener('click', async () => {
-            const id = btn.dataset.editWsDaily;
-            const current = puzzles.find((p) => String(p.id) === id);
+            const date = btn.dataset.editWsDaily;
+            const current = puzzles.find((p) => p.date === date);
             const nextTheme = window.prompt('Theme (optional):', current.theme || '');
             if (nextTheme === null) return;
             const nextWords = window.prompt('Words (comma or newline-separated):', current.words.join(', '));
             if (nextWords === null) return;
+            const validCurrentDate = DATE_RE.test(date) ? date : '';
+            const nextDate = window.prompt('Date (YYYY-MM-DD):', validCurrentDate);
+            if (nextDate === null) return;
+            if (!DATE_RE.test(nextDate.trim())) {
+                showToast('Enter the date as YYYY-MM-DD');
+                return;
+            }
             try {
-                await updateDailyWordsearchPuzzle(id, { theme: nextTheme, words: parseWordsInput(nextWords) });
-                showToast(`Puzzle #${id} updated`);
+                await updateDailyWordsearchPuzzle(date, {
+                    theme: nextTheme,
+                    words: parseWordsInput(nextWords),
+                    date: nextDate.trim(),
+                });
+                showToast('Puzzle updated');
                 renderWordsearchDailyTable();
             } catch (err) {
                 showToast(err.message || "Couldn't save -- check Firestore rules are deployed");
@@ -648,15 +931,104 @@ function wireWordsearchDailyAdd() {
     document.getElementById('wordsearch-daily-add-btn').addEventListener('click', async () => {
         const themeInput = document.getElementById('wordsearch-daily-theme-input');
         const wordsInput = document.getElementById('wordsearch-daily-words-input');
+        const startDateField = document.getElementById('wordsearch-daily-start-date-field');
+        const startDateInput = document.getElementById('wordsearch-daily-start-date-input');
+        if (!startDateField.hidden && !startDateInput.value) {
+            showToast('Pick a start date for Challenge #1');
+            return;
+        }
         try {
-            const id = await addDailyWordsearchPuzzle({ theme: themeInput.value, words: parseWordsInput(wordsInput.value) });
+            const result = await addDailyWordsearchPuzzle(
+                { theme: themeInput.value, words: parseWordsInput(wordsInput.value) },
+                startDateInput.value || undefined
+            );
             themeInput.value = '';
             wordsInput.value = '';
-            showToast(`Puzzle #${id} added`);
+            startDateInput.value = '';
+            showToast(`Puzzle #${result.challengeNumber} added (${result.date})`);
             renderWordsearchDailyTable();
         } catch (err) {
             showToast(err.message || "Couldn't save -- check Firestore rules are deployed");
         }
+    });
+}
+
+/** Parses an uploaded puzzle-list file: one puzzle per line, comma-separated fields. Each row is
+ * either DAILY_MODE.wordCount (10) fields (just words, no theme) or one more than that (a leading
+ * theme field followed by the words) -- matches the export format, so a downloaded CSV can be
+ * re-imported unchanged. */
+function parseWordsearchDailyListFile(text) {
+    const WORD_COUNT = 10;
+    return stripCsvHeaderRow(text.split(/\r?\n/))
+        .map((line) => line.split(',').map((field) => field.trim()).filter((field, i, arr) => !(i === arr.length - 1 && field === '')))
+        .filter((fields) => fields.length > 0 && fields.some(Boolean))
+        .map((fields) => {
+            if (fields.length === WORD_COUNT) return { theme: '', words: fields };
+            if (fields.length === WORD_COUNT + 1) return { theme: fields[0], words: fields.slice(1) };
+            throw new Error(`Each row must have ${WORD_COUNT} words (optionally preceded by a theme) -- one row has ${fields.length} fields`);
+        });
+}
+
+function wireWordsearchDailyImportExport() {
+    document.getElementById('wordsearch-daily-import-btn').addEventListener('click', async () => {
+        const fileInput = document.getElementById('wordsearch-daily-import-input');
+        const startDateField = document.getElementById('wordsearch-daily-start-date-field');
+        const startDateInput = document.getElementById('wordsearch-daily-start-date-input');
+        const file = fileInput.files[0];
+        if (!file) {
+            showToast('Choose a puzzle-list file first');
+            return;
+        }
+        if (!startDateField.hidden && !startDateInput.value) {
+            showToast('Pick a start date for Challenge #1');
+            return;
+        }
+
+        let entries;
+        try {
+            entries = parseWordsearchDailyListFile(await file.text());
+        } catch (err) {
+            showToast(err.message);
+            return;
+        }
+        if (entries.length === 0) {
+            showToast('No puzzles found in that file');
+            return;
+        }
+        if (!window.confirm(`Import ${entries.length} puzzle${entries.length === 1 ? '' : 's'}?`)) return;
+
+        try {
+            const result = await bulkAddDailyWordsearchPuzzles(entries, startDateInput.value || undefined);
+            fileInput.value = '';
+            startDateInput.value = '';
+            showToast(`Imported ${result.count} puzzle${result.count === 1 ? '' : 's'} (${result.firstDate} → ${result.lastDate})`);
+            renderWordsearchDailyTable();
+        } catch (err) {
+            showToast(err.message || "Couldn't import -- check Firestore rules are deployed");
+        }
+    });
+
+    document.getElementById('wordsearch-daily-export-btn').addEventListener('click', async () => {
+        let puzzles;
+        try {
+            puzzles = await listDailyWordsearchPuzzles();
+        } catch {
+            showToast("Couldn't load daily puzzles to export");
+            return;
+        }
+        if (puzzles.length === 0) {
+            showToast('No puzzles seeded yet');
+            return;
+        }
+
+        const csvRows = ['no,date,theme,words...', ...puzzles.map((p) => [p.challengeNumber ?? '', p.date, p.theme || '', ...p.words].join(','))];
+        const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'wordsearch-daily-puzzles.csv';
+        link.click();
+        URL.revokeObjectURL(url);
     });
 }
 
@@ -874,20 +1246,30 @@ async function init() {
     }
 
     wireCollapsibleSections();
-    await renderConfigForms();
+    const gameSectionConfigIds = ['challengeExpiration', 'sudokuTournamentSettings', 'wordsearchTournamentSettings'];
+    const generalConfigIds = CONFIG_FORMS
+        .map((form) => form.id)
+        .filter((id) => !gameSectionConfigIds.includes(id));
+    await renderConfigForms('config-forms', generalConfigIds);
+    await renderConfigForms('wordle-challenge-expiration-form', ['challengeExpiration']);
+    await renderConfigForms('sudoku-tournament-settings-form', ['sudokuTournamentSettings']);
+    await renderConfigForms('wordsearch-tournament-settings-form', ['wordsearchTournamentSettings']);
     await renderAdSlotForms();
     wireModeration();
     wireDailyWordsAdd();
+    wireDailyWordsImportExport();
     await renderDailyWordsTable();
     wireTournamentCreate();
     await renderTournamentsTable();
     wireSudokuDailyAdd();
+    wireSudokuDailyImportExport();
     await renderSudokuDailyTable();
     wireSudokuClassicAdd();
     await renderSudokuClassicTable();
     wireSudokuTournamentCreate();
     await renderSudokuTournamentsTable();
     wireWordsearchDailyAdd();
+    wireWordsearchDailyImportExport();
     await renderWordsearchDailyTable();
     wireWordsearchClassicAdd();
     await renderWordsearchClassicTable();

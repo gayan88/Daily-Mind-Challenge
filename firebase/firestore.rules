@@ -121,7 +121,8 @@ service cloud.firestore {
         }
 
         // Admin-managed pool of Daily Challenge words -- see src/js/admin/wordle-admin.js.
-        // wordleDailyWords/_meta holds { totalCount } alongside the numbered word docs.
+        // wordleDailyWords/_meta holds { totalCount, firstDate, lastDate } alongside the word
+        // docs, each keyed directly by the "YYYY-MM-DD" date it plays on (not a numeric id).
         match /wordleDailyWords/{id} {
             allow read: if true;
             allow write: if isAdmin();
@@ -194,7 +195,8 @@ service cloud.firestore {
         }
 
         // Admin-managed pool of Daily Sudoku puzzles -- see src/js/admin/sudoku-admin.js.
-        // sudokuDailyPuzzles/_meta holds { totalCount } alongside the numbered puzzle docs.
+        // sudokuDailyPuzzles/_meta holds { totalCount, firstDate, lastDate } alongside the puzzle
+        // docs, each keyed directly by the "YYYY-MM-DD" date it plays on (not a numeric id).
         match /sudokuDailyPuzzles/{id} {
             allow read: if true;
             allow write: if isAdmin();
@@ -245,9 +247,11 @@ service cloud.firestore {
         }
 
         // Admin-managed pool of Daily Word Search puzzles -- see src/js/admin/wordsearch-admin.js.
-        // wordsearchDailyPuzzles/_meta holds { totalCount } alongside the numbered puzzle docs.
-        // Puzzle docs hold a word list only ({ theme, words }) -- the grid itself is generated at
-        // play time by wordsearch-engine.js, not admin-authored like Sudoku's puzzle+solution pairs.
+        // wordsearchDailyPuzzles/_meta holds { totalCount, firstDate, lastDate } alongside the
+        // puzzle docs, each keyed directly by the "YYYY-MM-DD" date it plays on (not a numeric
+        // id). Puzzle docs hold a word list only ({ theme, words }) -- the grid itself is
+        // generated at play time by wordsearch-engine.js, not admin-authored like Sudoku's
+        // puzzle+solution pairs.
         match /wordsearchDailyPuzzles/{id} {
             allow read: if true;
             allow write: if isAdmin();
