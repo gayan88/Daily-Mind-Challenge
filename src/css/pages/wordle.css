@@ -867,3 +867,41 @@
         font-size: 12px;
     }
 }
+
+/* ---------- How to Play: Wordle-specific mini visuals (shared .htp-* layout is in
+   components.css) -- scaled-down, non-interactive copies of the real board/keyboard, built from
+   the same .wordle-cell/.wordle-key classes the actual game uses. ---------- */
+.htp-mini-wordle-row {
+    display: flex;
+    gap: 5px;
+    justify-content: center;
+}
+
+.htp-mini-wordle-row .wordle-cell {
+    width: 34px;
+    height: 34px;
+    font-size: 16px;
+    border-width: 1px;
+}
+
+.htp-mini-wordle-keyboard {
+    width: 100%;
+    gap: 4px;
+}
+
+.htp-mini-wordle-keyboard .wordle-kb-row {
+    gap: 3px;
+}
+
+.htp-mini-wordle-keyboard .wordle-key {
+    min-width: 14px;
+    height: 22px;
+    padding: 0 2px;
+    font-size: 8px;
+    cursor: default;
+}
+
+.htp-mini-wordle-keyboard .wordle-key.wide {
+    min-width: 22px;
+    font-size: 7px;
+}

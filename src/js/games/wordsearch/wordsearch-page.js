@@ -1,4 +1,4 @@
-import { initShell } from '../../app.js';
+import { trySession, showLoggedOutHeader } from '../../app.js';
 import { icon } from '../../utils/icons.js';
 import { getTodayDateString, showToast, escapeHtml, stringToSeed, getQueryParam } from '../../utils/helpers.js';
 import { getConfig } from '../../utils/config.js';
@@ -32,6 +32,21 @@ const ICON_CHECK_SM = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor
 
 function renderAdminBlocked(mount) {
     mount.innerHTML = `<div class="empty-state">Admin accounts don't play games.</div>`;
+}
+
+/** Shown in place of the game when there's no session, instead of the old hard redirect to `/` --
+ * this keeps `/wordsearch` itself a real page with visible content (see the static "How to Play"
+ * block in wordsearch.html) rather than one that always bounces an anonymous visitor away before
+ * anything renders, which made the page invisible to crawlers/an AdSense reviewer. */
+function renderSignInPrompt(mount) {
+    const redirectTo = encodeURIComponent(window.location.pathname + window.location.search);
+    mount.innerHTML = `
+        <div class="empty-state">
+            Sign in or continue as a guest to play today's Word Search.
+            <br><br>
+            <a class="btn primary" href="/?redirect=${redirectTo}">Sign In to Play</a>
+        </div>
+    `;
 }
 
 function renderNoPuzzlesSeeded(mount) {
@@ -403,8 +418,14 @@ function wireModeTabs(uid, profile, initialMode) {
 }
 
 async function init() {
-    const { uid, profile } = await initShell();
+    const session = await trySession();
     const mount = document.getElementById('game-mount');
+    if (!session) {
+        showLoggedOutHeader();
+        renderSignInPrompt(mount);
+        return;
+    }
+    const { uid, profile } = session;
 
     if (profile.isAdmin) {
         renderAdminBlocked(mount);

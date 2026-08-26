@@ -153,17 +153,6 @@ function wireAuthForms() {
     });
 }
 
-/** Game tiles link straight to their page for a logged-in user, but open the sign-in modal
- * (instead of navigating away) for a fresh visitor. */
-function wireGameTileGate() {
-    document.querySelectorAll('.game-tile').forEach((tile) => {
-        tile.addEventListener('click', (e) => {
-            e.preventDefault();
-            openAuthModal(tile.getAttribute('href'));
-        });
-    });
-}
-
 /* ---------- Dashboard (rendered for every visitor, logged in or not) ---------- */
 
 // Outlined line icons (not this app's usual emoji set, see icons.js) -- used only on the status
@@ -342,7 +331,6 @@ async function init() {
 
     if (!session) {
         setLoggedOutHeaderState();
-        wireGameTileGate();
         await renderLoggedOutDashboard();
 
         // Another page redirected here because it needs a session -- open the modal right away.

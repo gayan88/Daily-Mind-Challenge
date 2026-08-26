@@ -618,3 +618,15 @@
         font-size: 10px;
     }
 }
+
+/* ---------- How to Play: Word Search-specific mini visuals (shared .htp-* layout is in
+   components.css) -- built from the same .wordsearch-grid/.ws-cell classes the actual game uses,
+   just a small fixed 6x6 decorative grid instead of a real generated puzzle. ---------- */
+.htp-mini-wordsearch {
+    margin-bottom: 0;
+}
+
+.htp-mini-wordsearch .ws-cell {
+    cursor: default;
+    font-size: 12px;
+}

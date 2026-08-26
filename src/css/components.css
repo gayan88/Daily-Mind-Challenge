@@ -847,39 +847,40 @@
     text-decoration: underline;
 }
 
-/* ---------- Legal content (Privacy Policy, Cookie Consent Notice) ---------- */
-.legal-content h2 {
+/* ---------- Prose content (Privacy Policy, Cookie Consent Notice, game pages' "How to Play"
+   blocks) -- shared heading/paragraph/list styling for plain long-form text sections. ---------- */
+.prose-content h2 {
     font-size: 20px;
     font-weight: 700;
     margin-top: 28px;
     margin-bottom: 10px;
 }
 
-.legal-content h2:first-child {
+.prose-content h2:first-child {
     margin-top: 0;
 }
 
-.legal-content p {
+.prose-content p {
     margin-bottom: 14px;
     color: var(--color-text-secondary);
 }
 
-.legal-content ul {
+.prose-content ul {
     margin: 0 0 14px 20px;
     color: var(--color-text-secondary);
 }
 
-.legal-content li {
+.prose-content li {
     margin-bottom: 6px;
 }
 
-.legal-content .legal-updated {
+.prose-content .legal-updated {
     font-size: 13px;
     color: var(--color-text-muted);
     margin-bottom: 24px;
 }
 
-.legal-content a {
+.prose-content a {
     color: var(--color-primary);
     text-decoration: underline;
 }
@@ -1038,4 +1039,225 @@
     color: var(--color-text-muted);
     font-size: 14px;
     padding: 24px;
+}
+
+/* ---------- Cookie consent banner (site-wide -- see utils/cookie-consent.js) ---------- */
+.cookie-banner {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 100;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 24px;
+    background: var(--color-surface);
+    border-top: 0.5px solid var(--color-border);
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.cookie-banner-text {
+    flex: 1 1 280px;
+    font-size: 13px;
+    color: var(--color-text-secondary);
+}
+
+.cookie-banner-text a {
+    color: var(--color-primary);
+    text-decoration: underline;
+}
+
+.cookie-banner-actions {
+    display: flex;
+    gap: 10px;
+    flex: 0 0 auto;
+}
+
+.cookie-banner-actions .btn {
+    flex: 0 0 auto;
+    padding: 10px 20px;
+}
+
+@media (max-width: 480px) {
+    .cookie-banner {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 14px 16px;
+    }
+
+    .cookie-banner-actions {
+        justify-content: flex-end;
+    }
+}
+
+/* ---------- "How to Play" card (Wordle/Sudoku/Word Search game pages) ----------
+   Shared layout: logo banner, then Rules/Controls/Game Modes rows, each with an icon badge and
+   an optional game-specific mini visual (built from that game's own real CSS classes -- see each
+   page's own pages/*.css for e.g. .htp-mini-sudoku, .htp-mini-wordle-row, .htp-mini-wordsearch). */
+.htp-card {
+    padding: 28px;
+}
+
+.htp-banner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.htp-logo {
+    display: block;
+    width: 200px;
+    height: 200px;
+}
+
+.htp-banner h2 {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--color-text);
+    margin-top: -8px;
+}
+
+.htp-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 20px 0;
+}
+
+.htp-icon-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--color-primary-tint);
+    color: var(--color-primary);
+    flex: 0 0 auto;
+}
+
+.htp-icon-badge svg {
+    width: 26px;
+    height: 26px;
+}
+
+.htp-row-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.htp-row-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-bottom: 6px;
+}
+
+.htp-row-body > p {
+    color: var(--color-text-secondary);
+}
+
+.htp-visual {
+    flex: 0 0 auto;
+    width: 200px;
+    pointer-events: none;
+}
+
+.htp-divider {
+    height: 0.5px;
+    background: var(--color-border);
+}
+
+.htp-modes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-top: 8px;
+}
+
+.htp-mode-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    flex: 1 1 180px;
+    padding-left: 20px;
+    border-left: 0.5px solid var(--color-border);
+}
+
+.htp-mode-item:first-child {
+    padding-left: 0;
+    border-left: none;
+}
+
+.htp-mode-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--color-primary-tint);
+    color: var(--color-primary);
+    flex: 0 0 auto;
+}
+
+.htp-mode-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.htp-mode-name {
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-bottom: 2px;
+}
+
+.htp-mode-item p {
+    color: var(--color-text-secondary);
+    font-size: 14px;
+}
+
+.htp-tip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding-top: 20px;
+    color: var(--color-text-muted);
+    font-weight: 600;
+    text-align: center;
+}
+
+.htp-tip-icon {
+    display: flex;
+    flex: 0 0 auto;
+}
+
+.htp-tip-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+@media (max-width: 640px) {
+    .htp-visual {
+        display: none;
+    }
+
+    .htp-mode-item {
+        flex: 1 1 100%;
+        padding-left: 0;
+        border-left: none;
+        border-top: 0.5px solid var(--color-border);
+        padding-top: 16px;
+    }
+
+    .htp-mode-item:first-child {
+        border-top: none;
+        padding-top: 0;
+    }
 }

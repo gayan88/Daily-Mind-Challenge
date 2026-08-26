@@ -644,3 +644,26 @@
         display: none;
     }
 }
+
+/* ---------- How to Play: Sudoku-specific mini visuals only -- the shared card/row/badge/tip
+   layout (.htp-*) now lives in components.css since Wordle and Word Search reuse it too. ---------- */
+.htp-mini-sudoku {
+    width: 100%;
+    margin-bottom: 0;
+}
+
+.htp-mini-sudoku .sudoku-cell {
+    font-size: 10px;
+    cursor: default;
+}
+
+.htp-mini-palette {
+    width: 100%;
+    margin-bottom: 0;
+    gap: 5px;
+}
+
+.htp-mini-palette .sudoku-key {
+    font-size: 12px;
+    cursor: default;
+}

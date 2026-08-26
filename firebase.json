@@ -21,7 +21,8 @@
       { "source": "/sudoku", "destination": "/html/sudoku.html" },
       { "source": "/wordsearch", "destination": "/html/wordsearch.html" },
       { "source": "/privacy-policy", "destination": "/html/privacy-policy.html" },
-      { "source": "/cookie-consent", "destination": "/html/cookie-consent.html" }
+      { "source": "/cookie-consent", "destination": "/html/cookie-consent.html" },
+      { "source": "/about", "destination": "/html/about.html" }
     ]
   }
 }

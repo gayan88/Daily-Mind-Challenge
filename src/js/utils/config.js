@@ -46,6 +46,10 @@ export const CONFIG_DEFAULTS = {
         failedPoints: 10,
         description: 'Global rules applied to every Word Search Tournament: puzzle count (a guideline for admins creating one), seconds allowed per puzzle, and points awarded for completing/failing a puzzle. The completion bonus is set per tournament when it\'s created.',
     },
+    cookieConsent: {
+        enabled: true,
+        description: 'Shows a cookie consent banner (Accept/Decline) to first-time visitors when on. Declining sets Google Consent Mode to denied for Analytics/ad cookies via Firebase Analytics\' setConsent(); accepting (or leaving this off entirely) leaves them at the default granted state.',
+    },
     wordValidationAPI: {
         // v2, not v1 -- v1 returns 502 (not 404) for a word that doesn't exist, which makes it
         // impossible to distinguish "not a real word" from "the API is down".

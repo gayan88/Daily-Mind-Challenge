@@ -97,6 +97,11 @@ const CONFIG_FORMS = [
         ],
     },
     {
+        id: 'cookieConsent',
+        title: 'Cookie Consent Banner',
+        fields: [{ key: 'enabled', type: 'checkbox', label: 'Show the cookie consent banner to visitors' }],
+    },
+    {
         id: 'wordValidationAPI',
         title: 'Word Validation API',
         fields: [{ key: 'endpoint', type: 'text', label: 'Endpoint URL' }],
@@ -219,7 +224,9 @@ async function renderConfigForms(containerId, formIds) {
             const value = data[field.key];
             const inputHtml = field.type === 'textarea'
                 ? `<textarea id="cfg-${form.id}-${field.key}">${escapeHtml(field.isArray ? (value || []).join(', ') : (value || ''))}</textarea>`
-                : `<input type="${field.type}" id="cfg-${form.id}-${field.key}" value="${value === null || value === undefined ? '' : escapeHtml(String(value))}">`;
+                : field.type === 'checkbox'
+                    ? `<input type="checkbox" id="cfg-${form.id}-${field.key}" ${value ? 'checked' : ''}>`
+                    : `<input type="${field.type}" id="cfg-${form.id}-${field.key}" value="${value === null || value === undefined ? '' : escapeHtml(String(value))}">`;
             return `
                 <div class="config-form-field">
                     <label for="cfg-${form.id}-${field.key}">${escapeHtml(field.label)}</label>
@@ -249,6 +256,8 @@ async function renderConfigForms(containerId, formIds) {
                 const el = document.getElementById(`cfg-${formId}-${field.key}`);
                 if (field.isArray) {
                     fields[field.key] = el.value.split(',').map((w) => w.trim()).filter(Boolean);
+                } else if (field.type === 'checkbox') {
+                    fields[field.key] = el.checked;
                 } else if (field.type === 'number') {
                     fields[field.key] = el.value === '' ? (field.nullable ? null : 0) : Number(el.value);
                 } else {

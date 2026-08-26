@@ -5,6 +5,7 @@ import { loadSessionProfile } from './auth/user-profile.js';
 import { applyDailyLoginBonus } from './utils/points.js';
 import { applyIcons } from './utils/icons.js';
 import { applyAdSlots } from './utils/ads.js';
+import { initCookieConsentBanner } from './utils/cookie-consent.js';
 import { showToast, getTodayDateString, shareUrl } from './utils/helpers.js';
 
 async function injectPartial(placeholderId, path) {
@@ -110,8 +111,28 @@ function updateHeader(profile) {
     document.getElementById('user-menu-loggedout')?.setAttribute('hidden', '');
 }
 
-/** Injects the shared header/footer partials and applies admin-configured ad slot settings.
- * Safe to call whether or not a session exists yet. */
+/**
+ * For pages that render for anonymous visitors via `trySession()` but have no sign-in modal of
+ * their own (the three game pages -- only `index.html` has `#auth-modal` in its markup): shows
+ * the header's logged-out state (both menu variants are `hidden` by default in header.html, and
+ * nothing un-hides either one unless a session resolves via `updateHeader()` above or the home
+ * page's own `setLoggedOutHeaderState()`, which is what left the header with neither menu visible
+ * at all -- no Login button -- on these pages before this existed). The Login button navigates to
+ * `/?redirect=<current page>` instead of opening a modal in place, since there's no modal here to
+ * open -- same `?redirect=` mechanism `initShell()`'s old redirect used, and the home page already
+ * opens its modal automatically when that param is present.
+ */
+export function showLoggedOutHeader() {
+    document.getElementById('user-menu-loggedout')?.removeAttribute('hidden');
+    document.getElementById('user-menu-loggedin')?.setAttribute('hidden', '');
+    document.getElementById('header-login-btn')?.addEventListener('click', () => {
+        window.location.href = `/?redirect=${encodeURIComponent(currentPageWithQuery())}`;
+    });
+}
+
+/** Injects the shared header/footer partials, applies admin-configured ad slot settings, and
+ * shows the cookie consent banner if it's due (see utils/cookie-consent.js -- not awaited, since
+ * it doesn't block anything else here). Safe to call whether or not a session exists yet. */
 export async function loadHeaderFooter() {
     await Promise.all([
         injectPartial('site-header', '/partials/header.html'),
@@ -122,6 +143,7 @@ export async function loadHeaderFooter() {
     markActiveNavLink();
     wireUserDropdown();
     wireFooterShare();
+    initCookieConsentBanner();
 }
 
 /** Resolves an existing session (loads its profile, applies the daily bonus, wires the header)
