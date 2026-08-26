@@ -1,6 +1,6 @@
 # src/html
 
-Eight real, separate HTML pages — no client-side routing, no templating. Each page follows the same skeleton:
+Ten real, separate HTML pages — no client-side routing, no templating. Each page follows the same skeleton:
 
 ```html
 <link rel="stylesheet" href="/css/base.css">
@@ -32,8 +32,12 @@ The home page and the three game pages each have `<div class="ad-space" data-ad-
 | `profile.html` | `/js/pages/profile.js` | `/profile` |
 | `settings.html` | `/js/pages/settings.js` (registered users only) | `/settings` |
 | `admin.html` | `/js/admin/admin-page.js` (admins only) | `/admin` |
+| `privacy-policy.html` | inline module script (just `loadHeaderFooter()`, no page-specific logic) | `/privacy-policy` |
+| `cookie-consent.html` | inline module script (just `loadHeaderFooter()`, no page-specific logic) | `/cookie-consent` |
 
-The clean URLs are defined once, in `firebase.json`'s `hosting.rewrites` at the repo root — that's the single source of truth for the mapping. Adding a ninth page means adding both the physical `.html` file here and a matching rewrite entry there.
+The clean URLs are defined once, in `firebase.json`'s `hosting.rewrites` at the repo root — that's the single source of truth for the mapping. Adding a new page means adding both the physical `.html` file here and a matching rewrite entry there.
+
+`privacy-policy.html` and `cookie-consent.html` are deliberately **not** gated behind `initShell()`, unlike every other non-home page — they call `loadHeaderFooter()` directly instead, same as the home page. This matters beyond just "these are public pages": `initShell()` redirects an anonymous visitor (no session, not even a guest one) straight to `/` before any content renders, which means a crawler (Googlebot, an AdSense reviewer, etc.) hitting a gated page sees nothing there to index. These two pages exist specifically so there's real, crawlable content Google can see without needing to establish a session first — see `src/js/CLAUDE.md`'s `initShell()`/`trySession()` split for the underlying mechanism.
 
 ## Running locally
 

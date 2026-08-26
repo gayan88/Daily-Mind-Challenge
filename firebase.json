@@ -19,7 +19,9 @@
       { "source": "/admin", "destination": "/html/admin.html" },
       { "source": "/wordle", "destination": "/html/wordle.html" },
       { "source": "/sudoku", "destination": "/html/sudoku.html" },
-      { "source": "/wordsearch", "destination": "/html/wordsearch.html" }
+      { "source": "/wordsearch", "destination": "/html/wordsearch.html" },
+      { "source": "/privacy-policy", "destination": "/html/privacy-policy.html" },
+      { "source": "/cookie-consent", "destination": "/html/cookie-consent.html" }
     ]
   }
 }

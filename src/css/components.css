@@ -847,6 +847,43 @@
     text-decoration: underline;
 }
 
+/* ---------- Legal content (Privacy Policy, Cookie Consent Notice) ---------- */
+.legal-content h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-top: 28px;
+    margin-bottom: 10px;
+}
+
+.legal-content h2:first-child {
+    margin-top: 0;
+}
+
+.legal-content p {
+    margin-bottom: 14px;
+    color: var(--color-text-secondary);
+}
+
+.legal-content ul {
+    margin: 0 0 14px 20px;
+    color: var(--color-text-secondary);
+}
+
+.legal-content li {
+    margin-bottom: 6px;
+}
+
+.legal-content .legal-updated {
+    font-size: 13px;
+    color: var(--color-text-muted);
+    margin-bottom: 24px;
+}
+
+.legal-content a {
+    color: var(--color-primary);
+    text-decoration: underline;
+}
+
 /* ---------- Misc shared ---------- */
 .card {
     background: var(--color-surface);
