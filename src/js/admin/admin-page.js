@@ -8,12 +8,12 @@ import {
 } from './wordle-admin.js';
 import {
     listDailySudokuPuzzles, addDailySudokuPuzzle, updateDailySudokuPuzzle, bulkAddDailySudokuPuzzles,
-    listClassicSudokuPuzzles, addClassicSudokuPuzzle, updateClassicSudokuPuzzle,
+    listClassicSudokuPuzzles, addClassicSudokuPuzzle, updateClassicSudokuPuzzle, bulkAddClassicSudokuPuzzles,
     listSudokuTournaments, createSudokuTournament, setSudokuTournamentActive, deleteSudokuTournament,
 } from './sudoku-admin.js';
 import {
     listDailyWordsearchPuzzles, addDailyWordsearchPuzzle, updateDailyWordsearchPuzzle, bulkAddDailyWordsearchPuzzles,
-    listClassicWordsearchPuzzles, addClassicWordsearchPuzzle, updateClassicWordsearchPuzzle,
+    listClassicWordsearchPuzzles, addClassicWordsearchPuzzle, updateClassicWordsearchPuzzle, bulkAddClassicWordsearchPuzzles,
     listWordsearchTournaments, createWordsearchTournament, setWordsearchTournamentActive, deleteWordsearchTournament,
 } from './wordsearch-admin.js';
 import { getDailyActivitySummary } from './activity-summary-data.js';
@@ -44,6 +44,38 @@ function groupWordsByMonth(words) {
         groups.get(key).push(w);
     });
     return groups;
+}
+
+/** Further groups a chronologically-ordered month-groups Map (see groupWordsByMonth()) by "YYYY"
+ * -- a Map preserves insertion order here too, so years (and the months within each year) both
+ * come out in chronological order for free, same reasoning as groupWordsByMonth() itself. Exists
+ * because a pool seeded years ahead turns into dozens of flat month rows otherwise -- nesting
+ * under a year first means expanding any point in a multi-year pool is at most two clicks away,
+ * rather than depending on how far down a flat (or paginated) list that month happens to be. */
+const DIFFICULTY_ORDER = ['easy', 'medium', 'hard'];
+const DIFFICULTY_LABELS = { easy: 'Easy', medium: 'Medium', hard: 'Hard' };
+
+/** Groups a Classic-puzzle list (Sudoku or Word Search) by difficulty, always in Easy/Medium/Hard
+ * order regardless of insertion order (ids interleave difficulties, since all three share one
+ * numeric counter) -- a difficulty with nothing seeded yet is omitted rather than shown as an
+ * empty group. */
+function groupByDifficulty(items) {
+    const groups = new Map();
+    DIFFICULTY_ORDER.forEach((d) => {
+        const matching = items.filter((item) => item.difficulty === d);
+        if (matching.length > 0) groups.set(d, matching);
+    });
+    return groups;
+}
+
+function groupMonthsByYear(monthGroups) {
+    const years = new Map();
+    monthGroups.forEach((items, monthKey) => {
+        const year = monthKey.slice(0, 4);
+        if (!years.has(year)) years.set(year, new Map());
+        years.get(year).set(monthKey, items);
+    });
+    return years;
 }
 
 const CONFIG_FORMS = [
@@ -367,28 +399,41 @@ async function renderDailyWordsTable() {
         return;
     }
 
-    // Grouped by month so a large pool (hundreds of words) doesn't become one long flat scroll --
-    // each month is its own collapsible, defaulting to whichever one contains today (or the
-    // earliest seeded month, if today falls outside the seeded range entirely, e.g. pre-launch).
+    // Grouped by year, then month, so a large pool (hundreds of words, possibly spanning several
+    // years) doesn't become one long flat scroll -- see groupMonthsByYear()'s doc comment. The
+    // year and month containing today both default open (or the earliest seeded ones, if today
+    // falls outside the seeded range entirely, e.g. pre-launch).
     const monthGroups = groupWordsByMonth(words);
+    const yearGroups = groupMonthsByYear(monthGroups);
     const monthKeys = Array.from(monthGroups.keys());
     const currentMonthKey = getTodayDateString().slice(0, 7);
-    const defaultOpenKey = monthKeys.includes(currentMonthKey) ? currentMonthKey : monthKeys[0];
+    const defaultOpenMonthKey = monthKeys.includes(currentMonthKey) ? currentMonthKey : monthKeys[0];
+    const defaultOpenYearKey = yearGroups.has(defaultOpenMonthKey.slice(0, 4)) ? defaultOpenMonthKey.slice(0, 4) : Array.from(yearGroups.keys())[0];
 
-    container.innerHTML = Array.from(monthGroups.entries()).map(([monthKey, monthWords]) => `
-        <div class="admin-subsection${monthKey === defaultOpenKey ? ' open' : ''}" data-collapsible>
-            <button class="admin-subsection-header" type="button">${monthLabel(monthKey)} (${monthWords.length})</button>
+    container.innerHTML = Array.from(yearGroups.entries()).map(([year, yearMonths]) => {
+        const yearCount = Array.from(yearMonths.values()).reduce((sum, arr) => sum + arr.length, 0);
+        return `
+        <div class="admin-subsection${year === defaultOpenYearKey ? ' open' : ''}" data-collapsible>
+            <button class="admin-subsection-header" type="button">${year} (${yearCount})</button>
             <div class="card">
-                ${monthWords.map((w) => `
-                    <div class="daily-word-row">
-                        <span class="daily-word-id">#${w.challengeNumber ?? '?'} &middot; ${w.date}</span>
-                        <span class="daily-word-text">${escapeHtml(w.word)}</span>
-                        <button class="btn" data-edit-word="${w.date}" type="button">Edit</button>
+                ${Array.from(yearMonths.entries()).map(([monthKey, monthWords]) => `
+                    <div class="admin-subsection admin-subsection-nested${monthKey === defaultOpenMonthKey ? ' open' : ''}" data-collapsible>
+                        <button class="admin-subsection-header" type="button">${monthLabel(monthKey)} (${monthWords.length})</button>
+                        <div class="card">
+                            ${monthWords.map((w) => `
+                                <div class="daily-word-row">
+                                    <span class="daily-word-id">#${w.challengeNumber ?? '?'} &middot; ${w.date}</span>
+                                    <span class="daily-word-text">${escapeHtml(w.word)}</span>
+                                    <button class="btn" data-edit-word="${w.date}" type="button">Edit</button>
+                                </div>
+                            `).join('')}
+                        </div>
                     </div>
                 `).join('')}
             </div>
         </div>
-    `).join('');
+    `;
+    }).join('');
 
     // Scoped to this container (not the whole document) so it never double-binds the page's
     // other, statically-present collapsible sections that wireCollapsibleSections() already wired.
@@ -623,29 +668,41 @@ async function renderSudokuDailyTable() {
         return;
     }
 
-    // Grouped by month, same as the Daily Words table -- see groupWordsByMonth()'s doc comment.
+    // Grouped by year, then month -- see renderDailyWordsTable()/groupMonthsByYear()'s doc comment.
     const monthGroups = groupWordsByMonth(puzzles);
+    const yearGroups = groupMonthsByYear(monthGroups);
     const monthKeys = Array.from(monthGroups.keys());
     const currentMonthKey = getTodayDateString().slice(0, 7);
-    const defaultOpenKey = monthKeys.includes(currentMonthKey) ? currentMonthKey : monthKeys[0];
+    const defaultOpenMonthKey = monthKeys.includes(currentMonthKey) ? currentMonthKey : monthKeys[0];
+    const defaultOpenYearKey = yearGroups.has(defaultOpenMonthKey.slice(0, 4)) ? defaultOpenMonthKey.slice(0, 4) : Array.from(yearGroups.keys())[0];
 
-    container.innerHTML = Array.from(monthGroups.entries()).map(([monthKey, monthPuzzles]) => `
-        <div class="admin-subsection${monthKey === defaultOpenKey ? ' open' : ''}" data-collapsible>
-            <button class="admin-subsection-header" type="button">${monthLabel(monthKey)} (${monthPuzzles.length})</button>
+    container.innerHTML = Array.from(yearGroups.entries()).map(([year, yearMonths]) => {
+        const yearCount = Array.from(yearMonths.values()).reduce((sum, arr) => sum + arr.length, 0);
+        return `
+        <div class="admin-subsection${year === defaultOpenYearKey ? ' open' : ''}" data-collapsible>
+            <button class="admin-subsection-header" type="button">${year} (${yearCount})</button>
             <div class="card">
-                ${monthPuzzles.map((p) => {
-                    const prefilled = p.puzzle.split('').filter((c) => c !== '0').length;
-                    return `
-                        <div class="sudoku-daily-row">
-                            <span class="sudoku-daily-id">#${p.challengeNumber ?? '?'} &middot; ${p.date}</span>
-                            <span class="sudoku-daily-meta">${prefilled} Pre-Filled Cells</span>
-                            <button class="btn" data-edit-puzzle="${p.date}" type="button">Edit</button>
+                ${Array.from(yearMonths.entries()).map(([monthKey, monthPuzzles]) => `
+                    <div class="admin-subsection admin-subsection-nested${monthKey === defaultOpenMonthKey ? ' open' : ''}" data-collapsible>
+                        <button class="admin-subsection-header" type="button">${monthLabel(monthKey)} (${monthPuzzles.length})</button>
+                        <div class="card">
+                            ${monthPuzzles.map((p) => {
+                                const prefilled = p.puzzle.split('').filter((c) => c !== '0').length;
+                                return `
+                                    <div class="sudoku-daily-row">
+                                        <span class="sudoku-daily-id">#${p.challengeNumber ?? '?'} &middot; ${p.date}</span>
+                                        <span class="sudoku-daily-meta">${prefilled} Pre-Filled Cells</span>
+                                        <button class="btn" data-edit-puzzle="${p.date}" type="button">Edit</button>
+                                    </div>
+                                `;
+                            }).join('')}
                         </div>
-                    `;
-                }).join('')}
+                    </div>
+                `).join('')}
             </div>
         </div>
-    `).join('');
+    `;
+    }).join('');
 
     container.querySelectorAll('[data-collapsible] > .admin-subsection-header').forEach((btn) => {
         btn.addEventListener('click', () => {
@@ -790,17 +847,32 @@ async function renderSudokuClassicTable() {
         return;
     }
 
-    container.innerHTML = puzzles.map((p) => {
-        const prefilled = p.puzzle.split('').filter((c) => c !== '0').length;
-        return `
-        <div class="sudoku-daily-row">
-            <span class="sudoku-daily-id">#${p.id}</span>
-            <span class="status-pill ${p.difficulty}">${p.difficulty}</span>
-            <span class="sudoku-daily-meta">${prefilled} Pre-Filled Cells</span>
-            <button class="btn" data-edit-classic-puzzle="${p.id}" type="button">Edit</button>
+    // Grouped by difficulty (Easy/Medium/Hard) rather than one flat id-ordered list -- see
+    // groupByDifficulty()'s doc comment. Each group defaults open since there are only ever three.
+    const groups = groupByDifficulty(puzzles);
+    container.innerHTML = Array.from(groups.entries()).map(([difficulty, group]) => `
+        <div class="admin-subsection open" data-collapsible>
+            <button class="admin-subsection-header" type="button">${DIFFICULTY_LABELS[difficulty]} (${group.length})</button>
+            <div class="card">
+                ${group.map((p) => {
+                    const prefilled = p.puzzle.split('').filter((c) => c !== '0').length;
+                    return `
+                        <div class="sudoku-daily-row">
+                            <span class="sudoku-daily-id">#${p.id}</span>
+                            <span class="sudoku-daily-meta">${prefilled} Pre-Filled Cells</span>
+                            <button class="btn" data-edit-classic-puzzle="${p.id}" type="button">Edit</button>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
         </div>
-    `;
-    }).join('');
+    `).join('');
+
+    container.querySelectorAll('[data-collapsible] > .admin-subsection-header').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            btn.closest('[data-collapsible]').classList.toggle('open');
+        });
+    });
 
     container.querySelectorAll('[data-edit-classic-puzzle]').forEach((btn) => {
         btn.addEventListener('click', async () => {
@@ -840,6 +912,66 @@ function wireSudokuClassicAdd() {
         } catch (err) {
             showToast(err.message || "Couldn't save -- check Firestore rules are deployed");
         }
+    });
+}
+
+/** Parses an uploaded Classic-puzzle-list file: one "difficulty,puzzle,solution" trio per line,
+ * ignoring blank lines -- mirrors parseSudokuPuzzleListFile() with difficulty as the leading
+ * field, since Classic (unlike Daily) needs one. */
+function parseSudokuClassicListFile(text) {
+    return stripCsvHeaderRow(text.split(/\r?\n/))
+        .map((line) => line.split(',').map((field) => field.trim()))
+        .filter(([difficulty]) => difficulty)
+        .map(([difficulty, puzzle, solution]) => ({ difficulty, puzzle: puzzle || '', solution: solution || '' }));
+}
+
+function wireSudokuClassicImportExport() {
+    document.getElementById('sudoku-classic-import-btn').addEventListener('click', async () => {
+        const fileInput = document.getElementById('sudoku-classic-import-input');
+        const file = fileInput.files[0];
+        if (!file) {
+            showToast('Choose a puzzle-list file first');
+            return;
+        }
+
+        const entries = parseSudokuClassicListFile(await file.text());
+        if (entries.length === 0) {
+            showToast('No puzzles found in that file');
+            return;
+        }
+        if (!window.confirm(`Import ${entries.length} puzzle${entries.length === 1 ? '' : 's'}?`)) return;
+
+        try {
+            const result = await bulkAddClassicSudokuPuzzles(entries);
+            fileInput.value = '';
+            showToast(`Imported ${result.count} puzzle${result.count === 1 ? '' : 's'}`);
+            renderSudokuClassicTable();
+        } catch (err) {
+            showToast(err.message || "Couldn't import -- check Firestore rules are deployed");
+        }
+    });
+
+    document.getElementById('sudoku-classic-export-btn').addEventListener('click', async () => {
+        let puzzles;
+        try {
+            puzzles = await listClassicSudokuPuzzles();
+        } catch {
+            showToast("Couldn't load classic puzzles to export");
+            return;
+        }
+        if (puzzles.length === 0) {
+            showToast('No puzzles seeded yet');
+            return;
+        }
+
+        const csvRows = ['id,difficulty,puzzle,solution', ...puzzles.map((p) => `${p.id},${p.difficulty},${p.puzzle},${p.solution}`)];
+        const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'sudoku-classic-puzzles.csv';
+        link.click();
+        URL.revokeObjectURL(url);
     });
 }
 
@@ -957,26 +1089,38 @@ async function renderWordsearchDailyTable() {
         return;
     }
 
-    // Grouped by month, same as the Daily Words/Sudoku Daily Puzzles tables.
+    // Grouped by year, then month -- see renderDailyWordsTable()/groupMonthsByYear()'s doc comment.
     const monthGroups = groupWordsByMonth(puzzles);
+    const yearGroups = groupMonthsByYear(monthGroups);
     const monthKeys = Array.from(monthGroups.keys());
     const currentMonthKey = getTodayDateString().slice(0, 7);
-    const defaultOpenKey = monthKeys.includes(currentMonthKey) ? currentMonthKey : monthKeys[0];
+    const defaultOpenMonthKey = monthKeys.includes(currentMonthKey) ? currentMonthKey : monthKeys[0];
+    const defaultOpenYearKey = yearGroups.has(defaultOpenMonthKey.slice(0, 4)) ? defaultOpenMonthKey.slice(0, 4) : Array.from(yearGroups.keys())[0];
 
-    container.innerHTML = Array.from(monthGroups.entries()).map(([monthKey, monthPuzzles]) => `
-        <div class="admin-subsection${monthKey === defaultOpenKey ? ' open' : ''}" data-collapsible>
-            <button class="admin-subsection-header" type="button">${monthLabel(monthKey)} (${monthPuzzles.length})</button>
+    container.innerHTML = Array.from(yearGroups.entries()).map(([year, yearMonths]) => {
+        const yearCount = Array.from(yearMonths.values()).reduce((sum, arr) => sum + arr.length, 0);
+        return `
+        <div class="admin-subsection${year === defaultOpenYearKey ? ' open' : ''}" data-collapsible>
+            <button class="admin-subsection-header" type="button">${year} (${yearCount})</button>
             <div class="card">
-                ${monthPuzzles.map((p) => `
-                    <div class="sudoku-daily-row">
-                        <span class="sudoku-daily-id">#${p.challengeNumber ?? '?'} &middot; ${p.date}</span>
-                        <span class="sudoku-daily-meta">${p.theme ? `${escapeHtml(p.theme)} &bull; ` : ''}${p.words.length} words</span>
-                        <button class="btn" data-edit-ws-daily="${p.date}" type="button">Edit</button>
+                ${Array.from(yearMonths.entries()).map(([monthKey, monthPuzzles]) => `
+                    <div class="admin-subsection admin-subsection-nested${monthKey === defaultOpenMonthKey ? ' open' : ''}" data-collapsible>
+                        <button class="admin-subsection-header" type="button">${monthLabel(monthKey)} (${monthPuzzles.length})</button>
+                        <div class="card">
+                            ${monthPuzzles.map((p) => `
+                                <div class="sudoku-daily-row">
+                                    <span class="sudoku-daily-id">#${p.challengeNumber ?? '?'} &middot; ${p.date}</span>
+                                    <span class="sudoku-daily-meta">${p.theme ? `${escapeHtml(p.theme)} &bull; ` : ''}${p.words.length} words</span>
+                                    <button class="btn" data-edit-ws-daily="${p.date}" type="button">Edit</button>
+                                </div>
+                            `).join('')}
+                        </div>
                     </div>
                 `).join('')}
             </div>
         </div>
-    `).join('');
+    `;
+    }).join('');
 
     container.querySelectorAll('[data-collapsible] > .admin-subsection-header').forEach((btn) => {
         btn.addEventListener('click', () => {
@@ -1134,14 +1278,29 @@ async function renderWordsearchClassicTable() {
         return;
     }
 
-    container.innerHTML = puzzles.map((p) => `
-        <div class="sudoku-daily-row">
-            <span class="sudoku-daily-id">#${p.id}</span>
-            <span class="status-pill ${p.difficulty}">${p.difficulty}</span>
-            <span class="sudoku-daily-meta">${p.theme ? `${escapeHtml(p.theme)} &bull; ` : ''}${p.words.length} words</span>
-            <button class="btn" data-edit-ws-classic="${p.id}" type="button">Edit</button>
+    // Grouped by difficulty (Easy/Medium/Hard) rather than one flat id-ordered list -- see
+    // groupByDifficulty()'s doc comment. Each group defaults open since there are only ever three.
+    const groups = groupByDifficulty(puzzles);
+    container.innerHTML = Array.from(groups.entries()).map(([difficulty, group]) => `
+        <div class="admin-subsection open" data-collapsible>
+            <button class="admin-subsection-header" type="button">${DIFFICULTY_LABELS[difficulty]} (${group.length})</button>
+            <div class="card">
+                ${group.map((p) => `
+                    <div class="sudoku-daily-row">
+                        <span class="sudoku-daily-id">#${p.id}</span>
+                        <span class="sudoku-daily-meta">${p.theme ? `${escapeHtml(p.theme)} &bull; ` : ''}${p.words.length} words</span>
+                        <button class="btn" data-edit-ws-classic="${p.id}" type="button">Edit</button>
+                    </div>
+                `).join('')}
+            </div>
         </div>
     `).join('');
+
+    container.querySelectorAll('[data-collapsible] > .admin-subsection-header').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            btn.closest('[data-collapsible]').classList.toggle('open');
+        });
+    });
 
     container.querySelectorAll('[data-edit-ws-classic]').forEach((btn) => {
         btn.addEventListener('click', async () => {
@@ -1182,6 +1341,69 @@ function wireWordsearchClassicAdd() {
         } catch (err) {
             showToast(err.message || "Couldn't save -- check Firestore rules are deployed");
         }
+    });
+}
+
+/** Parses an uploaded Classic-puzzle-list file: one puzzle per line, "difficulty,theme,word1,
+ * word2,..." -- unlike Daily's fixed 10-word rows, Classic's word count varies by difficulty (6
+ * for Easy, 10 for Medium/Hard), so the theme field is always present (never omitted) rather than
+ * inferred from field count like parseWordsearchDailyListFile() does; word-count validation
+ * itself happens downstream in bulkAddClassicWordsearchPuzzles(), which already knows each
+ * difficulty's required count. */
+function parseWordsearchClassicListFile(text) {
+    return stripCsvHeaderRow(text.split(/\r?\n/))
+        .map((line) => line.split(',').map((field) => field.trim()).filter((field, i, arr) => !(i === arr.length - 1 && field === '')))
+        .filter((fields) => fields.length > 1)
+        .map(([difficulty, theme, ...words]) => ({ difficulty, theme: theme || '', words }));
+}
+
+function wireWordsearchClassicImportExport() {
+    document.getElementById('wordsearch-classic-import-btn').addEventListener('click', async () => {
+        const fileInput = document.getElementById('wordsearch-classic-import-input');
+        const file = fileInput.files[0];
+        if (!file) {
+            showToast('Choose a puzzle-list file first');
+            return;
+        }
+
+        const entries = parseWordsearchClassicListFile(await file.text());
+        if (entries.length === 0) {
+            showToast('No puzzles found in that file');
+            return;
+        }
+        if (!window.confirm(`Import ${entries.length} puzzle${entries.length === 1 ? '' : 's'}?`)) return;
+
+        try {
+            const result = await bulkAddClassicWordsearchPuzzles(entries);
+            fileInput.value = '';
+            showToast(`Imported ${result.count} puzzle${result.count === 1 ? '' : 's'}`);
+            renderWordsearchClassicTable();
+        } catch (err) {
+            showToast(err.message || "Couldn't import -- check Firestore rules are deployed");
+        }
+    });
+
+    document.getElementById('wordsearch-classic-export-btn').addEventListener('click', async () => {
+        let puzzles;
+        try {
+            puzzles = await listClassicWordsearchPuzzles();
+        } catch {
+            showToast("Couldn't load classic puzzles to export");
+            return;
+        }
+        if (puzzles.length === 0) {
+            showToast('No puzzles seeded yet');
+            return;
+        }
+
+        const csvRows = ['id,difficulty,theme,words...', ...puzzles.map((p) => [p.id, p.difficulty, p.theme || '', ...p.words].join(','))];
+        const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'wordsearch-classic-puzzles.csv';
+        link.click();
+        URL.revokeObjectURL(url);
     });
 }
 
@@ -1353,6 +1575,7 @@ async function init() {
     wireSudokuDailyImportExport();
     await renderSudokuDailyTable();
     wireSudokuClassicAdd();
+    wireSudokuClassicImportExport();
     await renderSudokuClassicTable();
     wireSudokuTournamentCreate();
     await renderSudokuTournamentsTable();
@@ -1360,6 +1583,7 @@ async function init() {
     wireWordsearchDailyImportExport();
     await renderWordsearchDailyTable();
     wireWordsearchClassicAdd();
+    wireWordsearchClassicImportExport();
     await renderWordsearchClassicTable();
     wireWordsearchTournamentCreate();
     await renderWordsearchTournamentsTable();

@@ -118,6 +118,18 @@
     display: block;
 }
 
+/* Year > Month nesting (Daily Words/Puzzles tables) -- same collapsible mechanics as a top-level
+   .admin-subsection, just visually lighter (white header instead of the default's gray tint) so
+   a nested month reads as "inside" its year rather than as another peer section. */
+.admin-subsection-nested {
+    margin-bottom: 8px;
+}
+
+.admin-subsection-nested > .admin-subsection-header {
+    background: var(--color-surface);
+    font-size: 13px;
+}
+
 .config-form {
     border-bottom: 0.5px solid var(--color-border);
     padding: 16px 0;

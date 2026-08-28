@@ -116,6 +116,7 @@
                             <button class="btn primary" id="daily-word-import-btn" type="button">Import Word List</button>
                             <button class="btn" id="daily-word-export-btn" type="button">Download CSV</button>
                         </div>
+                        <div class="form-hint">Format: one word per line (5 letters). A duplicate word -- already in this file, or already in the pool -- rejects the whole import.</div>
                         <div id="daily-words-table">
                             <div class="loading-text">Loading&hellip;</div>
                         </div>
@@ -188,6 +189,7 @@
                             <button class="btn primary" id="sudoku-daily-import-btn" type="button">Import Puzzle List</button>
                             <button class="btn" id="sudoku-daily-export-btn" type="button">Download CSV</button>
                         </div>
+                        <div class="form-hint">Format: one puzzle per line, "puzzle,solution" (each 81 digits, 0 = blank in the puzzle). A duplicate puzzle -- already in this file, or already in the pool -- rejects the whole import.</div>
                         <div id="sudoku-daily-table">
                             <div class="loading-text">Loading&hellip;</div>
                         </div>
@@ -217,6 +219,12 @@
                             </div>
                             <button class="btn primary" id="sudoku-classic-add-btn" type="button">Add Puzzle</button>
                         </div>
+                        <div class="mod-search-row">
+                            <input type="file" id="sudoku-classic-import-input" accept=".csv,.txt,text/csv,text/plain">
+                            <button class="btn primary" id="sudoku-classic-import-btn" type="button">Import Puzzle List</button>
+                            <button class="btn" id="sudoku-classic-export-btn" type="button">Download CSV</button>
+                        </div>
+                        <div class="form-hint">Format: one puzzle per line, "difficulty,puzzle,solution" (each puzzle/solution 81 digits, 0 = blank in the puzzle). A duplicate puzzle -- already in this file, or already in that difficulty's pool -- rejects the whole import.</div>
                         <div id="sudoku-classic-table">
                             <div class="loading-text">Loading&hellip;</div>
                         </div>
@@ -288,6 +296,7 @@
                             <button class="btn primary" id="wordsearch-daily-import-btn" type="button">Import Puzzle List</button>
                             <button class="btn" id="wordsearch-daily-export-btn" type="button">Download CSV</button>
                         </div>
+                        <div class="form-hint">Format: one puzzle per line, 10 comma-separated words, with an optional leading theme (11 fields instead of 10). A duplicate word set -- already in this file, or already in the pool -- rejects the whole import.</div>
                         <div id="wordsearch-daily-table">
                             <div class="loading-text">Loading&hellip;</div>
                         </div>
@@ -317,6 +326,12 @@
                             </div>
                             <button class="btn primary" id="wordsearch-classic-add-btn" type="button">Add Puzzle</button>
                         </div>
+                        <div class="mod-search-row">
+                            <input type="file" id="wordsearch-classic-import-input" accept=".csv,.txt,text/csv,text/plain">
+                            <button class="btn primary" id="wordsearch-classic-import-btn" type="button">Import Puzzle List</button>
+                            <button class="btn" id="wordsearch-classic-export-btn" type="button">Download CSV</button>
+                        </div>
+                        <div class="form-hint">Format: one puzzle per line, "difficulty,theme,word1,word2,..." (theme field required but can be empty; Easy needs 6 words, Medium/Hard need 10). A duplicate word set -- already in this file, or already in that difficulty's pool -- rejects the whole import.</div>
                         <div id="wordsearch-classic-table">
                             <div class="loading-text">Loading&hellip;</div>
                         </div>

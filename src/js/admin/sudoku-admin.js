@@ -87,11 +87,17 @@ export async function listDailySudokuPuzzles() {
  * keyed directly by date -- same date-keyed scheme as wordle-admin.js#addDailyWord(), see its own
  * doc comment for the full rationale. The very first puzzle (empty pool) requires `startDate`
  * (the admin's chosen launch date, becoming Challenge #1); every puzzle after that ignores
- * `startDate` and is automatically dated one day after the previous puzzle's date.
+ * `startDate` and is automatically dated one day after the previous puzzle's date. Rejects a
+ * puzzle that's already somewhere in the pool (exact same 81-digit puzzle string).
  */
 export async function addDailySudokuPuzzle(puzzle, solution, startDate) {
     const error = validateSudokuPuzzlePair(puzzle, solution);
     if (error) throw new Error(error);
+
+    const existing = await listDailySudokuPuzzles();
+    if (existing.some((p) => p.puzzle === puzzle)) {
+        throw new Error('That exact puzzle is already in the Daily Puzzles pool.');
+    }
 
     const metaRef = doc(db, DAILY_COLLECTION, '_meta');
     const metaSnap = await getDoc(metaRef);
@@ -125,7 +131,9 @@ export async function addDailySudokuPuzzle(puzzle, solution, startDate) {
  * Bulk version of addDailySudokuPuzzle() for CSV import -- takes a plain list of `{puzzle,
  * solution}` pairs (no dates; dates are assigned the exact same way addDailySudokuPuzzle() would)
  * and writes them all in as few Firestore batches as possible -- see
- * wordle-admin.js#bulkAddDailyWords() for the full rationale on chunking/atomicity.
+ * wordle-admin.js#bulkAddDailyWords() for the full rationale on chunking/atomicity. Rejects the
+ * whole import up front (before any write) if the same puzzle string repeats within the file, or
+ * if any puzzle is already somewhere in the existing pool.
  */
 export async function bulkAddDailySudokuPuzzles(rawPairs, startDate) {
     const metaRef = doc(db, DAILY_COLLECTION, '_meta');
@@ -139,6 +147,20 @@ export async function bulkAddDailySudokuPuzzles(rawPairs, startDate) {
         const error = validateSudokuPuzzlePair(puzzle, solution);
         if (error) throw new Error(`Row ${i + 1}: ${error}`);
     });
+
+    const seenInFile = new Set();
+    let dupInFileIndex = -1;
+    rawPairs.forEach(({ puzzle }, i) => {
+        if (dupInFileIndex !== -1) return;
+        if (seenInFile.has(puzzle)) { dupInFileIndex = i; return; }
+        seenInFile.add(puzzle);
+    });
+    if (dupInFileIndex !== -1) throw new Error(`Row ${dupInFileIndex + 1}: this puzzle appears more than once in the file.`);
+
+    const existingPuzzles = new Set((await listDailySudokuPuzzles()).map((p) => p.puzzle));
+    const dupInPool = rawPairs.findIndex(({ puzzle }) => existingPuzzles.has(puzzle));
+    if (dupInPool !== -1) throw new Error(`Row ${dupInPool + 1}: this puzzle is already in the Daily Puzzles pool.`);
+
     if (existingTotal === 0 && !startDate) {
         throw new Error('Pick a start date for the very first puzzle (Challenge #1)');
     }
@@ -241,11 +263,18 @@ export async function listClassicSudokuPuzzles() {
 }
 
 /** Appends a new puzzle (next numeric id, one counter shared across all three difficulties --
- * `difficulty` is just a field on the doc, not a separate sequence). */
+ * `difficulty` is just a field on the doc, not a separate sequence). Rejects a puzzle that's
+ * already somewhere in that same difficulty's pool -- a duplicate across two *different*
+ * difficulties is fine, since each difficulty's pool is picked from independently. */
 export async function addClassicSudokuPuzzle(puzzle, solution, difficulty) {
     const error = validateSudokuPuzzlePair(puzzle, solution);
     if (error) throw new Error(error);
     if (!isValidDifficulty(difficulty)) throw new Error('Difficulty must be easy, medium, or hard.');
+
+    const existing = await listClassicSudokuPuzzles();
+    if (existing.some((p) => p.difficulty === difficulty && p.puzzle === puzzle)) {
+        throw new Error(`That exact puzzle is already in the ${difficulty} pool.`);
+    }
 
     const metaRef = doc(db, CLASSIC_COLLECTION, '_meta');
     const metaSnap = await getDoc(metaRef);
@@ -260,6 +289,68 @@ export async function addClassicSudokuPuzzle(puzzle, solution, difficulty) {
     });
     await setDoc(metaRef, { totalCount: nextId, updatedAt: serverTimestamp() });
     return nextId;
+}
+
+/**
+ * Bulk version of addClassicSudokuPuzzle() for CSV import -- takes a plain list of `{puzzle,
+ * solution, difficulty}` entries and appends them all under the same shared numeric id counter,
+ * written via chunked writeBatch() -- see wordle-admin.js#bulkAddDailyWords() for the full
+ * rationale on chunking/atomicity. Rejects the whole import, before any write, if the same puzzle
+ * string repeats within the file or already exists in the pool, both scoped per difficulty (same
+ * reasoning as addClassicSudokuPuzzle()'s own duplicate check).
+ */
+export async function bulkAddClassicSudokuPuzzles(rawEntries) {
+    if (rawEntries.length === 0) throw new Error('No puzzles to import');
+    rawEntries.forEach(({ puzzle, solution, difficulty }, i) => {
+        if (!isValidDifficulty(difficulty)) throw new Error(`Row ${i + 1}: difficulty must be easy, medium, or hard.`);
+        const error = validateSudokuPuzzlePair(puzzle, solution);
+        if (error) throw new Error(`Row ${i + 1}: ${error}`);
+    });
+
+    const seenInFile = new Map(); // difficulty -> Set(puzzle)
+    let dupInFileIndex = -1;
+    rawEntries.forEach(({ puzzle, difficulty }, i) => {
+        if (dupInFileIndex !== -1) return;
+        if (!seenInFile.has(difficulty)) seenInFile.set(difficulty, new Set());
+        const seen = seenInFile.get(difficulty);
+        if (seen.has(puzzle)) { dupInFileIndex = i; return; }
+        seen.add(puzzle);
+    });
+    if (dupInFileIndex !== -1) throw new Error(`Row ${dupInFileIndex + 1}: this puzzle appears more than once in the file for that difficulty.`);
+
+    const existing = await listClassicSudokuPuzzles();
+    const existingByDifficulty = new Map();
+    existing.forEach((p) => {
+        if (!existingByDifficulty.has(p.difficulty)) existingByDifficulty.set(p.difficulty, new Set());
+        existingByDifficulty.get(p.difficulty).add(p.puzzle);
+    });
+    const dupInPool = rawEntries.findIndex(({ puzzle, difficulty }) => existingByDifficulty.get(difficulty)?.has(puzzle));
+    if (dupInPool !== -1) throw new Error(`Row ${dupInPool + 1}: this puzzle is already in the ${rawEntries[dupInPool].difficulty} pool.`);
+
+    const metaRef = doc(db, CLASSIC_COLLECTION, '_meta');
+    const metaSnap = await getDoc(metaRef);
+    const existingTotal = metaSnap.exists() ? (metaSnap.data().totalCount || 0) : 0;
+
+    const assignments = rawEntries.map(({ puzzle, solution, difficulty }, i) => ({
+        id: existingTotal + i + 1,
+        puzzle,
+        solution,
+        difficulty,
+    }));
+
+    for (let i = 0; i < assignments.length; i += BATCH_LIMIT - 1) {
+        const chunk = assignments.slice(i, i + BATCH_LIMIT - 1);
+        const batch = writeBatch(db);
+        chunk.forEach(({ id, puzzle, solution, difficulty }) => {
+            batch.set(doc(db, CLASSIC_COLLECTION, String(id)), { puzzle, solution, difficulty, createdAt: serverTimestamp() });
+        });
+        if (i + chunk.length >= assignments.length) {
+            batch.set(metaRef, { totalCount: existingTotal + assignments.length, updatedAt: serverTimestamp() });
+        }
+        await batch.commit();
+    }
+
+    return { count: assignments.length };
 }
 
 /** Corrects an already-seeded puzzle's content or difficulty without changing its position/id. */

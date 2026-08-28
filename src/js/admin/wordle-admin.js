@@ -38,9 +38,16 @@ export async function listDailyWords() {
  * Append-only by design -- reordering/removing earlier entries would shift which word lands on
  * which past/future date for players already mid-streak (see CLAUDE.md). Adding more words later
  * never touches or recomputes any existing word's date, since new ones are only ever appended
- * after the current end of the calendar.
+ * after the current end of the calendar. Rejects a word that's already somewhere in the pool
+ * (case-insensitive) -- same word, same date-keyed calendar, no reason to ever repeat one.
  */
 export async function addDailyWord(word, startDate) {
+    const trimmedWord = word.trim().toUpperCase();
+    const existing = await listDailyWords();
+    if (existing.some((w) => w.word === trimmedWord)) {
+        throw new Error(`"${trimmedWord}" is already in the Daily Words pool.`);
+    }
+
     const metaRef = doc(db, WORDS_COLLECTION, '_meta');
     const metaSnap = await getDoc(metaRef);
     const totalCount = metaSnap.exists() ? (metaSnap.data().totalCount || 0) : 0;
@@ -56,7 +63,7 @@ export async function addDailyWord(word, startDate) {
     const challengeNumber = totalCount + 1;
     await setDoc(doc(db, WORDS_COLLECTION, dateString), {
         challengeNumber,
-        word: word.trim().toUpperCase(),
+        word: trimmedWord,
         createdAt: serverTimestamp(),
     });
     await setDoc(metaRef, {
@@ -75,7 +82,10 @@ export async function addDailyWord(word, startDate) {
  * `BATCH_LIMIT - 1` words per batch, since each batch also needs room for the trailing `_meta`
  * write). Each chunk commits atomically -- either every word in that chunk lands or none does --
  * and `_meta` is only written once, in the very last chunk, so a mid-import failure never leaves
- * `_meta.lastDate` pointing past a word that didn't actually get written.
+ * `_meta.lastDate` pointing past a word that didn't actually get written. Rejects the whole import
+ * if any word repeats within the file itself, or if any word is already somewhere in the existing
+ * pool (case-insensitive both ways) -- an all-or-nothing check up front, before any write happens,
+ * so a bad file never gets partially imported.
  */
 export async function bulkAddDailyWords(rawWords, startDate) {
     const metaRef = doc(db, WORDS_COLLECTION, '_meta');
@@ -88,6 +98,19 @@ export async function bulkAddDailyWords(rawWords, startDate) {
     if (words.length === 0) throw new Error('No words to import');
     const invalid = words.find((w) => !/^[A-Z]{5}$/.test(w));
     if (invalid) throw new Error(`"${invalid}" isn't a 5-letter word`);
+
+    const seenInFile = new Set();
+    let dupInFile = null;
+    for (const w of words) {
+        if (seenInFile.has(w)) { dupInFile = w; break; }
+        seenInFile.add(w);
+    }
+    if (dupInFile) throw new Error(`"${dupInFile}" appears more than once in the file.`);
+
+    const existingWords = new Set((await listDailyWords()).map((w) => w.word));
+    const dupInPool = words.find((w) => existingWords.has(w));
+    if (dupInPool) throw new Error(`"${dupInPool}" is already in the Daily Words pool.`);
+
     if (existingTotal === 0 && !startDate) {
         throw new Error('Pick a start date for the very first word (Challenge #1)');
     }

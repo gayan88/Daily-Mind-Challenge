@@ -61,6 +61,13 @@ function isValidDifficulty(difficulty) {
     return DIFFICULTIES.includes(difficulty);
 }
 
+/** A puzzle's "identity" for duplicate-checking purposes is its set of words, not their order or
+ * its theme -- two puzzles with the same 10 words (just listed in a different order, or with a
+ * different theme label) are the same puzzle as far as a player's concerned. */
+function wordSetSignature(words) {
+    return words.map((w) => w.trim().toUpperCase()).sort().join('|');
+}
+
 /** Lists every seeded Daily Challenge puzzle, ordered by date (which also matches
  * challengeNumber order, since dates are only ever assigned going forward -- see
  * addDailyWordsearchPuzzle()). */
@@ -79,10 +86,17 @@ export async function listDailyWordsearchPuzzles() {
  * its own doc comment for the full rationale. The very first puzzle (empty pool) requires
  * `startDate` (the admin's chosen launch date, becoming Challenge #1); every puzzle after that
  * ignores `startDate` and is automatically dated one day after the previous puzzle's date.
+ * Rejects a puzzle whose word set (see wordSetSignature()) already matches one in the pool.
  */
 export async function addDailyWordsearchPuzzle({ theme, words }, startDate) {
     const error = validateWordList(words, { minCount: DAILY_MODE.wordCount, maxCount: DAILY_MODE.wordCount });
     if (error) throw new Error(error);
+
+    const signature = wordSetSignature(words);
+    const existing = await listDailyWordsearchPuzzles();
+    if (existing.some((p) => wordSetSignature(p.words) === signature)) {
+        throw new Error('A puzzle with this exact set of words is already in the Daily Puzzles pool.');
+    }
 
     const metaRef = doc(db, DAILY_COLLECTION, '_meta');
     const metaSnap = await getDoc(metaRef);
@@ -116,7 +130,9 @@ export async function addDailyWordsearchPuzzle({ theme, words }, startDate) {
  * Bulk version of addDailyWordsearchPuzzle() for CSV import -- takes a plain list of `{theme,
  * words}` entries (no dates; dates are assigned the exact same way addDailyWordsearchPuzzle()
  * would) and writes them all in as few Firestore batches as possible -- see
- * wordle-admin.js#bulkAddDailyWords() for the full rationale on chunking/atomicity.
+ * wordle-admin.js#bulkAddDailyWords() for the full rationale on chunking/atomicity. Rejects the
+ * whole import up front (before any write) if the same word set (see wordSetSignature()) repeats
+ * within the file, or if any puzzle's word set is already somewhere in the existing pool.
  */
 export async function bulkAddDailyWordsearchPuzzles(rawEntries, startDate) {
     const metaRef = doc(db, DAILY_COLLECTION, '_meta');
@@ -130,6 +146,21 @@ export async function bulkAddDailyWordsearchPuzzles(rawEntries, startDate) {
         const error = validateWordList(words, { minCount: DAILY_MODE.wordCount, maxCount: DAILY_MODE.wordCount });
         if (error) throw new Error(`Row ${i + 1}: ${error}`);
     });
+
+    const seenInFile = new Set();
+    let dupInFileIndex = -1;
+    rawEntries.forEach(({ words }, i) => {
+        if (dupInFileIndex !== -1) return;
+        const signature = wordSetSignature(words);
+        if (seenInFile.has(signature)) { dupInFileIndex = i; return; }
+        seenInFile.add(signature);
+    });
+    if (dupInFileIndex !== -1) throw new Error(`Row ${dupInFileIndex + 1}: this exact set of words appears more than once in the file.`);
+
+    const existingSignatures = new Set((await listDailyWordsearchPuzzles()).map((p) => wordSetSignature(p.words)));
+    const dupInPool = rawEntries.findIndex(({ words }) => existingSignatures.has(wordSetSignature(words)));
+    if (dupInPool !== -1) throw new Error(`Row ${dupInPool + 1}: this exact set of words is already in the Daily Puzzles pool.`);
+
     if (existingTotal === 0 && !startDate) {
         throw new Error('Pick a start date for the very first puzzle (Challenge #1)');
     }
@@ -236,12 +267,21 @@ export async function listClassicWordsearchPuzzles() {
 }
 
 /** Appends a new puzzle (next numeric id, one counter shared across all three difficulties --
- * `difficulty` is just a field on the doc, not a separate sequence). */
+ * `difficulty` is just a field on the doc, not a separate sequence). Rejects a puzzle whose word
+ * set already matches one in that same difficulty's pool -- see wordSetSignature(); a duplicate
+ * across two *different* difficulties is fine, since each difficulty's pool is picked from
+ * independently. */
 export async function addClassicWordsearchPuzzle({ theme, words, difficulty }) {
     if (!isValidDifficulty(difficulty)) throw new Error('Difficulty must be easy, medium, or hard.');
     const wordCount = CLASSIC_MODES[difficulty].wordCount;
     const error = validateWordList(words, { minCount: wordCount, maxCount: wordCount });
     if (error) throw new Error(error);
+
+    const signature = wordSetSignature(words);
+    const existing = await listClassicWordsearchPuzzles();
+    if (existing.some((p) => p.difficulty === difficulty && wordSetSignature(p.words) === signature)) {
+        throw new Error(`A puzzle with this exact set of words is already in the ${difficulty} pool.`);
+    }
 
     const metaRef = doc(db, CLASSIC_COLLECTION, '_meta');
     const metaSnap = await getDoc(metaRef);
@@ -256,6 +296,71 @@ export async function addClassicWordsearchPuzzle({ theme, words, difficulty }) {
     });
     await setDoc(metaRef, { totalCount: nextId, updatedAt: serverTimestamp() });
     return nextId;
+}
+
+/**
+ * Bulk version of addClassicWordsearchPuzzle() for CSV import -- takes a plain list of
+ * `{theme, words, difficulty}` entries and appends them all under the same shared numeric id
+ * counter, written via chunked writeBatch() -- see wordle-admin.js#bulkAddDailyWords() for the
+ * full rationale on chunking/atomicity. Rejects the whole import, before any write, if the same
+ * word set (see wordSetSignature()) repeats within the file or already exists in the pool, both
+ * scoped per difficulty (same reasoning as addClassicWordsearchPuzzle()'s own duplicate check).
+ */
+export async function bulkAddClassicWordsearchPuzzles(rawEntries) {
+    if (rawEntries.length === 0) throw new Error('No puzzles to import');
+    rawEntries.forEach(({ words, difficulty }, i) => {
+        if (!isValidDifficulty(difficulty)) throw new Error(`Row ${i + 1}: difficulty must be easy, medium, or hard.`);
+        const wordCount = CLASSIC_MODES[difficulty].wordCount;
+        const error = validateWordList(words, { minCount: wordCount, maxCount: wordCount });
+        if (error) throw new Error(`Row ${i + 1}: ${error}`);
+    });
+
+    const seenInFile = new Map(); // difficulty -> Set(signature)
+    let dupInFileIndex = -1;
+    rawEntries.forEach(({ words, difficulty }, i) => {
+        if (dupInFileIndex !== -1) return;
+        const signature = wordSetSignature(words);
+        if (!seenInFile.has(difficulty)) seenInFile.set(difficulty, new Set());
+        const seen = seenInFile.get(difficulty);
+        if (seen.has(signature)) { dupInFileIndex = i; return; }
+        seen.add(signature);
+    });
+    if (dupInFileIndex !== -1) throw new Error(`Row ${dupInFileIndex + 1}: this exact set of words appears more than once in the file for that difficulty.`);
+
+    const existing = await listClassicWordsearchPuzzles();
+    const existingByDifficulty = new Map();
+    existing.forEach((p) => {
+        const signature = wordSetSignature(p.words);
+        if (!existingByDifficulty.has(p.difficulty)) existingByDifficulty.set(p.difficulty, new Set());
+        existingByDifficulty.get(p.difficulty).add(signature);
+    });
+    const dupInPool = rawEntries.findIndex(({ words, difficulty }) => existingByDifficulty.get(difficulty)?.has(wordSetSignature(words)));
+    if (dupInPool !== -1) throw new Error(`Row ${dupInPool + 1}: this exact set of words is already in the ${rawEntries[dupInPool].difficulty} pool.`);
+
+    const metaRef = doc(db, CLASSIC_COLLECTION, '_meta');
+    const metaSnap = await getDoc(metaRef);
+    const existingTotal = metaSnap.exists() ? (metaSnap.data().totalCount || 0) : 0;
+
+    const assignments = rawEntries.map(({ theme, words, difficulty }, i) => ({
+        id: existingTotal + i + 1,
+        theme: theme ? theme.trim() : '',
+        words: words.map((w) => w.trim().toUpperCase()),
+        difficulty,
+    }));
+
+    for (let i = 0; i < assignments.length; i += BATCH_LIMIT - 1) {
+        const chunk = assignments.slice(i, i + BATCH_LIMIT - 1);
+        const batch = writeBatch(db);
+        chunk.forEach(({ id, theme, words, difficulty }) => {
+            batch.set(doc(db, CLASSIC_COLLECTION, String(id)), { theme, words, difficulty, createdAt: serverTimestamp() });
+        });
+        if (i + chunk.length >= assignments.length) {
+            batch.set(metaRef, { totalCount: existingTotal + assignments.length, updatedAt: serverTimestamp() });
+        }
+        await batch.commit();
+    }
+
+    return { count: assignments.length };
 }
 
 /** Corrects an already-seeded puzzle's content or difficulty without changing its position/id. */
