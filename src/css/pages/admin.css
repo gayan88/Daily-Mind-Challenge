@@ -173,6 +173,14 @@
 }
 
 .config-form-field label {
+    display: flex;
+    align-items: flex-end;
+    /* Reserves room for a 2-line label -- without this, a field whose label happens to wrap (e.g.
+       "Points for completing a puzzle" next to shorter labels in the same row) pushes its own
+       input down below the others', misaligning the whole row of inputs. align-items: flex-end
+       above then bottom-aligns a short single-line label within that reserved space, so every
+       label's last line sits directly above its input regardless of how many lines it took. */
+    min-height: 2.4em;
     font-size: 12px;
     font-weight: 600;
     color: var(--color-text-secondary);

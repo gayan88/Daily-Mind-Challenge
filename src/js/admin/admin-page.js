@@ -399,25 +399,20 @@ async function renderDailyWordsTable() {
         return;
     }
 
-    // Grouped by year, then month, so a large pool (hundreds of words, possibly spanning several
-    // years) doesn't become one long flat scroll -- see groupMonthsByYear()'s doc comment. The
-    // year and month containing today both default open (or the earliest seeded ones, if today
-    // falls outside the seeded range entirely, e.g. pre-launch).
+    // Grouped by year, then month -- see groupMonthsByYear()'s doc comment. Both levels start
+    // fully collapsed (not defaulting the current year/month open) since even a single month's
+    // worth of entries can already be a long list on its own.
     const monthGroups = groupWordsByMonth(words);
     const yearGroups = groupMonthsByYear(monthGroups);
-    const monthKeys = Array.from(monthGroups.keys());
-    const currentMonthKey = getTodayDateString().slice(0, 7);
-    const defaultOpenMonthKey = monthKeys.includes(currentMonthKey) ? currentMonthKey : monthKeys[0];
-    const defaultOpenYearKey = yearGroups.has(defaultOpenMonthKey.slice(0, 4)) ? defaultOpenMonthKey.slice(0, 4) : Array.from(yearGroups.keys())[0];
 
     container.innerHTML = Array.from(yearGroups.entries()).map(([year, yearMonths]) => {
         const yearCount = Array.from(yearMonths.values()).reduce((sum, arr) => sum + arr.length, 0);
         return `
-        <div class="admin-subsection${year === defaultOpenYearKey ? ' open' : ''}" data-collapsible>
+        <div class="admin-subsection" data-collapsible>
             <button class="admin-subsection-header" type="button">${year} (${yearCount})</button>
             <div class="card">
                 ${Array.from(yearMonths.entries()).map(([monthKey, monthWords]) => `
-                    <div class="admin-subsection admin-subsection-nested${monthKey === defaultOpenMonthKey ? ' open' : ''}" data-collapsible>
+                    <div class="admin-subsection admin-subsection-nested" data-collapsible>
                         <button class="admin-subsection-header" type="button">${monthLabel(monthKey)} (${monthWords.length})</button>
                         <div class="card">
                             ${monthWords.map((w) => `
@@ -668,22 +663,19 @@ async function renderSudokuDailyTable() {
         return;
     }
 
-    // Grouped by year, then month -- see renderDailyWordsTable()/groupMonthsByYear()'s doc comment.
+    // Grouped by year, then month, both collapsed by default -- see renderDailyWordsTable()/
+    // groupMonthsByYear()'s doc comment.
     const monthGroups = groupWordsByMonth(puzzles);
     const yearGroups = groupMonthsByYear(monthGroups);
-    const monthKeys = Array.from(monthGroups.keys());
-    const currentMonthKey = getTodayDateString().slice(0, 7);
-    const defaultOpenMonthKey = monthKeys.includes(currentMonthKey) ? currentMonthKey : monthKeys[0];
-    const defaultOpenYearKey = yearGroups.has(defaultOpenMonthKey.slice(0, 4)) ? defaultOpenMonthKey.slice(0, 4) : Array.from(yearGroups.keys())[0];
 
     container.innerHTML = Array.from(yearGroups.entries()).map(([year, yearMonths]) => {
         const yearCount = Array.from(yearMonths.values()).reduce((sum, arr) => sum + arr.length, 0);
         return `
-        <div class="admin-subsection${year === defaultOpenYearKey ? ' open' : ''}" data-collapsible>
+        <div class="admin-subsection" data-collapsible>
             <button class="admin-subsection-header" type="button">${year} (${yearCount})</button>
             <div class="card">
                 ${Array.from(yearMonths.entries()).map(([monthKey, monthPuzzles]) => `
-                    <div class="admin-subsection admin-subsection-nested${monthKey === defaultOpenMonthKey ? ' open' : ''}" data-collapsible>
+                    <div class="admin-subsection admin-subsection-nested" data-collapsible>
                         <button class="admin-subsection-header" type="button">${monthLabel(monthKey)} (${monthPuzzles.length})</button>
                         <div class="card">
                             ${monthPuzzles.map((p) => {
@@ -1089,22 +1081,19 @@ async function renderWordsearchDailyTable() {
         return;
     }
 
-    // Grouped by year, then month -- see renderDailyWordsTable()/groupMonthsByYear()'s doc comment.
+    // Grouped by year, then month, both collapsed by default -- see renderDailyWordsTable()/
+    // groupMonthsByYear()'s doc comment.
     const monthGroups = groupWordsByMonth(puzzles);
     const yearGroups = groupMonthsByYear(monthGroups);
-    const monthKeys = Array.from(monthGroups.keys());
-    const currentMonthKey = getTodayDateString().slice(0, 7);
-    const defaultOpenMonthKey = monthKeys.includes(currentMonthKey) ? currentMonthKey : monthKeys[0];
-    const defaultOpenYearKey = yearGroups.has(defaultOpenMonthKey.slice(0, 4)) ? defaultOpenMonthKey.slice(0, 4) : Array.from(yearGroups.keys())[0];
 
     container.innerHTML = Array.from(yearGroups.entries()).map(([year, yearMonths]) => {
         const yearCount = Array.from(yearMonths.values()).reduce((sum, arr) => sum + arr.length, 0);
         return `
-        <div class="admin-subsection${year === defaultOpenYearKey ? ' open' : ''}" data-collapsible>
+        <div class="admin-subsection" data-collapsible>
             <button class="admin-subsection-header" type="button">${year} (${yearCount})</button>
             <div class="card">
                 ${Array.from(yearMonths.entries()).map(([monthKey, monthPuzzles]) => `
-                    <div class="admin-subsection admin-subsection-nested${monthKey === defaultOpenMonthKey ? ' open' : ''}" data-collapsible>
+                    <div class="admin-subsection admin-subsection-nested" data-collapsible>
                         <button class="admin-subsection-header" type="button">${monthLabel(monthKey)} (${monthPuzzles.length})</button>
                         <div class="card">
                             ${monthPuzzles.map((p) => `
