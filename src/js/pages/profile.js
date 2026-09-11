@@ -5,7 +5,23 @@ import { containsBlockedWord } from '../utils/profanity.js';
 import { getUserLifetimeStats, getUserGameHistory } from '../utils/points.js';
 import { showToast } from '../utils/helpers.js';
 
-const GAME_LABELS = { wordle: 'Wordle', sudoku: 'Sudoku', wordsearch: 'Word Search' };
+// Every gameType any gameScores doc can be written under, across all 9 game/mode data files --
+// GAME_LABELS used to only know the three Daily Challenge ones, so a Classic/Tournament/Challenge
+// row fell back to showing its raw gameType string instead of a real label.
+const GAME_LABELS = {
+    wordle: 'Wordle',
+    'wordle-tournament': 'Wordle Tournament',
+    'wordle-challenge': 'Wordle Challenge',
+    'wordle-challenge-creator': 'Wordle Challenge Reward',
+    sudoku: 'Sudoku',
+    'sudoku-classic': 'Sudoku Classic',
+    'sudoku-tournament': 'Sudoku Tournament',
+    'sudoku-tournament-bonus': 'Sudoku Tournament Bonus',
+    wordsearch: 'Word Search',
+    'wordsearch-classic': 'Word Search Classic',
+    'wordsearch-tournament': 'Word Search Tournament',
+    'wordsearch-tournament-bonus': 'Word Search Tournament Bonus',
+};
 
 function renderStats(profile, totalScore, gamesPlayedCount) {
     const el = document.getElementById('profile-stats');
@@ -35,12 +51,23 @@ function renderHistory(history) {
         return;
     }
     el.innerHTML = history
-        .map((entry) => `
-            <div class="history-row">
-                <div class="history-game">${GAME_LABELS[entry.gameType] || entry.gameType}</div>
-                <div class="history-detail">${entry.gameDate} — ${entry.score} pts (${entry.timeTaken})</div>
-            </div>
-        `)
+        .map((entry) => {
+            // `gameDate` is a real calendar date only for Daily Challenge docs -- Classic/
+            // Tournament/Challenge modes repurpose it as a deterministic key (a tournament id, a
+            // {tournamentId}_{puzzleIndex} pair, etc.), so `scoreDate` (always a real date,
+            // regardless of mode) is shown instead when present. `timeTaken` only exists on
+            // Daily/Classic docs -- Tournament docs track different fields entirely (wordAttempts,
+            // puzzleResults, raw errors/timeTakenSeconds), so it's omitted rather than shown as
+            // the literal text "undefined" when absent.
+            const date = entry.scoreDate || entry.gameDate;
+            const timeSuffix = entry.timeTaken ? ` (${entry.timeTaken})` : '';
+            return `
+                <div class="history-row">
+                    <div class="history-game">${GAME_LABELS[entry.gameType] || entry.gameType}</div>
+                    <div class="history-detail">${date} — ${entry.score} pts${timeSuffix}</div>
+                </div>
+            `;
+        })
         .join('');
 }
 

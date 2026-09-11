@@ -514,6 +514,129 @@ admin page, not just Word Search's.
 - `firebase/firestore.indexes.json` — new `(gameType, scoreDate)` composite index.
 - Every game/mode data file under `src/js/games/*/` — `scoreDate` field addition.
 
+## 11. Addendum — early September 2026
+
+Work that happened after the AdSense-readiness push above, in later sessions.
+
+### 11.1 `ads.txt` completed
+Once a real AdSense Publisher ID existed, `src/ads.txt` was created with the actual line Google
+provided (`google.com, pub-2846401176879660, DIRECT, f08c47fec0942fa0`) and deployed — this was
+the one item from §8.10's checklist that had to wait on account-side signup.
+
+### 11.2 AdSense's consent-message requirement (explained, not built)
+Google's AdSense onboarding separately requires a **certified Consent Management Platform (CMP)**
+for EEA/UK/Switzerland traffic — this is a different, more specific requirement than the custom
+cookie-consent banner built in §8.8. That banner only signals Firebase Analytics/Google Consent
+Mode; it isn't wired into the IAB Transparency & Consent Framework AdSense's real-time-bidding
+ecosystem reads from, and isn't a "Google-certified CMP." Recommended (not yet implemented):
+Google's own CMP with the 3-choice message (Consent / Do not consent / Manage options) — Google
+would supply a script snippet to add to the site once that's set up. **Open item.**
+
+### 11.3 Facebook/Instagram campaign brief
+Built on request for handing to an external marketing agency: a Claude Artifact (design grounded
+in the app's real brand colors and each game's own accent), plus a self-contained repo copy at
+`docs/facebook-campaign-brief.md` with all logos/share-images copied into `docs/assets/campaign/`
+(not just referenced from `src/`, since the agency has no codebase access), and a print-ready PDF
+export (`docs/Daily-Mind-Challenge-Campaign-Brief.pdf`, generated via headless Chrome so every
+image renders directly on the page rather than as a link). Includes a full mode-by-mode breakdown
+of all three games, written for a non-technical audience.
+
+### 11.4 Leaderboard bug: per-game tabs only showed Daily Challenge scores
+**Symptom:** Word Search Tournament points weren't showing under the Word Search leaderboard tab
+(reported by the user; Sudoku/Wordle's own tabs had the identical bug, unreported but confirmed by
+code inspection).
+
+**Root cause:** `getGameLeaderboard()` in `leaderboard-data.js` filtered with
+`where('gameType', '==', gameType)` — an exact match against one literal string (e.g.
+`'wordsearch'`). Each game actually writes multiple `gameType` values depending on mode (Daily,
+Classic, Tournament, Tournament-bonus, and for Wordle, Challenge/Challenge-creator) — only the
+Daily one matched, so Classic and Tournament scores were silently excluded from that game's own
+tab (though still correctly counted on "Overall", which has no `gameType` filter at all). This is
+a different bug from the `scoreDate` issue in §1/§8 — that one was the wrong *date field*; this one
+was the *gameType filter* being too narrow.
+
+**Fix:** added a `GAME_TYPES` map (each game's full list of gameTypes) and switched the query to
+`where('gameType', 'in', GAME_TYPES[game])`. `wordle-challenge-creator` was deliberately included
+in Wordle's list, so a player's Wordle-tab total stays consistent with the Wordle portion of their
+Overall-tab total. No new Firestore index needed — Firestore treats `in` the same as `==` for
+composite-index purposes, so the existing `(gameType, scoreDate)` index still covers it. Confirmed
+with the user beforehand that this wouldn't require a backfill: unlike the `scoreDate` fix, the
+underlying documents already had the correct `gameType` all along — only the query was wrong — so
+every already-played Tournament/Classic score (written since the `scoreDate` fix) became correctly
+visible immediately on deploy, no backfill needed.
+
+### 11.5 Profile page: Recent Activity showed raw data for non-Daily scores
+**Symptom (screenshot):** rows for Tournament scores showed the raw `gameType` string as the label
+(e.g. `wordsearch-tournament-bonus` instead of a real name), a Firestore document key instead of a
+date (`FnNzJ5bjIsmLLuFtgNEN`), and the literal text `(undefined)` instead of a time.
+
+**Root cause:** `profile.js#renderHistory()` was written assuming every `gameScores` doc has the
+Daily Challenge shape — a `gameType` of exactly `wordle`/`sudoku`/`wordsearch`, a `gameDate` that's
+a real date, and a `timeTaken` formatted string. Tournament/Classic/Challenge docs break all three
+assumptions (see §11.4 and the whole `gameDate`-repurposing story throughout this changelog) — this
+was the same underlying architectural fact causing a third, separate display bug.
+
+**Fix:** `GAME_LABELS` expanded to all 12 gameTypes across the three games (e.g.
+`wordle-tournament` → "Wordle Tournament"); the date shown now prefers `scoreDate` (always real)
+over `gameDate`; the time suffix is only appended when `timeTaken` actually exists, instead of
+interpolating `undefined` as literal text. Display-only fix — no scoring data was touched. Old
+Tournament rows written before the `scoreDate` fix will still show their raw key as the date (that
+part isn't backfilled either), but the label and the "(undefined)" text are fixed for every row
+regardless of age.
+
+### 11.6 Known, unresolved: Safari-only footer disappears after playing Word Search
+**Symptom reported:** after finishing a Word Search round and navigating to the home page (and
+even a further game page after that), the footer doesn't render — persists until a manual refresh.
+**Confirmed Safari-only** (not Chrome).
+
+**Investigated, not yet fixed.** Ruled out via code inspection: no service worker, no
+`pushState`/`history` manipulation, no `beforeunload`/`pagehide`/`visibilitychange` handlers
+anywhere in the codebase — and `loadHeaderFooter()` injects the footer as the very first thing it
+does, independent of and before any session/profile/game-specific logic, so a hang or error
+elsewhere shouldn't be able to un-inject it. Leading hypothesis: Safari's back-forward cache
+(bfcache), which is more aggressive than Chrome's about restoring a frozen page snapshot instead
+of a real reload — this would specifically require the user to be navigating via the browser's
+Back button or a swipe-back gesture, not fresh link clicks, which hasn't yet been confirmed. If
+confirmed, the standard fix is a `pageshow` listener checking `event.persisted`, re-running setup
+(or forcing a real reload) when a bfcache restore is detected. **Next step, if picked back up:**
+confirm the exact navigation method being used, then decide whether to implement that fix
+speculatively even without 100% confirmation, given the strong circumstantial match (Safari-only,
+symptom persists across multiple subsequent page loads until refresh).
+
+### 11.7 New doc: `docs/adding-a-new-game.md`
+A checklist (not a chronological log) of every touchpoint a new fourth game would need —
+requested after this session's leaderboard bug (§11.4) doubled as a concrete example of "the
+things that are easy to forget when a new game/mode is added": no central "list of games" registry
+exists anywhere in this codebase, so a new game means updating roughly a dozen independent
+hardcoded lists (leaderboard `GAME_TYPES`, home page's `checkPlayedTodayAll()`, admin's
+`ACTIVITY_ROWS`, Profile's `GAME_LABELS`, `AD_SLOTS`, and more) one at a time, not registering it
+once.
+
+### 11.8 Discussed, not built: "Wordle Plus" (variable-length Wordle variant)
+The user is considering a fourth game — same three modes as Wordle (Daily/Tournaments/Challenge a
+Friend), but with 6–12 letter words instead of a fixed 5, and explicitly **not** to be built as a
+new mode inside existing Wordle (a separate game, existing Wordle untouched). Explain-only so far,
+nothing implemented. Key points from that discussion, for whoever picks this up:
+
+- `wordle-engine.js`'s core guessing mechanic is already word-length-agnostic (`wordLength =
+  targetWord.length`, used throughout) — the engine doesn't need new logic, just reuse.
+- Recommended: Wordle Plus should get **its own copy** of the engine
+  (`games/wordle-plus/wordle-plus-engine.js`), not import Wordle's file directly — matching this
+  codebase's existing precedent of each game keeping its own copy of near-identical logic (see how
+  `wordle-summary-modal.js`/`sudoku-summary-modal.js`/`wordsearch-summary-modal.js` are already
+  three separate, nearly-identical files by design) and guaranteeing zero risk to the existing,
+  explicitly-must-not-change Wordle game.
+- Being a full separate game (not a mode), the entire checklist in §11.7/`docs/adding-a-new-game.md`
+  applies: own home tile, own leaderboard tab + `GAME_TYPES` entry, own gameType family
+  (`wordle-plus`, `wordle-plus-tournament`, `wordle-plus-challenge`, `wordle-plus-challenge-creator`),
+  own Firestore collections/rules, own admin section, own entries everywhere the three existing
+  games are hardcoded.
+- Open design decisions flagged, not yet answered: whether word length is fixed or varies
+  puzzle-to-puzzle within 6–12 (affects how much responsive-CSS board-sizing work is needed since
+  the current tile CSS is sized for exactly 5 letters), what the guess budget should be (classic
+  Wordle's 6 is tuned for 5 letters specifically, and the attempts-bonus point formula is sized to
+  match whatever that number is), and who sources the 6–12 letter word content.
+
 ## Every JS/CSS/HTML file's own `CLAUDE.md` was kept up to date alongside its code
 
 This project keeps a `CLAUDE.md` file in most source directories documenting that directory's
