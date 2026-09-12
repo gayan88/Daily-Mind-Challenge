@@ -25,6 +25,33 @@ export function addDaysToDateString(dateString, days) {
     return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
 }
 
+/** ISO-8601 week-year + week number for a date (Monday-start weeks; week 1 is the week containing
+ * the year's first Thursday, per the standard). Used by progression/championship-service.js
+ * (Phase 6) for deterministic weekly period keys, e.g. "2026-W36" (Section 20 of the progression
+ * spec). Note: the ISO week-year can differ from the calendar year for a few days in late
+ * December/early January -- that's correct, standard ISO 8601 behavior, not a bug. */
+export function getISOWeekInfo(dateString) {
+    const [year, month, day] = dateString.split('-').map(Number);
+    const date = new Date(Date.UTC(year, month - 1, day));
+    const dayNum = (date.getUTCDay() + 6) % 7; // Mon=0 .. Sun=6
+    date.setUTCDate(date.getUTCDate() - dayNum + 3); // move to this week's Thursday
+    const isoYear = date.getUTCFullYear();
+    const firstThursday = new Date(Date.UTC(isoYear, 0, 4));
+    const firstThursdayDayNum = (firstThursday.getUTCDay() + 6) % 7;
+    firstThursday.setUTCDate(firstThursday.getUTCDate() - firstThursdayDayNum + 3);
+    const week = 1 + Math.round((date - firstThursday) / (7 * 86400000));
+    return { isoYear, week };
+}
+
+/** Monday of the ISO week containing `dateString`, as a "YYYY-MM-DD" string. */
+export function getISOWeekMonday(dateString) {
+    const [year, month, day] = dateString.split('-').map(Number);
+    const date = new Date(Date.UTC(year, month - 1, day));
+    const dayNum = (date.getUTCDay() + 6) % 7;
+    date.setUTCDate(date.getUTCDate() - dayNum);
+    return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`;
+}
+
 /** Returns the "YYYY-MM-DD" date `daysAgo` days before today (0 = today itself). */
 export function getDateDaysAgo(daysAgo) {
     const d = new Date();

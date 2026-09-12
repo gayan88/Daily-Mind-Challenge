@@ -2,7 +2,9 @@ import { trySession, showLoggedOutHeader } from '../../app.js';
 import { icon } from '../../utils/icons.js';
 import { getTodayDateString, showToast, escapeHtml, stringToSeed, getQueryParam } from '../../utils/helpers.js';
 import { getConfig } from '../../utils/config.js';
-import { checkPlayedToday, markSharedToFacebook, markSharedWithFriends } from '../../utils/points.js';
+import { checkPlayedToday, checkPlayedTodayAll, markSharedToFacebook, markSharedWithFriends } from '../../utils/points.js';
+import { awardDailyCompletionXp } from '../../progression/xp-service.js';
+import { advanceStreakForDailyCompletion } from '../../progression/streak-service.js';
 import { playWordSearchRound } from './wordsearch-engine.js';
 import { DAILY_MODE, CLASSIC_MODES, TOURNAMENT_MODE } from './wordsearch-modes.js';
 import { getTodayChallenge, recordDailyResult } from './wordsearch-daily-data.js';
@@ -110,6 +112,15 @@ async function renderDailyMode(mount, uid, profile, setActiveRound) {
                 totalWords,
             });
             if (!result) return;
+
+            // Phase 3 progression XP (registered players only, see docs/progression-gamification-roadmap.md)
+            // -- checked *after* recordDailyResult() above, so it reflects this completion.
+            if (profile.kind === 'registered') {
+                const playedToday = await checkPlayedTodayAll(uid);
+                const allDone = Object.values(playedToday).every(Boolean);
+                await awardDailyCompletionXp(uid, allDone);
+                await advanceStreakForDailyCompletion(uid);
+            }
 
             showWordSearchSummaryModal({
                 title: 'Solved!',

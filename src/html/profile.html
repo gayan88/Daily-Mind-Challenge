@@ -26,15 +26,86 @@
     <div class="content">
         <div class="section">
             <div class="section-title">Your Profile</div>
-            <div class="card">
+            <div class="card profile-card">
+                <button class="edit-profile-icon-btn" id="edit-profile-btn" type="button" title="Edit Profile" aria-label="Edit Profile">✏️</button>
+
+                <div class="profile-hero">
+                    <img class="profile-hero-avatar" id="profile-avatar" alt="">
+                    <div class="profile-hero-info">
+                        <div class="profile-hero-name" id="profile-name-display"></div>
+                        <div class="profile-hero-tagline" id="profile-hero-tagline">Play daily. Keep your streak alive!</div>
+                        <div class="profile-hero-streak" id="profile-streak" hidden></div>
+                    </div>
+                </div>
+
+                <div class="rank-progress-card" id="profile-rank-card" hidden>
+                    <div class="rank-progress-bar-row">
+                        <div class="rank-progress-side">
+                            <img class="rank-progress-bar-icon" id="profile-rank-current-icon" alt="">
+                            <div class="rank-progress-side-label" id="profile-rank-current-label"></div>
+                        </div>
+                        <div class="rank-progress-bar-center">
+                            <div class="progress-bar rank-progress-bar">
+                                <div class="progress-bar-fill" id="profile-rank-bar-fill"></div>
+                            </div>
+                            <div class="rank-progress-xp-big" id="profile-rank-xp-big"></div>
+                            <div class="rank-progress-next" id="profile-rank-next"></div>
+                        </div>
+                        <div class="rank-progress-side">
+                            <img class="rank-progress-bar-icon" id="profile-rank-next-icon" alt="">
+                            <div class="rank-progress-side-label" id="profile-rank-next-label"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="rank-panel" id="profile-rank-panel" hidden>
+                    <div class="rank-panel-title">
+                        All Ranks
+                        <span class="rank-panel-hint">ⓘ Hover over a rank to see details</span>
+                    </div>
+                    <div class="rank-strip" id="rank-strip"></div>
+                </div>
+
+                <div class="profile-stats" id="profile-stats"></div>
+            </div>
+        </div>
+
+        <!-- Edit Profile modal -- reuses the same .modal-overlay/.modal-dialog/.modal-close
+             component the home page's sign-in modal uses (src/css/pages/home.css), for a
+             consistent look rather than a one-off modal style. -->
+        <div class="modal-overlay" id="edit-profile-modal" hidden>
+            <div class="modal-dialog">
+                <button class="modal-close" id="edit-profile-modal-close" type="button" aria-label="Close">&times;</button>
                 <div class="form-field">
                     <label for="display-name-input">Display name</label>
                     <input type="text" id="display-name-input" maxlength="24">
                 </div>
-                <button class="btn primary" id="save-name-btn" type="button">Save</button>
-
-                <div class="profile-stats" id="profile-stats"></div>
+                <button class="btn primary" id="save-name-btn" type="button" style="width: 100%;">Save</button>
             </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Your Games</div>
+            <div class="game-progress-guest-note" id="profile-games-guest-note" hidden>
+                Sign up for an account to start earning Game Levels and track your progress in each game.
+            </div>
+            <div class="game-progress-grid" id="profile-game-progress"></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Today's Missions</div>
+            <div class="missions-guest-note" id="profile-missions-guest-note" hidden>
+                Sign up for an account to start earning missions and XP.
+            </div>
+            <div class="missions-list" id="profile-missions"></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Achievements</div>
+            <div class="achievements-guest-note" id="profile-achievements-guest-note" hidden>
+                Sign up for an account to start earning achievements.
+            </div>
+            <div class="achievements-grid" id="profile-achievements"></div>
         </div>
 
         <div class="section">

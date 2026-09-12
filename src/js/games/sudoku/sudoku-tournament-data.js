@@ -10,6 +10,7 @@ import {
     getDocs,
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 import { db } from '../../api/firebase-init.js';
+import { awardShareXp } from '../../progression/xp-service.js';
 import { getTodayDateString } from '../../utils/helpers.js';
 
 const ATTEMPTS_COLLECTION = 'sudokuTournamentAttempts';
@@ -184,7 +185,7 @@ export async function completeTournamentIfNeeded(uid, profile, tournament) {
  */
 export async function markSharedToFacebook(uid, tournamentId) {
     const ref = doc(db, 'gameScores', bonusScoreDocId(uid, tournamentId));
-    return runTransaction(db, async (tx) => {
+    const result = await runTransaction(db, async (tx) => {
         const snap = await tx.get(ref);
         if (!snap.exists() || snap.data().sharedToFacebook) {
             return { applied: false, newScore: snap.exists() ? snap.data().score : 0 };
@@ -193,11 +194,13 @@ export async function markSharedToFacebook(uid, tournamentId) {
         tx.update(ref, { score: newScore, sharedToFacebook: true, updatedAt: serverTimestamp() });
         return { applied: true, newScore };
     });
+    if (result.applied) await awardShareXp(uid);
+    return result;
 }
 
 export async function markSharedWithFriends(uid, tournamentId) {
     const ref = doc(db, 'gameScores', bonusScoreDocId(uid, tournamentId));
-    return runTransaction(db, async (tx) => {
+    const result = await runTransaction(db, async (tx) => {
         const snap = await tx.get(ref);
         if (!snap.exists() || snap.data().sharedWithFriends) {
             return { applied: false, newScore: snap.exists() ? snap.data().score : 0 };
@@ -206,4 +209,6 @@ export async function markSharedWithFriends(uid, tournamentId) {
         tx.update(ref, { score: newScore, sharedWithFriends: true, updatedAt: serverTimestamp() });
         return { applied: true, newScore };
     });
+    if (result.applied) await awardShareXp(uid);
+    return result;
 }

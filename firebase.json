@@ -3,6 +3,11 @@
     "rules": "firebase/firestore.rules",
     "indexes": "firebase/firestore.indexes.json"
   },
+  "emulators": {
+    "firestore": { "port": 8080 },
+    "auth": { "port": 9099 },
+    "ui": { "enabled": true, "port": 4000 }
+  },
   "hosting": {
     "public": "src",
     "ignore": [

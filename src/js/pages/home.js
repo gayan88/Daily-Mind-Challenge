@@ -4,6 +4,9 @@ import { getOverallLeaderboard, findUserInLeaderboard } from '../leaderboard/lea
 import { checkPlayedTodayAll, getUserLifetimeStats } from '../utils/points.js';
 import { getConfig } from '../utils/config.js';
 import { escapeHtml, getQueryParam, getTodayDateString } from '../utils/helpers.js';
+import { calculateOverallProgress, XP_AMOUNTS } from '../progression/xp-service.js';
+import { syncDailyMissions, DAILY_MISSIONS } from '../progression/mission-service.js';
+import { getPlayerAchievements } from '../progression/achievement-engine.js';
 import {
     signInAsGuest,
     signUpWithUsername,
@@ -193,7 +196,29 @@ function renderStatusCardLoggedOut() {
     applyIcons(card);
 }
 
-function renderStatusCard(profile, todayRank, todayPoints, bonusApplied, totalPoints) {
+/** Streak + Overall Level/XP + a workout-completion hint -- Phase 8's "Daily Brain Workout"
+ * home-page summary, all registered-player-only concepts (Section 4 of the progression spec).
+ * Deliberately reuses Phase 3/4's exact existing numbers (the real perfect-day bonus amount, via
+ * XP_AMOUNTS.PERFECT_DAY_BONUS) rather than a new, separate one -- the mockup's own "+100 XP"
+ * would have meant a second, conflicting "finish everything today" bonus on top of the one Phase 3
+ * already built; see docs/progression-gamification-roadmap.md's Phase 8 section for the decision. */
+function renderProgressionRowHtml(profile, allGamesDoneToday) {
+    const streak = profile.raw.currentStreak || 0;
+    const overall = calculateOverallProgress(profile.xp);
+    const workoutHint = allGamesDoneToday
+        ? `${icon('CHECK')} Today's workout complete!`
+        : `Complete every game today for a bonus (+${XP_AMOUNTS.PERFECT_DAY_BONUS} XP)`;
+
+    return `
+        <div class="status-progression-row">
+            <span class="status-progression-item">${icon('FLAME')} ${streak} day streak</span>
+            <span class="status-progression-item">${icon('STAR')} Level ${overall.level} <span class="status-progression-muted">(${overall.xp.toLocaleString()} XP)</span></span>
+        </div>
+        <div class="status-workout-hint">${workoutHint}</div>
+    `;
+}
+
+function renderStatusCard(profile, todayRank, todayPoints, bonusApplied, totalPoints, allGamesDoneToday) {
     const card = document.getElementById('status-card');
 
     const bonusRow = bonusApplied
@@ -203,9 +228,11 @@ function renderStatusCard(profile, todayRank, todayPoints, bonusApplied, totalPo
             : '';
 
     const highlight = highlightForTodayRank(todayRank);
+    const progressionRow = profile.kind === 'registered' ? renderProgressionRowHtml(profile, allGamesDoneToday) : '';
 
     card.innerHTML = `
         <div class="status-welcome">Welcome back, ${escapeHtml(profile.displayName)}!</div>
+        ${progressionRow}
         ${bonusRow}
         <div class="status-stats-grid">
             ${statTile(ICON_STAR, "Today's Points", todayPoints)}
@@ -223,6 +250,35 @@ function renderStatusCard(profile, todayRank, todayPoints, bonusApplied, totalPo
         </div>
     `;
     applyIcons(card);
+}
+
+/** Compact "Daily Missions" / "Achievements" summary (Phase 8's "compact summary" scope decision
+ * -- full detail stays on /profile, this is just a teaser). Registered players only; the whole
+ * section stays hidden for guests. `missionResult` is whatever `syncDailyMissions()` returned in
+ * renderLoggedInDashboard() below -- this function does no evaluation/awarding of its own, purely
+ * display. `achievementsCount` is a plain count read (achievement-engine.js#getPlayerAchievements),
+ * not a re-evaluation -- keeps this page's Firestore work light, per the same scope decision. */
+function renderWorkoutExtras(profile, missionResult, achievementsCount) {
+    const section = document.getElementById('workout-extras-section');
+    if (profile.kind !== 'registered') {
+        section.hidden = true;
+        return;
+    }
+    section.hidden = false;
+
+    const doneCount = DAILY_MISSIONS.filter((m) => missionResult.completedMissionIds.has(m.id)).length;
+
+    document.getElementById('workout-missions').innerHTML = `
+        <span class="workout-extras-icon" data-icon="TARGET"></span>
+        <span class="workout-extras-text">Daily Missions: <strong>${doneCount}/${DAILY_MISSIONS.length}</strong> complete</span>
+        <a href="/profile" class="workout-extras-link">View <span data-icon="ARROW_RIGHT"></span></a>
+    `;
+    document.getElementById('workout-achievements').innerHTML = `
+        <span class="workout-extras-icon" data-icon="GOLD_MEDAL"></span>
+        <span class="workout-extras-text"><strong>${achievementsCount}</strong> badge${achievementsCount === 1 ? '' : 's'} earned</span>
+        <a href="/profile" class="workout-extras-link">View <span data-icon="ARROW_RIGHT"></span></a>
+    `;
+    applyIcons(section);
 }
 
 function markTileCompleted(game, played) {
@@ -282,24 +338,41 @@ async function renderLoggedInDashboard(uid, profile, bonusApplied) {
     // player's own "today's points" -- otherwise the login toast promises points that never show up.
     const needsBonusConfig = profile.kind === 'registered' && profile.lastLoginDate === getTodayDateString();
 
-    const [leaderboardRows, playedToday, dailyRewardConfig, lifetimeStats] = await Promise.all([
+    const isRegistered = profile.kind === 'registered';
+
+    const [leaderboardRows, playedToday, dailyRewardConfig, lifetimeStats, missionResult, achievements] = await Promise.all([
         getOverallLeaderboard('today', 20),
         checkPlayedTodayAll(uid),
         needsBonusConfig ? getConfig('dailyLoginReward') : Promise.resolve(null),
         getUserLifetimeStats(uid),
+        // Missions (Phase 7) evaluated + awarded right here, not only on /profile -- the home
+        // page is the actual "daily habit" destination (Section 24 of the progression spec), so
+        // this is the more natural place for "did I finish today's workout" to actually resolve.
+        // Safe to also run again on a later /profile visit -- syncDailyMissions() is idempotent.
+        isRegistered ? syncDailyMissions(uid) : Promise.resolve(null),
+        // Achievements are only *read* here (a plain count), not re-evaluated -- that heavier
+        // context-assembly stays exclusive to profile.js, per Phase 8's "compact summary" scope
+        // decision (keep the home page's Firestore work light).
+        isRegistered ? getPlayerAchievements(uid) : Promise.resolve([]),
     ]);
 
     const userRow = findUserInLeaderboard(leaderboardRows, uid);
     const todayPoints = (userRow?.points ?? 0) + (needsBonusConfig ? dailyRewardConfig.points : 0);
-    const totalPoints = profile.kind === 'registered' ? profile.loginPoints + lifetimeStats.totalScore : lifetimeStats.totalScore;
+    const totalPoints = isRegistered ? profile.loginPoints + lifetimeStats.totalScore : lifetimeStats.totalScore;
+    const allGamesDoneToday = !!playedToday.wordle && !!playedToday.sudoku && !!playedToday.wordsearch;
 
-    renderStatusCard(profile, userRow?.rank ?? null, todayPoints, bonusApplied, totalPoints);
+    // Keeps the in-memory profile in sync with any XP a mission reward just awarded -- same
+    // reasoning as app.js's login-bonus XP sync and profile.js's own mission-sync call.
+    if (missionResult) profile.xp = (profile.xp || 0) + missionResult.xpAwarded;
+
+    renderStatusCard(profile, userRow?.rank ?? null, todayPoints, bonusApplied, totalPoints, allGamesDoneToday);
 
     markTileCompleted('wordle', !!playedToday.wordle);
     markTileCompleted('sudoku', !!playedToday.sudoku);
     markTileCompleted('wordsearch', !!playedToday.wordsearch);
 
     renderLeaderboardPreview(leaderboardRows, uid);
+    renderWorkoutExtras(profile, missionResult, achievements.length);
 
     // Overall Rank requires aggregating the entire all-time gameScores collection (the same
     // unbounded-read cost leaderboard.html's All-time tab already accepts -- see its CLAUDE.md's

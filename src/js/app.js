@@ -7,6 +7,7 @@ import { applyIcons } from './utils/icons.js';
 import { applyAdSlots } from './utils/ads.js';
 import { initCookieConsentBanner } from './utils/cookie-consent.js';
 import { showToast, getTodayDateString, shareUrl } from './utils/helpers.js';
+import { XP_AMOUNTS } from './progression/xp-service.js';
 
 async function injectPartial(placeholderId, path) {
     const el = document.getElementById(placeholderId);
@@ -172,7 +173,11 @@ async function resolveSession(user) {
         if (bonus.applied) {
             profile.loginPoints += bonus.amount;
             profile.lastLoginDate = getTodayDateString();
-            profile.raw.currentStreak = bonus.newStreak;
+            // Keeps the in-memory profile in sync with the XP that write also just awarded
+            // (progression/xp-service.js#XP_AMOUNTS.DAILY_LOGIN) -- otherwise a page that renders
+            // Overall Level/XP from this same `profile` object (profile.js) would show a stale,
+            // pre-bonus value on the exact page load where the bonus was just applied.
+            profile.xp = (profile.xp || 0) + XP_AMOUNTS.DAILY_LOGIN;
         }
     }
 

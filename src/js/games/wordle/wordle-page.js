@@ -1,7 +1,9 @@
 import { trySession, showLoggedOutHeader } from '../../app.js';
 import { icon } from '../../utils/icons.js';
 import { showToast, escapeHtml, getQueryParam, getTodayDateString, shareUrl } from '../../utils/helpers.js';
-import { checkPlayedToday } from '../../utils/points.js';
+import { checkPlayedToday, checkPlayedTodayAll } from '../../utils/points.js';
+import { awardDailyCompletionXp } from '../../progression/xp-service.js';
+import { advanceStreakForDailyCompletion } from '../../progression/streak-service.js';
 import { getConfig } from '../../utils/config.js';
 import { playWordleRound } from './wordle-engine.js';
 import { isRealWord } from './wordle-word-validation.js';
@@ -113,6 +115,15 @@ async function renderDailyMode(mount, uid, profile, setActiveRound) {
                 timeTakenSeconds,
             });
             if (!result) return;
+
+            // Phase 3 progression XP (registered players only, see docs/progression-gamification-roadmap.md)
+            // -- checked *after* recordDailyResult() above, so it reflects this completion.
+            if (profile.kind === 'registered') {
+                const playedToday = await checkPlayedTodayAll(uid);
+                const allDone = Object.values(playedToday).every(Boolean);
+                await awardDailyCompletionXp(uid, allDone);
+                await advanceStreakForDailyCompletion(uid);
+            }
 
             showWordleSummaryModal({
                 title: won ? 'You solved it!' : `The word was ${challenge.word}`,

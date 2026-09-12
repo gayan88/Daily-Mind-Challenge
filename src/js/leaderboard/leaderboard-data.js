@@ -6,6 +6,7 @@ import {
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 import { db } from '../api/firebase-init.js';
 import { getTodayDateString, getDateDaysAgo } from '../utils/helpers.js';
+import { GAMES } from '../progression/game-registry.js';
 
 // Rolling windows (last N days including today), not calendar-aligned weeks/months/years --
 // simpler than computing calendar boundaries and avoids timezone edge cases.
@@ -39,11 +40,9 @@ function constraintsFor(period) {
  * (the reward a Challenge creator earns per solver) is included here for the same reason --
  * leaving it out would make a player's Wordle-tab total not match the Wordle portion of their
  * Overall-tab total, which would look like a second bug. */
-const GAME_TYPES = {
-    wordle: ['wordle', 'wordle-tournament', 'wordle-challenge', 'wordle-challenge-creator'],
-    sudoku: ['sudoku', 'sudoku-classic', 'sudoku-tournament', 'sudoku-tournament-bonus'],
-    wordsearch: ['wordsearch', 'wordsearch-classic', 'wordsearch-tournament', 'wordsearch-tournament-bonus'],
-};
+const GAME_TYPES = Object.fromEntries(
+    Object.entries(GAMES).map(([gameId, game]) => [gameId, game.scoreTypes])
+);
 
 // Cached for the page's lifetime -- banned status rarely changes mid-session, and without this,
 // switching leaderboard tabs (or the home page + a later leaderboard.html visit) re-fetches the
@@ -63,11 +62,10 @@ function rank(rows) {
     return rows;
 }
 
-/** Overall leaderboard for a period: sum of that period's gameScores per user, across all game types. */
-export async function getOverallLeaderboard(period = 'today', limitCount = 50) {
-    const q = query(collection(db, 'gameScores'), ...constraintsFor(period));
-    const [snap, bannedUids] = await Promise.all([getDocs(q), getBannedUids()]);
-
+/** Shared aggregation: sums a gameScores query's docs per user (excluding banned users), sorted
+ * highest-first. Used by every function below -- the two named-period leaderboards and Phase 6's
+ * explicit-date-range version (progression/championship-service.js). */
+function aggregateScores(snap, bannedUids) {
     const totals = new Map();
     snap.docs.forEach((d) => {
         const data = d.data();
@@ -81,9 +79,14 @@ export async function getOverallLeaderboard(period = 'today', limitCount = 50) {
         entry.points += data.score;
         totals.set(data.userId, entry);
     });
+    return Array.from(totals.values()).sort((a, b) => b.points - a.points);
+}
 
-    const rows = Array.from(totals.values()).sort((a, b) => b.points - a.points).slice(0, limitCount);
-    return rank(rows);
+/** Overall leaderboard for a period: sum of that period's gameScores per user, across all game types. */
+export async function getOverallLeaderboard(period = 'today', limitCount = 50) {
+    const q = query(collection(db, 'gameScores'), ...constraintsFor(period));
+    const [snap, bannedUids] = await Promise.all([getDocs(q), getBannedUids()]);
+    return rank(aggregateScores(snap, bannedUids).slice(0, limitCount));
 }
 
 /** Leaderboard for a single game (wordle | sudoku | wordsearch) over a period -- sums across every
@@ -95,23 +98,25 @@ export async function getGameLeaderboard(game, period = 'today', limitCount = 50
     const gameTypes = GAME_TYPES[game] || [game];
     const q = query(collection(db, 'gameScores'), where('gameType', 'in', gameTypes), ...constraintsFor(period));
     const [snap, bannedUids] = await Promise.all([getDocs(q), getBannedUids()]);
+    return rank(aggregateScores(snap, bannedUids).slice(0, limitCount));
+}
 
-    const totals = new Map();
-    snap.docs.forEach((d) => {
-        const data = d.data();
-        if (bannedUids.has(data.userId)) return;
-        const entry = totals.get(data.userId) || {
-            uid: data.userId,
-            displayName: data.displayName,
-            isGuest: data.isGuest,
-            points: 0,
-        };
-        entry.points += data.score;
-        totals.set(data.userId, entry);
-    });
-
-    const rows = Array.from(totals.values()).sort((a, b) => b.points - a.points).slice(0, limitCount);
-    return rank(rows);
+/** Same aggregation as getGameLeaderboard(), but for an explicit [startDate, endDate] range
+ * (inclusive `scoreDate` bounds) instead of a named rolling period -- used by
+ * progression/championship-service.js (Phase 6) to determine a closed calendar week/month's
+ * winner. Not ranked/limited (no `rank` field, no slice) -- a caller that just wants the winner
+ * takes the first entry. Same `(gameType, scoreDate)` composite index as the named-period queries
+ * above already covers this query shape, so no new index was needed. */
+export async function getGameScoresForDateRange(game, startDate, endDate) {
+    const gameTypes = GAME_TYPES[game] || [game];
+    const q = query(
+        collection(db, 'gameScores'),
+        where('gameType', 'in', gameTypes),
+        where('scoreDate', '>=', startDate),
+        where('scoreDate', '<=', endDate)
+    );
+    const [snap, bannedUids] = await Promise.all([getDocs(q), getBannedUids()]);
+    return aggregateScores(snap, bannedUids);
 }
 
 export function findUserInLeaderboard(rows, uid) {

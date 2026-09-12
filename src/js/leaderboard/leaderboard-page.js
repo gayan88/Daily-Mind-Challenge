@@ -1,8 +1,9 @@
 import { initShell } from '../app.js';
-import { getOverallLeaderboard, getGameLeaderboard } from './leaderboard-data.js';
+import { getOverallLeaderboard, getGameLeaderboard, findUserInLeaderboard } from './leaderboard-data.js';
 import { escapeHtml } from '../utils/helpers.js';
 import { icon } from '../utils/icons.js';
 import { getConfig } from '../utils/config.js';
+import { finalizeRecentPeriodsIfNeeded } from '../progression/championship-service.js';
 
 const EMPTY_MESSAGES = {
     today: 'No scores yet today. Be the first!',
@@ -46,8 +47,46 @@ function rowHtml(row, uid) {
     `;
 }
 
+/**
+ * Phase 10 leaderboard UX fix: previously the only way to find your own rank was scrolling/"Load
+ * More"-ing until your highlighted `.hlb-you` row happened to appear -- for anyone ranked below
+ * the first page, that could mean many clicks. This renders a small always-visible summary at the
+ * top of the page, independent of how many rows are currently revealed below, using the same
+ * `findUserInLeaderboard()` lookup against the already-fetched `allRows` (no extra Firestore
+ * read). Shown for guests too, not just registered players -- guests appear on leaderboards
+ * (Section 4 of the progression spec), so this isn't a progression-gated feature.
+ *
+ * Inherits the same `FETCH_CAP` truncation as the rest of this page (both leaderboard functions
+ * already rank+slice before returning) -- a player ranked below 500 would show as "haven't scored
+ * yet" here too, same pre-existing limitation `.hlb-you` already had.
+ */
+function renderYourRank(userRow) {
+    const el = document.getElementById('lb-your-rank');
+    el.hidden = false;
+
+    if (!userRow) {
+        el.innerHTML = `<span class="lb-your-rank-text">You haven't scored in this period yet — play a game to join the board!</span>`;
+        return;
+    }
+
+    el.innerHTML = `
+        <div class="lb-your-rank-marker">${rankMarkerHtml(userRow.rank)}</div>
+        <span class="lb-your-rank-text">You're ranked <strong>#${userRow.rank}</strong> with <strong>${userRow.points}</strong> pts</span>
+    `;
+}
+
 async function init() {
-    const { uid } = await initShell();
+    const { uid, profile } = await initShell();
+
+    // Lazy Championship finalization (Phase 6 of docs/progression-gamification-roadmap.md,
+    // Section 22 of the progression spec) -- only registered, non-banned visitors can actually
+    // finalize a period (firestore.rules), and this is a best-effort background task: it never
+    // blocks or affects this page's own rendering, and a failure (e.g. a race with another tab
+    // also finalizing the same period) is silently ignored.
+    if (profile.kind === 'registered') {
+        finalizeRecentPeriodsIfNeeded().catch(() => {});
+    }
+
     const gameTabs = Array.from(document.querySelectorAll('.lb-tab'));
     const periodTabs = Array.from(document.querySelectorAll('.lb-period-tab'));
     const el = document.getElementById('leaderboard-full');
@@ -90,6 +129,7 @@ async function init() {
             ? await getOverallLeaderboard(currentPeriod, FETCH_CAP)
             : await getGameLeaderboard(currentGame, currentPeriod, FETCH_CAP);
         visibleCount = pageSize;
+        renderYourRank(findUserInLeaderboard(allRows, uid));
         renderVisible();
     }
 

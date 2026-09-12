@@ -45,6 +45,10 @@ export async function createRegisteredProfile(uid, { usernameLower, displayName,
         bannedDate: null,
         loginPoints: 0,
         lastLoginDate: '',
+        currentStreak: 0,
+        lastStreakDate: '',
+        xp: 0,
+        lastPerfectDayDate: '',
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
     });
@@ -76,6 +80,7 @@ function normalizeRegistered(uid, data) {
         isBanned: !!data.isBanned,
         loginPoints: data.loginPoints || 0,
         lastLoginDate: data.lastLoginDate || '',
+        xp: data.xp || 0,
         raw: data,
     };
 }

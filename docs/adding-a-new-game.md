@@ -41,12 +41,15 @@ Adding a game means updating each of these separately, not registering it once s
   A new game built without `scoreDate` from day one would hit the identical "invisible on the
   leaderboard" problem.
 
-## 4. Leaderboard
+## 4. Progression + Leaderboard
 
-- Add the new game's full list of gameTypes to `GAME_TYPES` in
-  `src/js/leaderboard/leaderboard-data.js`. Forgetting this means the new game's Tournament/Classic
-  scores silently don't count on its own leaderboard tab — only on "Overall", which has no
-  `gameType` filter at all.
+- Add one entry to `GAMES` in `src/js/progression/game-registry.js` — `gameId`, display `label`,
+  and the full list of `gameType`s the new game can score under. This single entry now feeds
+  both the profile page's per-game Level/Points display (`progression-service.js`) **and**
+  `leaderboard-data.js`'s `GAME_TYPES`, which derives from this registry instead of keeping its
+  own copy. Forgetting this means the new game's Tournament/Classic scores silently don't count
+  on its own leaderboard tab (only on "Overall", which has no `gameType` filter at all) **and**
+  don't show up in its own Level/progress on the profile page.
 - Add a new tab button in `src/html/leaderboard.html`.
 
 ## 5. Home page

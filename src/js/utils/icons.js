@@ -21,6 +21,8 @@ export const ICONS = {
     GOLD_MEDAL: '\u{1F947}',       // 🥇
     SILVER_MEDAL: '\u{1F948}',     // 🥈
     BRONZE_MEDAL: '\u{1F949}',     // 🥉
+    SUN: '\u{2600}\u{FE0F}',       // ☀️ Daily mode
+    PLAY: '\u{25B6}\u{FE0F}',      // ▶️ Classic mode
 };
 
 export function icon(name) {

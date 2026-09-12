@@ -18,6 +18,16 @@ service cloud.firestore {
                 && get(/databases/$(database)/documents/registeredUsers/$(request.auth.uid)).data.isAdmin == true;
         }
 
+        // Registered-only, non-banned gate -- same shape as canCreateWordleChallenge() below, kept
+        // as its own generic function since more than one collection needs this exact check
+        // (currently playerAchievements; Wordle Challenges keeps its own copy under its own name
+        // for now rather than being refactored to share this, to keep this change minimal).
+        function isRegisteredNonBanned() {
+            return isSignedIn()
+                && exists(/databases/$(database)/documents/registeredUsers/$(request.auth.uid))
+                && get(/databases/$(database)/documents/registeredUsers/$(request.auth.uid)).data.isBanned == false;
+        }
+
         match /guests/{uid} {
             allow read: if true;
             allow create: if isSignedIn() && request.auth.uid == uid
@@ -36,8 +46,26 @@ service cloud.firestore {
             function isSelfServiceUpdate() {
                 let changed = request.resource.data.diff(resource.data).affectedKeys();
                 let pointsDelta = request.resource.data.loginPoints - resource.data.loginPoints;
-                return changed.hasOnly(['displayName', 'email', 'updatedAt', 'loginPoints', 'lastLoginDate', 'currentStreak'])
+                // xp (global, Phase 3 of the progression spec) uses `.get(field, default)` on
+                // *both* sides of the delta so this doesn't break for players registered before
+                // the `xp` field existed -- a doc with no `xp` key (old side) or a write that
+                // doesn't touch `xp` at all (new side) is treated as 0, no migration needed. 300
+                // covers the largest single legitimate write: a Daily Mission reward (Phase 7,
+                // 100 XP) or the already-decided-but-not-yet-built Weekly Mission reward (300 XP)
+                // -- each mission is its own separate write, not summed together, so 300 (not
+                // 100+300) is the true ceiling. Comfortably above the smaller writes elsewhere
+                // (Daily Challenge completion + perfect-day bonus = 30, a share bonus = 5, login = 5).
+                let xpDelta = request.resource.data.get('xp', 0) - resource.data.get('xp', 0);
+                // currentStreak (Phase 4) only ever legitimately advances by exactly 1 (a
+                // consecutive day) or drops to exactly 1 (a gap, or a first-ever streak day) --
+                // same bounded-progression shape as e.g. wordleTournamentAttempts.currentWordIndex
+                // below. `lastStreakDate` is a separate field from `lastLoginDate` on purpose --
+                // see progression/streak-service.js for why.
+                let streakDelta = request.resource.data.get('currentStreak', 0) - resource.data.get('currentStreak', 0);
+                return changed.hasOnly(['displayName', 'email', 'updatedAt', 'loginPoints', 'lastLoginDate', 'currentStreak', 'lastStreakDate', 'xp', 'lastPerfectDayDate'])
                     && pointsDelta >= 0 && pointsDelta <= 100
+                    && xpDelta >= 0 && xpDelta <= 300
+                    && (streakDelta == 0 || streakDelta == 1 || request.resource.data.get('currentStreak', 0) == 1)
                     && request.resource.data.displayName is string
                     && request.resource.data.displayName.size() <= 24
                     && request.resource.data.isAdmin == resource.data.isAdmin
@@ -301,6 +329,111 @@ service cloud.firestore {
                     || request.resource.data.puzzlesPassed == resource.data.puzzlesPassed + 1)
                 && (request.resource.data.puzzlesFailed == resource.data.puzzlesFailed
                     || request.resource.data.puzzlesFailed == resource.data.puzzlesFailed + 1);
+            allow delete: if isAdmin();
+        }
+
+        // Player Achievements (Phase 5 of docs/progression-gamification-roadmap.md) -- one doc per
+        // earned achievement, id = {uid}_{achievementId}, create-only (same "one attempt" pattern
+        // as gameScores/tournament-attempt docs above: a repeat setDoc() on an existing id is an
+        // `update`, which no rule here allows, so the achievement-engine.js client code's own
+        // pre-filter against already-earned ids is backed up server-side, not just trusted).
+        // `count` is always exactly 1 at create time, for every achievement -- Championship
+        // achievements (Phase 6, below) still create at count 1 on the *first* win, then use the
+        // separate `allow update` block further down to accumulate on repeat wins. The
+        // achievementId allow-list must be kept in sync with achievement-registry.js by hand --
+        // rules can't import JS -- same maintenance coupling as maxCreateScore()'s gameType list
+        // above.
+        match /playerAchievements/{achievementDocId} {
+            allow read: if true;
+            allow create: if isRegisteredNonBanned()
+                && request.resource.data.uid == request.auth.uid
+                && achievementDocId == request.auth.uid + '_' + request.resource.data.achievementId
+                && request.resource.data.achievementId in [
+                    'wordle-master', 'sudoku-master', 'wordsearch-master',
+                    'streak-7', 'streak-30', 'streak-100', 'streak-365',
+                    'explorer-5', 'explorer-10', 'explorer-20',
+                    'daily-mind-champion', 'all-rounder', 'puzzle-collector',
+                    'wordle-weekly-champion', 'wordle-monthly-champion',
+                    'sudoku-weekly-champion', 'sudoku-monthly-champion',
+                    'wordsearch-weekly-champion', 'wordsearch-monthly-champion'
+                ]
+                && request.resource.data.count == 1;
+
+            // Championship achievements (Phase 6) accumulate: every other achievement above is
+            // one-time (create-only, no update at all), but a player can win the same weekly/
+            // monthly championship repeatedly over time, so `count` may be incremented -- by
+            // exactly 1 per update, only by the achievement's own owner, only on a championship id,
+            // only touching `count` and nothing else. See progression/championship-service.js#
+            // claimChampionshipAchievements().
+            allow update: if isSignedIn() && request.auth.uid == resource.data.uid
+                && request.resource.data.uid == resource.data.uid
+                && request.resource.data.achievementId == resource.data.achievementId
+                && resource.data.achievementId in [
+                    'wordle-weekly-champion', 'wordle-monthly-champion',
+                    'sudoku-weekly-champion', 'sudoku-monthly-champion',
+                    'wordsearch-weekly-champion', 'wordsearch-monthly-champion'
+                ]
+                && request.resource.data.count == resource.data.count + 1
+                && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['count']);
+
+            allow delete: if isAdmin();
+        }
+
+        // Championships (Phase 6 of docs/progression-gamification-roadmap.md) -- one doc per
+        // game+period, id = {gameId}_{periodType}_{periodKey} (matches the exact periodKey format
+        // from Section 20 of the spec, e.g. "wordle_week_2026-W36"). Immutable once finalized,
+        // except for the one-field `claimed` flip below. Registered, non-banned users only may
+        // finalize a period (viewing/reading stays public, `allow read: if true`, so guests can
+        // still see who won) -- this doesn't verify the *computed* winner is actually correct
+        // (that would need re-running the same aggregation query server-side, which this app has
+        // no backend to do), consistent with this app's existing "v1-pragmatic, not fully
+        // cheat-proof" points/achievements model. `winnerUid` is null when nobody played that game
+        // during the period -- still written (with `claimed: true` immediately, nothing to claim),
+        // so the period is marked checked and never re-queried by
+        // progression/championship-service.js#finalizeRecentPeriodsIfNeeded().
+        match /periodResults/{periodResultId} {
+            allow read: if true;
+            allow create: if isRegisteredNonBanned()
+                && request.resource.data.gameId in ['wordle', 'sudoku', 'wordsearch']
+                && request.resource.data.periodType in ['week', 'month']
+                && periodResultId == request.resource.data.gameId + '_' + request.resource.data.periodType + '_' + request.resource.data.periodKey
+                && (request.resource.data.winnerUid == null || request.resource.data.winnerPoints >= 0);
+
+            // Only the recorded winner may claim their own championship (turn this period's win
+            // into a playerAchievements record) -- see claimChampionshipAchievements() above.
+            // Nothing else about an already-finalized period can ever change.
+            allow update: if isSignedIn() && request.auth.uid == resource.data.winnerUid
+                && resource.data.claimed == false
+                && request.resource.data.claimed == true
+                && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['claimed']);
+
+            allow delete: if isAdmin();
+        }
+
+        // Missions (Phase 7 of docs/progression-gamification-roadmap.md) -- one doc per player per
+        // mission per period, id = {uid}_{missionId}_{periodKey}. Daily missions only are
+        // implemented so far (`periodKey` is a "YYYY-MM-DD" date); weekly missions, when built,
+        // would use an ISO week key like Championships and need their own missionIds added below.
+        // Create-only (mirrors gameScores/playerAchievements) -- a repeat setDoc() on an
+        // already-claimed mission+period is an `update`, which no rule here allows, so the reward
+        // can never be double-awarded even across multiple visits/tabs the same day. `xpAwarded`
+        // is bounded generously (covers today's 100-XP daily missions and the
+        // already-decided-but-not-yet-built 300-XP weekly reward) rather than validated exactly
+        // per missionId, consistent with how loosely this app already trusts self-reported values
+        // elsewhere. The missionId allow-list must be kept in sync with
+        // progression/mission-service.js by hand -- rules can't import JS -- same maintenance
+        // coupling as maxCreateScore()'s gameType list.
+        match /playerMissions/{missionDocId} {
+            allow read: if true;
+            allow create: if isRegisteredNonBanned()
+                && request.resource.data.uid == request.auth.uid
+                && missionDocId == request.auth.uid + '_' + request.resource.data.missionId + '_' + request.resource.data.periodKey
+                && request.resource.data.missionId in [
+                    'daily-complete-3-challenges', 'daily-play-3-games', 'daily-earn-1000-points',
+                    'daily-wordle-challenge-3-plays', 'daily-share-facebook-group'
+                ]
+                && request.resource.data.xpAwarded > 0 && request.resource.data.xpAwarded <= 300;
+            allow update: if false;
             allow delete: if isAdmin();
         }
     }

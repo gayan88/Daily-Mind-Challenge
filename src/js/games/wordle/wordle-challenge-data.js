@@ -18,6 +18,7 @@ import { db } from '../../api/firebase-init.js';
 import { getConfig } from '../../utils/config.js';
 import { getTodayDateString } from '../../utils/helpers.js';
 import { isRealWord } from './wordle-word-validation.js';
+import { awardShareXp } from '../../progression/xp-service.js';
 
 const COLLECTION = 'wordleChallenges';
 
@@ -117,6 +118,28 @@ export async function listPublicWordleChallengesPage(pageSize, cursor = null) {
  * render-only version). */
 export async function listMyWordleChallenges(uid) {
     const q = query(collection(db, COLLECTION), where('creatorUid', '==', uid), orderBy('createdAt', 'desc'));
+    const snap = await getDocs(q);
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+/** Challenges created by this user since local midnight today -- used by
+ * progression/mission-service.js's "Create a Wordle Challenge & Get 3 Plays" daily mission, which
+ * needs to know specifically about *today's* new challenges, not the creator's full history. Reuses
+ * the same (creatorUid, createdAt) composite index as listMyWordleChallenges() above -- a range
+ * filter on createdAt needs no additional index beyond what that equality+orderBy query already
+ * requires. */
+export async function listWordleChallengesCreatedToday(uid) {
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    const startOfTomorrow = new Date(startOfToday.getTime() + 24 * 60 * 60 * 1000);
+
+    const q = query(
+        collection(db, COLLECTION),
+        where('creatorUid', '==', uid),
+        where('createdAt', '>=', Timestamp.fromDate(startOfToday)),
+        where('createdAt', '<', Timestamp.fromDate(startOfTomorrow)),
+        orderBy('createdAt', 'desc')
+    );
     const snap = await getDocs(q);
     return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
@@ -232,7 +255,7 @@ export async function recordWordleChallengeCompletion(challengeId, uid, profile,
  */
 export async function markSharedToFacebook(uid, challengeId) {
     const ref = doc(db, 'gameScores', challengeScoreDocId(uid, challengeId));
-    return runTransaction(db, async (tx) => {
+    const result = await runTransaction(db, async (tx) => {
         const snap = await tx.get(ref);
         if (!snap.exists() || snap.data().sharedToFacebook) {
             return { applied: false, newScore: snap.exists() ? snap.data().score : 0 };
@@ -241,12 +264,14 @@ export async function markSharedToFacebook(uid, challengeId) {
         tx.update(ref, { score: newScore, sharedToFacebook: true, updatedAt: serverTimestamp() });
         return { applied: true, newScore };
     });
+    if (result.applied) await awardShareXp(uid);
+    return result;
 }
 
 /** Guarded, one-time +10 for "Share with Friends" -- independent from markSharedToFacebook() above. */
 export async function markSharedWithFriends(uid, challengeId) {
     const ref = doc(db, 'gameScores', challengeScoreDocId(uid, challengeId));
-    return runTransaction(db, async (tx) => {
+    const result = await runTransaction(db, async (tx) => {
         const snap = await tx.get(ref);
         if (!snap.exists() || snap.data().sharedWithFriends) {
             return { applied: false, newScore: snap.exists() ? snap.data().score : 0 };
@@ -255,6 +280,8 @@ export async function markSharedWithFriends(uid, challengeId) {
         tx.update(ref, { score: newScore, sharedWithFriends: true, updatedAt: serverTimestamp() });
         return { applied: true, newScore };
     });
+    if (result.applied) await awardShareXp(uid);
+    return result;
 }
 
 /**

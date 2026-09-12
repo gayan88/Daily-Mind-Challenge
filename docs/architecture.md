@@ -33,7 +33,7 @@ This app never uses `onSnapshot()` real-time listeners, so Firestore's default s
 
 Firestore security rules (`firebase/firestore.rules`) are the actual enforcement boundary, not client-side checks:
 - Every write is scoped to `request.auth.uid` — a client can only ever write its own `guests`/`registeredUsers` doc.
-- `registeredUsers` writes are split into self-service fields (displayName/email, with a capped `loginPoints` delta) vs. admin-only moderation fields (`isAdmin`/`isBanned`/etc.), gated by an `isAdmin()` rule function.
+- `registeredUsers` writes are split into self-service fields (displayName/email, with capped `loginPoints`/`xp` deltas — the latter added for Phase 3's global XP system, `docs/progression-gamification-roadmap.md`) vs. admin-only moderation fields (`isAdmin`/`isBanned`/etc.), gated by an `isAdmin()` rule function.
 - `gameScores` uses a deterministic document ID (`{uid}_{gameType}_{date}`) so a repeat write for the same game/day is rejected as an `update` (not allowed) rather than a `create` (allowed) — the "one attempt per game per day" rule is enforced server-side, not just in the UI.
 - This is a **v1-pragmatic** model, not full server-authoritative validation — there's no Cloud Function re-computing scores. A determined attacker could still make small, rule-compliant fraudulent writes. Full server-side validation would require Cloud Functions, which this project doesn't use.
 

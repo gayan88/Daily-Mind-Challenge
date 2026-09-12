@@ -1,34 +1,660 @@
+.profile-hero {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+/* Rank badge image (Section 14 of the progression spec) -- replaces the old letter-initial
+   avatar. object-fit: cover keeps the 400x400 source badges from distorting at this size. */
+.profile-hero-avatar {
+    flex: 0 0 auto;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--color-primary-tint);
+}
+
+.profile-hero-name {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.profile-hero-tagline {
+    font-size: 13px;
+    color: var(--color-text-muted);
+    margin-top: 2px;
+}
+
+.profile-hero-streak {
+    font-size: 14px;
+    font-weight: 600;
+    margin-top: 6px;
+    color: var(--color-text);
+}
+
+/* Milestone visual highlight only (7/30/100/365 days) -- escalating weight/color, no new data of
+   its own, see progression/streak-service.js#getStreakMilestoneTier(). The matching real badges
+   (streak-7/30/100/365) now live in the Achievements section below, as of Phase 5. */
+.profile-hero-streak-tier-7 {
+    color: var(--color-wordsearch-start);
+}
+
+.profile-hero-streak-tier-30 {
+    color: var(--color-wordsearch-end);
+    font-size: 15px;
+}
+
+.profile-hero-streak-tier-100 {
+    color: var(--color-danger);
+    font-size: 16px;
+}
+
+.profile-hero-streak-tier-365 {
+    color: #B8860B;
+    font-size: 17px;
+}
+
+/* ---------- Single-column profile card -- a 2-column hero+side-panel layout was tried first but
+   left a lot of dead white space (the left column had nothing below its progress bar, the right
+   column's ladder didn't fill its own height either); this denser stacked layout replaced it. ---------- */
+.profile-card {
+    position: relative; /* anchors the corner edit-profile icon button below */
+}
+
+.edit-profile-icon-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 0.5px solid var(--color-border);
+    background: var(--color-surface);
+    font-size: 15px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.edit-profile-icon-btn:hover {
+    background: var(--color-bg);
+}
+
+/* ---------- Rank progress bar (under the hero) -- sub-rank progress (1,000 XP wide, e.g.
+   "Novice I" -> "Novice II"), flanked by the current/next sub-rank's badge, with a large centered
+   XP readout. ---------- */
+.rank-progress-card {
+    background: var(--color-bg);
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    margin-top: 20px;
+}
+
+.rank-progress-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.rank-progress-side {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    width: 56px;
+}
+
+.rank-progress-bar-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.rank-progress-side-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--color-text);
+    text-align: center;
+}
+
+.rank-progress-bar-center {
+    flex: 1 1 auto;
+    min-width: 0;
+    text-align: center;
+}
+
+/* Overrides the shared .progress-bar's height just for this one (bigger, more prominent bar) --
+   not touched globally, since .progress-bar is also used by the smaller per-game/mission bars
+   elsewhere on this page, which shouldn't grow along with this one. */
+.rank-progress-bar {
+    height: 20px;
+    border-radius: 10px;
+    margin-top: 0;
+}
+
+.rank-progress-bar .progress-bar-fill {
+    border-radius: 10px;
+}
+
+.rank-progress-xp-big {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-top: 10px;
+}
+
+.rank-progress-xp-big-muted {
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--color-text-muted);
+}
+
+.rank-progress-next {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    margin-top: 2px;
+}
+
+/* ---------- "All Ranks" strip -- a flat, always-visible row of all 10 main ranks (replacing an
+   earlier vertical ladder + separate Current/Next Rank boxes, which took much more vertical space
+   for the same 10 icons). Wraps on narrow screens rather than scrolling horizontally. ---------- */
+.rank-panel {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 0.5px solid var(--color-border);
+}
+
+.rank-panel-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--color-text-muted);
+    margin-bottom: 16px;
+}
+
+.rank-panel-hint {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--color-primary);
+    text-transform: none;
+    letter-spacing: normal;
+}
+
+.rank-strip {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.rank-strip-item {
+    position: relative; /* anchors the custom tooltip below */
+    flex: 1 1 0;
+    min-width: 64px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    cursor: help;
+    outline: none; /* the item is tabindex="0" for keyboard/:focus access to the tooltip, but
+                      shouldn't show the browser's default focus ring on top of its own hover
+                      styling -- the tooltip itself is the visible focus feedback */
+}
+
+/* Custom tooltip -- not the native `title` attribute, which has an inconsistent hover delay and
+   renders unreliably across browsers (hovering just changed the cursor to "?" with no text ever
+   appearing). Pure CSS, shows instantly on hover/keyboard focus via a `data-tooltip` attribute. */
+.rank-strip-item::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-8px);
+    background: var(--color-text);
+    color: white;
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.15s;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.rank-strip-item:hover::after,
+.rank-strip-item:focus::after,
+.rank-strip-item:focus-within::after {
+    opacity: 1;
+    visibility: visible;
+}
+
+.rank-strip-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.rank-strip-item-current .rank-strip-icon {
+    outline: 3px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.rank-strip-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-text);
+    margin-top: 6px;
+}
+
+.rank-strip-current-marker {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--color-primary);
+    line-height: 1.3;
+    margin-top: 2px;
+    min-height: 24px; /* reserves space so non-current items don't shift the row's alignment */
+}
+
+/* ---------- Bottom stat row: icon-circle tiles with a subtitle caption ---------- */
 .profile-stats {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
-    margin-top: 16px;
+    margin-top: 20px;
 }
 
 @media (min-width: 480px) {
     .profile-stats {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+/* Higher specificity than the media-query rule above, so it wins at every width -- guests get a
+   2-tile row (Total Points, Games Played only -- XP/Achievements are registered-only concepts). */
+.profile-stats.profile-stats-two {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.profile-stat-tile {
+    background: var(--color-bg);
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 16px 12px;
+    text-align: center;
+}
+
+.profile-stat-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 8px;
+    font-size: 16px;
+}
+
+.profile-stat-icon-points {
+    background: var(--color-primary-tint);
+    color: var(--color-primary);
+}
+
+.profile-stat-icon-xp {
+    background: #E3F2FD;
+    color: #1976D2;
+}
+
+.profile-stat-icon-games {
+    background: #E8F5E9;
+    color: var(--color-success);
+}
+
+.profile-stat-icon-achievements {
+    background: #FFF8E1;
+    color: #B8860B;
+}
+
+.profile-stat-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.profile-stat-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-text);
+    margin-top: 2px;
+}
+
+.profile-stat-subtitle {
+    font-size: 10px;
+    color: var(--color-text-muted);
+    margin-top: 2px;
+}
+
+.game-progress-load-more {
+    display: block;
+    width: 100%;
+    margin-top: 12px;
+}
+
+.game-progress-guest-note {
+    font-size: 13px;
+    color: var(--color-text-muted);
+    margin-bottom: 12px;
+}
+
+.game-progress-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+
+.game-progress-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--color-surface);
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 16px;
+}
+
+.game-progress-logo {
+    flex: 0 0 auto;
+    width: 96px;
+    height: 96px;
+    border-radius: var(--radius-md);
+    object-fit: contain;
+}
+
+.game-progress-body {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.game-progress-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.game-progress-name {
+    font-weight: 600;
+    color: var(--color-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.game-progress-level {
+    flex: 0 0 auto;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-primary);
+}
+
+.game-progress-level-locked {
+    color: var(--color-text-muted);
+}
+
+.game-progress-card-guest .game-progress-points {
+    margin-top: 0;
+}
+
+.game-progress-points {
+    font-size: 13px;
+    color: var(--color-text-muted);
+    margin-top: 4px;
+}
+
+.game-progress-modes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+@media (max-width: 380px) {
+    .game-progress-logo {
+        width: 64px;
+        height: 64px;
+    }
+}
+
+.mode-chip {
+    font-size: 11px;
+    color: var(--color-text-muted);
+    background: var(--color-bg);
+    border: 0.5px solid var(--color-border);
+    border-radius: 999px;
+    padding: 3px 8px;
+}
+
+.mode-chip strong {
+    color: var(--color-text);
+}
+
+.progress-bar {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--color-border);
+    margin-top: 10px;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: var(--color-primary);
+    border-radius: 3px;
+}
+
+.game-progress-next {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    margin-top: 6px;
+}
+
+.missions-guest-note {
+    font-size: 13px;
+    color: var(--color-text-muted);
+    margin-bottom: 12px;
+}
+
+.missions-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+
+@media (min-width: 560px) {
+    .missions-list {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 960px) {
+    .missions-list {
         grid-template-columns: repeat(3, 1fr);
     }
 }
 
-.stat-tile {
-    background: var(--color-bg);
+.mission-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    background: var(--color-surface);
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+}
+
+.mission-card-done {
+    border-color: var(--color-success);
+}
+
+.mission-icon-circle {
+    flex: 0 0 auto;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+.mission-icon-circle.variant-0 {
+    background: var(--color-primary-tint);
+    color: var(--color-primary);
+}
+
+.mission-icon-circle.variant-1 {
+    background: #E3F2FD;
+    color: #1976D2;
+}
+
+.mission-icon-circle.variant-2 {
+    background: #E8F5E9;
+    color: var(--color-success);
+}
+
+.mission-icon-circle.variant-3 {
+    background: #FFF8E1;
+    color: #B8860B;
+}
+
+.mission-icon-circle.variant-4 {
+    background: #E0F7FA;
+    color: #00838F;
+}
+
+.mission-body {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.mission-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.mission-label {
+    font-weight: 600;
+    color: var(--color-text);
+    font-size: 14px;
+    line-height: 1.3;
+}
+
+.mission-reward {
+    flex: 0 0 auto;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--color-primary);
+    background: var(--color-primary-tint);
+    border-radius: 999px;
+    padding: 3px 10px;
+    white-space: nowrap;
+}
+
+.mission-progress {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-top: 10px;
+}
+
+.mission-progress-muted {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-muted);
+}
+
+.mission-card-done .mission-progress {
+    color: var(--color-success);
+}
+
+.mission-card .progress-bar {
+    margin-top: 8px;
+}
+
+.mission-card-done .progress-bar-fill {
+    background: var(--color-success);
+}
+
+.achievements-guest-note {
+    font-size: 13px;
+    color: var(--color-text-muted);
+    margin-bottom: 12px;
+}
+
+.achievements-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+@media (min-width: 480px) {
+    .achievements-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.achievement-card {
+    background: var(--color-surface);
     border: 0.5px solid var(--color-border);
     border-radius: var(--radius-md);
     padding: 14px;
     text-align: center;
 }
 
-.stat-value {
-    font-size: 24px;
+.achievement-icon {
+    font-size: 26px;
+}
+
+.achievement-label {
+    font-weight: 600;
+    color: var(--color-text);
+    font-size: 13px;
+    margin-top: 6px;
+}
+
+.achievement-count {
     font-weight: 700;
     color: var(--color-primary);
 }
 
-.stat-label {
-    font-size: 12px;
+.achievement-description {
+    font-size: 11px;
     color: var(--color-text-muted);
     margin-top: 4px;
+}
+
+.achievement-card-locked {
+    opacity: 0.55;
+}
+
+.achievement-card-earned {
+    border-color: var(--color-primary-light);
 }
 
 .history-row {

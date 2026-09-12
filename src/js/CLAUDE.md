@@ -10,6 +10,7 @@ Plain ES modules, loaded via `<script type="module">` directly in each HTML page
 | `auth/` | Session/login logic + guest & registered profile documents |
 | `games/wordle/`, `games/sudoku/`, `games/wordsearch/` | Each game's engine, page glue, and daily-content data, colocated |
 | `leaderboard/` | Daily leaderboard queries + the leaderboard page |
+| `progression/` | Game-agnostic Points → Level engine (game registry + derived progress calculations) |
 | `admin/` | Moderation actions + the admin page |
 | `pages/` | Page glue for home, profile, settings (features without a dedicated folder) |
 | `utils/` | Cross-cutting helpers used by more than one feature area |

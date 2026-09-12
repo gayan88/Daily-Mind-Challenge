@@ -1,6 +1,6 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-import { getAuth } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-import { initializeFirestore } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { getAuth, connectAuthEmulator } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import { initializeFirestore, connectFirestoreEmulator } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js';
 import { firebaseConfig } from './firebase-config.js';
 
@@ -28,3 +28,14 @@ export const db = initializeFirestore(app, {
     experimentalForceLongPolling: true,
     useFetchStreams: false,
 });
+
+// Local-only: when this app is served from localhost/127.0.0.1 (python3 -m http.server, per
+// docs/architecture.md's "Running locally"), point at the Firebase Emulator Suite instead of the
+// real project -- lets firestore.rules changes be tested against a throwaway local Firestore/Auth
+// instance before ever being deployed to production. Never triggers for the real deployed site
+// (a real hostname), so this can't affect production. Start the emulators first with
+// `firebase emulators:start` (ports match `firebase.json`'s `emulators` config below).
+if (typeof location !== 'undefined' && (location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    connectFirestoreEmulator(db, 'localhost', 8080);
+    connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
+}

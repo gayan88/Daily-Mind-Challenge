@@ -470,6 +470,87 @@
     color: var(--color-text-secondary);
 }
 
+/* ---------- Daily Brain Workout summary (Phase 8) ---------- */
+.status-progression-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 12px;
+}
+
+.status-progression-item {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.status-progression-muted {
+    font-weight: 400;
+    color: var(--color-text-muted);
+}
+
+.status-workout-hint {
+    font-size: 13px;
+    color: var(--color-text-muted);
+    margin-bottom: 16px;
+}
+
+.workout-extras-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: var(--color-surface);
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 16px 20px;
+}
+
+@media (min-width: 640px) {
+    .workout-extras-card {
+        flex-direction: row;
+    }
+}
+
+.workout-extras-item {
+    flex: 1 1 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.workout-extras-icon {
+    flex: 0 0 auto;
+    color: var(--color-primary);
+    font-size: 18px;
+}
+
+.workout-extras-text {
+    flex: 1 1 auto;
+    font-size: 14px;
+    color: var(--color-text-secondary);
+}
+
+.workout-extras-text strong {
+    color: var(--color-primary);
+}
+
+.workout-extras-link {
+    flex: 0 0 auto;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-primary);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+.workout-extras-link:hover {
+    text-decoration: underline;
+}
+
 /* ---------- Ad slot (placeholder by default, admin-configurable via config/ads) ---------- */
 .ad-space {
     background: linear-gradient(135deg, #F1EFE8 0%, #F9F8FC 100%);
@@ -1260,4 +1341,51 @@
         border-top: none;
         padding-top: 0;
     }
+}
+
+/* ---------- Generic modal (sign-in modal on home.html, Edit Profile modal on profile.html) ----------
+   Moved here from pages/home.css once profile.js started reusing the same component -- shared
+   across more than one page belongs in components.css, not a single page's own stylesheet. */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(44, 44, 42, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 300;
+}
+
+.modal-dialog {
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    padding: 52px 24px 24px;
+    width: 100%;
+    max-width: 400px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+}
+
+.modal-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    color: var(--color-text-muted);
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    z-index: 1;
+}
+
+.modal-close:hover {
+    background: var(--color-bg);
+    color: var(--color-text);
 }
