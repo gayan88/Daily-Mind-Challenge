@@ -17,19 +17,22 @@ export const XP_AMOUNTS = {
     DAILY_GAME_COMPLETION: 10, // per Daily Challenge finished (any game), see awardDailyCompletionXp()
     PERFECT_DAY_BONUS: 20,     // once per day, when every registered game's Daily Challenge is done
     SHARE: 5,                  // per "Share to Facebook"/"Share with Friends" action, see awardShareXp()
+    ACHIEVEMENT_UNLOCK: 250,   // per newly-earned achievement (any category), see awardAchievementXp()
 };
 
 // Overall Level, same fixed-threshold style as Game Level (progression-service.js) -- always
 // derived from XP at call time, never stored, so the two can never drift apart.
 //
-// Stays 0-indexed internally (0-499 XP = level 0, 500-999 XP = level 1, ...), same as Game Level's
-// own raw `level` field -- callers display `level + 1` so a brand-new player with 0 XP sees "Level
-// 1" instead of "Level 0", exactly mirroring profile.js's `g.level + 1` display shift for Game
-// Level cards (see progression/CLAUDE.md). Kept 0-indexed here rather than shifting the math
-// itself since `nextLevel`/`nextLevelThreshold`/`xpToNextLevel`/`progressPercent` below are all
-// clean band-boundary arithmetic in the raw numbering; the current call sites (home.js's status
-// card, leaderboard/player-profile-modal.js) apply the +1 themselves at render time only.
-const XP_PER_LEVEL = 500;
+// Stays 0-indexed internally (0-999 XP = level 0, 1000-1999 XP = level 1, ...), same as Game
+// Level's own raw `level` field -- callers display `level + 1` so a brand-new player with 0 XP
+// sees "Level 1" instead of "Level 0", exactly mirroring profile.js's `g.level + 1` display shift
+// for Game Level cards (see progression/CLAUDE.md). Kept 0-indexed here rather than shifting the
+// math itself since `nextLevel`/`nextLevelThreshold`/`xpToNextLevel`/`progressPercent` below are
+// all clean band-boundary arithmetic in the raw numbering; the current call sites (home.js's
+// status card, leaderboard/player-profile-modal.js) apply the +1 themselves at render time only.
+// Exported so those call sites build their "X / {XP_PER_LEVEL} XP" label off this constant instead
+// of a hardcoded copy of the number.
+export const XP_PER_LEVEL = 1000;
 
 export function calculateOverallLevel(xp) {
     return Math.floor((xp || 0) / XP_PER_LEVEL);
@@ -40,9 +43,10 @@ export function calculateOverallProgress(xp) {
     const level = calculateOverallLevel(total);
     const nextLevel = level + 1;
     const nextLevelThreshold = nextLevel * XP_PER_LEVEL;
+    const xpIntoLevel = total - level * XP_PER_LEVEL;
     const xpToNextLevel = nextLevelThreshold - total;
-    const progressPercent = Math.round(((total - level * XP_PER_LEVEL) / XP_PER_LEVEL) * 100);
-    return { xp: total, level, nextLevel, nextLevelThreshold, xpToNextLevel, progressPercent };
+    const progressPercent = Math.round((xpIntoLevel / XP_PER_LEVEL) * 100);
+    return { xp: total, level, nextLevel, nextLevelThreshold, xpIntoLevel, xpToNextLevel, progressPercent };
 }
 
 /**
@@ -104,5 +108,29 @@ export async function awardShareXp(uid) {
         if (!snap.exists()) return;
         const user = snap.data();
         tx.update(ref, { xp: (user.xp || 0) + XP_AMOUNTS.SHARE, updatedAt: serverTimestamp() });
+    });
+}
+
+/**
+ * Flat XP bump for unlocking any single achievement -- called once per newly-earned achievement,
+ * not once per sync batch, so a player who crosses several achievement thresholds at once (e.g.
+ * several Game Level tiers in one Daily Challenge win) still gets exactly `ACHIEVEMENT_UNLOCK` XP
+ * per achievement rather than a caller trying to sum them into one write; each individual write
+ * this way always stays well under firestore.rules' isSelfServiceUpdate() 300-XP-per-write cap
+ * regardless of how many achievements land in the same visit. Called from both
+ * achievement-engine.js#syncPlayerAchievements() (every non-championship category) and
+ * championship-service.js#claimChampionshipAchievements() (championship tiers, which are awarded
+ * through a separate path since they have no evaluate() of their own) -- only after that specific
+ * achievement doc's own create has actually succeeded, not speculatively before it. Silently
+ * no-ops for guests, same as awardShareXp() above (achievements are registered-only anyway, so
+ * this is belt-and-suspenders, not a load-bearing check).
+ */
+export async function awardAchievementXp(uid) {
+    const ref = doc(db, 'registeredUsers', uid);
+    await runTransaction(db, async (tx) => {
+        const snap = await tx.get(ref);
+        if (!snap.exists()) return;
+        const user = snap.data();
+        tx.update(ref, { xp: (user.xp || 0) + XP_AMOUNTS.ACHIEVEMENT_UNLOCK, updatedAt: serverTimestamp() });
     });
 }

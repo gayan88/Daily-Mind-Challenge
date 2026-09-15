@@ -50,11 +50,14 @@ service cloud.firestore {
                 // *both* sides of the delta so this doesn't break for players registered before
                 // the `xp` field existed -- a doc with no `xp` key (old side) or a write that
                 // doesn't touch `xp` at all (new side) is treated as 0, no migration needed. 300
-                // covers the largest single legitimate write: a Daily Mission reward (Phase 7,
-                // 100 XP) or the already-decided-but-not-yet-built Weekly Mission reward (300 XP)
-                // -- each mission is its own separate write, not summed together, so 300 (not
-                // 100+300) is the true ceiling. Comfortably above the smaller writes elsewhere
-                // (Daily Challenge completion + perfect-day bonus = 30, a share bonus = 5, login = 5).
+                // covers the largest single legitimate write: the already-decided-but-not-yet-built
+                // Weekly Mission reward (300 XP), just above achievement-registry.js's per-achievement
+                // unlock bonus (250 XP, progression/xp-service.js#awardAchievementXp()) -- each
+                // achievement/mission is its own separate write, not summed together, even when
+                // several achievements unlock in the same visit, so 300 (not a multiple of it) is
+                // the true ceiling. Comfortably above the smaller writes elsewhere (a Daily Mission
+                // reward = 100, Daily Challenge completion + perfect-day bonus = 30, a share bonus =
+                // 5, login = 5).
                 let xpDelta = request.resource.data.get('xp', 0) - resource.data.get('xp', 0);
                 // currentStreak (Phase 4) only ever legitimately advances by exactly 1 (a
                 // consecutive day) or drops to exactly 1 (a gap, or a first-ever streak day) --

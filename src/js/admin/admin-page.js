@@ -1,5 +1,5 @@
 import { initShell } from '../app.js';
-import { ensureConfigDefaults, updateConfig } from '../utils/config.js';
+import { ensureConfigDefaults, updateConfig, CONFIG_DEFAULTS } from '../utils/config.js';
 import { AD_SLOTS, DEFAULT_ADS_CONFIG } from '../utils/ads.js';
 import { lookupUserByUsername, setUserBanned, setUserAdmin } from './moderation.js';
 import {
@@ -141,7 +141,10 @@ const CONFIG_FORMS = [
     {
         id: 'wordValidationAPI',
         title: 'Word Validation API',
-        fields: [{ key: 'endpoint', type: 'text', label: 'Endpoint URL' }],
+        fields: [
+            { key: 'endpoint', type: 'text', label: 'Endpoint URL' },
+            { key: 'enabled', type: 'checkbox', label: 'Check guesses/challenge words against the dictionary' },
+        ],
     },
     {
         id: 'profanityList',
@@ -258,7 +261,12 @@ async function renderConfigForms(containerId, formIds) {
         // far) the form title alone made this readable without one, but that breaks down once a
         // form has several fields side by side (e.g. Sudoku Tournament Settings' four numbers).
         const fieldsHtml = form.fields.map((field) => {
-            const value = data[field.key];
+            // Falls back to CONFIG_DEFAULTS when a field is missing from an existing doc (e.g. a
+            // field added to a form after that config doc was first created/saved) -- without
+            // this, ensureConfigDefaults() returns the doc as-is with no merge, so a genuinely-on
+            // boolean default would render as an unchecked checkbox here, misleading the admin
+            // into thinking it's off when the actual runtime behavior still treats it as on.
+            const value = data[field.key] !== undefined ? data[field.key] : CONFIG_DEFAULTS[form.id]?.[field.key];
             const inputHtml = field.type === 'textarea'
                 ? `<textarea id="cfg-${form.id}-${field.key}">${escapeHtml(field.isArray ? (value || []).join(', ') : (value || ''))}</textarea>`
                 : field.type === 'checkbox'

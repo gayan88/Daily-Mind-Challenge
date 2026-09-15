@@ -54,6 +54,10 @@ export const CONFIG_DEFAULTS = {
         // v2, not v1 -- v1 returns 502 (not 404) for a word that doesn't exist, which makes it
         // impossible to distinguish "not a real word" from "the API is down".
         endpoint: 'https://api.dictionaryapi.dev/api/v2/entries/en/',
+        // Admin on/off switch (src/js/games/wordle/wordle-word-validation.js#isRealWord()) --
+        // when off, every guess/challenge word is accepted without calling the API at all, not
+        // just treated as valid after a call. Defaults on, preserving existing behavior.
+        enabled: true,
         description: 'Free Dictionary API endpoint for word validation',
     },
     profanityList: {

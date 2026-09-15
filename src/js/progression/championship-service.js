@@ -14,6 +14,7 @@ import { db } from '../api/firebase-init.js';
 import { getTodayDateString, addDaysToDateString, getISOWeekInfo, getISOWeekMonday } from '../utils/helpers.js';
 import { GAMES } from './game-registry.js';
 import { getGameScoresForDateRange } from '../leaderboard/leaderboard-data.js';
+import { awardAchievementXp } from './xp-service.js';
 
 function pad2(n) {
     return String(n).padStart(2, '0');
@@ -371,6 +372,7 @@ export async function claimChampionshipAchievements(uid) {
                 count: 1,
                 earnedAt: serverTimestamp(),
             });
+            await awardAchievementXp(uid);
         } catch {
             // Already exists -- shouldn't normally happen given the exact-match check above, but
             // harmless if it does (e.g. a retried request after a dropped connection).

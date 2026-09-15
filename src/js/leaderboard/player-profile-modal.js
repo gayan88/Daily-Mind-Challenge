@@ -29,7 +29,7 @@
 import { getPlayerAchievements } from '../progression/achievement-engine.js';
 import { ACHIEVEMENTS } from '../progression/achievement-registry.js';
 import { calculateRankProgress, GUEST_RANK_IMAGE } from '../progression/rank-service.js';
-import { calculateOverallProgress } from '../progression/xp-service.js';
+import { calculateOverallProgress, XP_PER_LEVEL } from '../progression/xp-service.js';
 import { getRegisteredUserSummary, getOverallLeaderboard, findUserInLeaderboard } from './leaderboard-data.js';
 import { getUserLifetimeStats } from '../utils/points.js';
 import { icon } from '../utils/icons.js';
@@ -182,7 +182,6 @@ export async function showPlayerProfileModal(row) {
     const globalRank = allTimeRows ? (findUserInLeaderboard(allTimeRows, row.uid)?.rank ?? null) : null;
     const earnedIds = new Set(earnedDocs.map((d) => d.achievementId));
     const earned = ACHIEVEMENTS.filter((a) => earnedIds.has(a.id));
-    const xpIntoLevel = levelProgress.xp - levelProgress.level * 500;
 
     dialog.style.background = rankProgress.mainRank.color;
     avatarEl.src = rankProgress.subRankImage;
@@ -211,7 +210,7 @@ export async function showPlayerProfileModal(row) {
         <div class="player-profile-level-card">
             <div class="player-profile-level-row">
                 <span class="player-profile-level-title">Level ${levelProgress.level + 1}</span>
-                <span class="player-profile-level-xp">${xpIntoLevel.toLocaleString()} / 500 XP</span>
+                <span class="player-profile-level-xp">${levelProgress.xpIntoLevel.toLocaleString()} / ${XP_PER_LEVEL.toLocaleString()} XP</span>
             </div>
             <div class="player-profile-level-bar"><div class="player-profile-level-fill" style="width:${levelProgress.progressPercent}%"></div></div>
             <div class="player-profile-level-caption">${levelProgress.xpToNextLevel.toLocaleString()} XP to reach Level ${levelProgress.nextLevel + 1}</div>

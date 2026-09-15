@@ -9,6 +9,7 @@ import {
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 import { db } from '../api/firebase-init.js';
 import { ACHIEVEMENTS } from './achievement-registry.js';
+import { awardAchievementXp } from './xp-service.js';
 
 function achievementDocId(uid, achievementId) {
     return `${uid}_${achievementId}`;
@@ -55,6 +56,9 @@ export async function syncPlayerAchievements(uid, context) {
                 count: 1,
                 earnedAt: serverTimestamp(),
             });
+            // Only after the doc create above actually succeeds -- a lost race (caught below)
+            // means this achievement wasn't newly earned by *this* call, so no XP for it here.
+            await awardAchievementXp(uid);
         } catch {
             // Lost a race with another write creating the same doc -- already earned, harmless no-op.
         }

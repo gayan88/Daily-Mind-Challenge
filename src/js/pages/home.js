@@ -4,7 +4,7 @@ import { getOverallLeaderboard, findUserInLeaderboard, getXpForUids } from '../l
 import { checkPlayedTodayAll, getUserLifetimeStats } from '../utils/points.js';
 import { getConfig } from '../utils/config.js';
 import { escapeHtml, getQueryParam, getTodayDateString } from '../utils/helpers.js';
-import { calculateOverallProgress } from '../progression/xp-service.js';
+import { calculateOverallProgress, XP_PER_LEVEL } from '../progression/xp-service.js';
 import { calculateRankProgress, GUEST_RANK_IMAGE } from '../progression/rank-service.js';
 import { showPlayerProfileModal } from '../leaderboard/player-profile-modal.js';
 import { syncDailyMissions, DAILY_MISSIONS } from '../progression/mission-service.js';
@@ -240,7 +240,7 @@ function renderStatusCard(profile, todayRank, todayPoints, bonusApplied, totalPo
         <div class="status-level-card">
             <div class="status-level-row">
                 <span class="status-level-title">Level ${levelProgress.level + 1}</span>
-                <span class="status-level-xp">${(levelProgress.xp - levelProgress.level * 500).toLocaleString()} / 500 XP</span>
+                <span class="status-level-xp">${levelProgress.xpIntoLevel.toLocaleString()} / ${XP_PER_LEVEL.toLocaleString()} XP</span>
             </div>
             <div class="status-level-bar"><div class="status-level-fill" style="width:${levelProgress.progressPercent}%"></div></div>
             <div class="status-level-caption">${levelProgress.xpToNextLevel.toLocaleString()} XP to reach Level ${levelProgress.nextLevel + 1}</div>

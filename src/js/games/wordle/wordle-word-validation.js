@@ -6,13 +6,19 @@ import { getConfig } from '../../utils/config.js';
  * clean 200/404, the word is treated as valid rather than blocking play/challenge creation on a
  * flaky third-party dependency. Only an explicit 404 ("no entry for this word") counts as invalid.
  *
+ * `config/wordValidationAPI.enabled` (Admin > General) is a full on/off switch, not just a
+ * "treat failures as valid" knob -- when off, this returns true immediately without ever calling
+ * the API, so admins can disable the dictionary check entirely (e.g. the API's down, or they just
+ * don't want it) without that showing up as a flood of "API unreachable" warnings.
+ *
  * Used both at Challenge a Friend creation time (`wordle-challenge-data.js`) and live during play
  * across all three Wordle modes (`wordle-engine.js`'s optional `validateGuess` callback, wired up
  * in `wordle-page.js`) -- kept in its own file, not tied to the challenges collection, since it's
  * no longer just a challenge-creation concern.
  */
 export async function isRealWord(word) {
-    const { endpoint } = await getConfig('wordValidationAPI');
+    const { endpoint, enabled } = await getConfig('wordValidationAPI');
+    if (enabled === false) return true;
     try {
         const res = await fetch(`${endpoint}${word.toLowerCase()}`, { signal: AbortSignal.timeout(5000) });
         if (res.status === 404) return false;

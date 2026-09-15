@@ -208,6 +208,23 @@
     background: white;
 }
 
+/* The generic text-input styling above (flex:1 stretched full-width, padded, bordered) doesn't
+   apply to a checkbox at all -- without this override a checkbox inherited that box model and
+   rendered as a tiny control adrift inside a full-width stretched box instead of a normal-sized
+   toggle sitting flush left under its label, same stacked label-above-control shape as every
+   other field in the row (so a checkbox field still lines up with its text-input siblings). */
+.config-form-row input[type="checkbox"] {
+    align-self: flex-start;
+    flex: 0 0 auto;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: none;
+    background: none;
+    accent-color: var(--color-primary);
+    cursor: pointer;
+}
+
 /* .btn defaults to flex: 1 (for equal-width button pairs elsewhere) -- override that here so
    Save/Look Up/Delete size to their own content instead of stretching to match the input. */
 .config-form-row .btn,

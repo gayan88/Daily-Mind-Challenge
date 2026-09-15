@@ -52,6 +52,28 @@ Adding a game means updating each of these separately, not registering it once s
   don't show up in its own Level/progress on the profile page.
 - Add a new tab button in `src/html/leaderboard.html`.
 
+## 4.5. Achievements
+
+- **Per-game Level tiers** (Expert/Master/Grand Master) and **Championship tiers** (Daily/Weekly/
+  Monthly win-count milestones) in `src/js/progression/achievement-registry.js` are already
+  generic -- they're built by iterating `GAMES` (`Object.entries(GAMES).flatMap(...)`), so adding
+  the new game to `game-registry.js` (step 4 above) is enough to generate all of its achievement
+  *definitions* automatically, with generic ids/labels/descriptions derived from `game.label`. No
+  hand-written achievement entries needed for these two categories.
+- **But `firebase/firestore.rules`' `playerAchievements` `allow create` allow-list does NOT
+  auto-generate** -- it's a hand-maintained array of every valid achievement id (rules can't
+  import JS). Forgetting to add the new game's ~18 ids (3 Level tiers + 15 Championship tiers)
+  there means every one of its achievements is silently rejected on create -- the player would see
+  them stuck at "Not Started"/"In Progress" forever, never actually earnable. This is the single
+  easiest achievement-related step to miss.
+- **Custom badge art is optional** -- `CUSTOM_IMAGES` in `achievement-registry.js` is currently
+  Wordle-only; a new game's achievements render fine with the generic per-category emoji fallback
+  (`profile.js`'s `ACHIEVEMENT_CATEGORY_ICON`) until/unless illustrated art is added for it later.
+- The "all 3 games at once" tiers (All-Rounder/Puzzle Enthusiast/Mind Master, `ALL_GAMES_TIERS`)
+  and `puzzle-addict`/`mind-athlete` (total games played / total points) already read from
+  `context.gameProgress`/`totalGamesPlayed`/`totalPoints`, which are assembled generically across
+  every entry in `GAMES` -- nothing to add there either, a fourth game just makes them harder.
+
 ## 5. Home page
 
 - A new game tile in `src/html/index.html`, plus a new logo/tile image asset

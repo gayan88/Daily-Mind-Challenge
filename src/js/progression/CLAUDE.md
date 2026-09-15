@@ -32,23 +32,39 @@ read-only/derived-only follow-up to Phase 3, picked back up after being deferred
   XP-earning event, decided with the user before implementation per the spec's "don't hardcode
   thresholds blindly" instruction -- see `docs/progression-gamification-roadmap.md`'s Phase 3
   section for the full list and rationale) and `calculateOverallLevel(xp)` /
-  `calculateOverallProgress(xp)` (500-XP-per-level, same derived-not-stored style as Game Level).
-  `awardDailyCompletionXp(uid, allDailyGamesCompletedToday, allDailyGamesWonToday)` and
-  `awardShareXp(uid)` are the two actual Firestore-writing functions, called from each game's
-  Daily Challenge completion handler and from every `markSharedToFacebook()`/
-  `markSharedWithFriends()` implementation across the codebase respectively. `allDailyGamesWonToday`
-  (added alongside `achievement-registry.js`'s "Perfect Day"/"Triple Threat") is a separate signal
-  from completion -- Wordle can record a score on a *loss* (6 failed guesses still writes a doc),
-  while Sudoku/Word Search Daily have no loss condition at all (see their own `won: true` doc
-  comments in `sudoku-daily-data.js`/`wordsearch-daily-data.js`), so in practice only Wordle can
-  make this false. When both completion and win are true and it's a new calendar day for this:
-  writes `lastFlawlessDayDate` (a stricter twin of `lastPerfectDayDate` -- completed-and-won all 3,
-  not just completed) and increments a lifetime `perfectDayCount` tally (for "Triple Threat": N
-  *different* days with a flawless day, not a streak of consecutive ones). Both silently no-op for
-  a uid with no `registeredUsers` doc (guests), so call sites never need their own
-  `profile.kind === 'registered'` check before calling them --
-  though the Daily Challenge call sites still check it anyway, to skip an unnecessary
-  `checkPlayedTodayAll()` read for guests.
+  `calculateOverallProgress(xp)` (1,000-XP-per-level via the exported `XP_PER_LEVEL` constant --
+  changed from an earlier 500 at the user's request; same derived-not-stored style as Game Level,
+  0-indexed internally with callers adding `+1` at display time so 0 XP reads "Level 1" not "Level
+  0", exactly mirroring `profile.js`'s `g.level + 1` shift for Game Level cards -- the two other
+  current callers, `home.js`'s status card and `leaderboard/player-profile-modal.js`'s Level card,
+  build their own "X / `XP_PER_LEVEL` XP" label off the exported constant and the progress object's
+  `xpIntoLevel` field rather than hardcoding the number, so this can't drift out of sync with a
+  future retune the way two separate hardcoded `500`s once did). `awardDailyCompletionXp(uid,
+  allDailyGamesCompletedToday, allDailyGamesWonToday)`, `awardShareXp(uid)`, and
+  `awardAchievementXp(uid)` are the three actual Firestore-writing functions. The first two are
+  called from each game's Daily Challenge completion handler and from every
+  `markSharedToFacebook()`/`markSharedWithFriends()` implementation across the codebase
+  respectively. `allDailyGamesWonToday` (added alongside `achievement-registry.js`'s "Perfect
+  Day"/"Triple Threat") is a separate signal from completion -- Sudoku/Word Search Daily have no
+  loss condition at all (see their own `won: true` doc comments in
+  `sudoku-daily-data.js`/`wordsearch-daily-data.js`), and Wordle Daily Challenge no longer writes a
+  `gameScores` doc on a loss at all either (see `games/wordle/CLAUDE.md`'s retry-cooldown entry) --
+  so in practice this can now only ever be false for Sudoku/Word Search, since a Wordle "completion"
+  now already implies a win by construction. When both completion and win are true and it's a new
+  calendar day for this: writes `lastFlawlessDayDate` (a stricter twin of `lastPerfectDayDate` --
+  completed-and-won all 3, not just completed) and increments a lifetime `perfectDayCount` tally
+  (for "Triple Threat": N *different* days with a flawless day, not a streak of consecutive ones).
+  `awardAchievementXp(uid)` is a flat `XP_AMOUNTS.ACHIEVEMENT_UNLOCK` (250) bump per newly-earned
+  achievement (any category), called once per achievement -- not batched -- from both
+  `achievement-engine.js#syncPlayerAchievements()` and
+  `championship-service.js#claimChampionshipAchievements()`, only after that specific
+  achievement's own `playerAchievements` doc-create has actually succeeded. Calling it once per
+  achievement rather than summing several into one write keeps every individual write safely under
+  `firestore.rules`' `isSelfServiceUpdate()` 300-XP-per-write cap even when a player crosses
+  several achievement thresholds in the same visit. All three silently no-op for a uid with no
+  `registeredUsers` doc (guests), so call sites never need their own `profile.kind === 'registered'`
+  check before calling them -- though the Daily Challenge call sites still check it anyway, to skip
+  an unnecessary `checkPlayedTodayAll()` read for guests.
 - **`rank-service.js`** — Overall Rank (Section 14), picked back up after being deferred out of
   Phase 3. Pure and read-only, no Firestore code at all. `MAIN_RANKS`: 10 tiers (10,000 XP per
   tier -- Novice through Legend, the user's exact thresholds/names), each `{ tier, name, image,
@@ -56,7 +72,9 @@ read-only/derived-only follow-up to Phase 3, picked back up after being deferred
   `src/assets/images/` (`rank-novice.png` .. `rank-legend.png`), used for the "All Ranks" strip and
   the hero progress bar's flanking main-rank icons; `color` is that tier's accent hex, sampled
   directly off the user-supplied `sub-ranks.png` reference sheet's own row background -- tracked
-  for later use (e.g. tinting rank-related UI) even though nothing reads it yet. `calculateMainRank(xp)`
+  for later use when this was first built, since read by `leaderboard/player-profile-modal.js` as
+  the clicked player's popup header background (a per-rank "trading card" look; guests get a fixed
+  neutral color instead, since no `MAIN_RANKS` tier applies to them). `calculateMainRank(xp)`
   returns just the tier object.
 
   `subRankImagePath(mainRank, subRankNumber)` (internal) resolves one of the **100** per-sub-rank
@@ -108,13 +126,28 @@ read-only/derived-only follow-up to Phase 3, picked back up after being deferred
   old ids not in the new list just stop being evaluated (any already-earned `playerAchievements`
   docs under them are harmless orphans, same as every earlier id rename in this app -- no
   migration needed). `ACHIEVEMENTS`: an array of
-  `{ id, category, label, description, evaluate(context), progress(context)?, target? }`. Both
-  `evaluate()` and `progress()` are pure functions, no Firestore access -- they only read whatever
-  `context` `profile.js` assembled. `progress()`/`target` are optional -- used by `profile.js` to
-  sort an *unearned* achievement into "In Progress" (progress > 0) vs. "Not Started" (progress ===
-  0) for its status-grouped layout, and to render a live "current / target" line + bar for the
-  former; entries without a `progress()` (`daily-mind-champion`, `perfect-day`) stay binary,
-  since "did I ever have one" isn't a cumulative fraction.
+  `{ id, category, label, description, evaluate(context), progress(context)?, target?, family?,
+  familyOrder? }`. Both `evaluate()` and `progress()` are pure functions, no Firestore access --
+  they only read whatever `context` `profile.js` assembled. `progress()`/`target` are optional --
+  used by `profile.js` to sort an *unearned* achievement into "In Progress" (progress > 0) vs. "Not
+  Started" (progress === 0) for its status-grouped layout, and to render a live "current / target"
+  line + bar for the former; entries without a `progress()` (`daily-mind-champion`, `perfect-day`)
+  stay binary, since "did I ever have one" isn't a cumulative fraction.
+
+  `family` (a grouping-key string, e.g. `wordle-level`, `wordle-day-champion`, `streak`,
+  `all-games-level`) fixes a bug where every tiered achievement family -- per-game Level tiers,
+  Championship tiers, Streak tiers, and the "all 3 games" Level tiers -- independently showed "In
+  Progress" for *every* unearned sibling at once, since each just checked its own `progress() > 0`
+  in isolation with no awareness of the others sharing one underlying number (e.g. Wordle Daily
+  Champion's 30/50/100-times tiers all showing the same win tally simultaneously). `profile.js`'s
+  `renderAchievements()` now pre-computes, per family, the lowest-order not-yet-earned member --
+  only that one is allowed to actually call its own `progress()` and land in "In Progress"; every
+  other unearned sibling is forced to "Not Started" regardless of what its `progress()` would
+  technically return. Ordering within a family is by `target` except where `target` itself doesn't
+  vary per tier (the "all 3 games" tiers all share `target: 3`, "how many of the 3 games meet the
+  threshold" -- not the actual per-tier level requirement), in which case `familyOrder` (the real
+  per-tier `rawLevel`) is set explicitly and used instead. An achievement with no `family` (the
+  `global` category's one-off entries) is unaffected -- the family check is skipped entirely for it.
 
   Categories:
   - `game` — three level tiers per entry in `GAMES` (`{gameId}-expert/-master/-grandmaster`, at
@@ -140,15 +173,30 @@ read-only/derived-only follow-up to Phase 3, picked back up after being deferred
     still show real "12 / 30"-style progress. `CHAMPIONSHIP_TIERS`/`PERIOD_LABEL`/`PERIOD_ID` here
     must exactly match `championship-service.js`'s own copies -- kept as separate literals (this
     file stays Firestore-free) rather than imported, same precedent as `STREAK_MILESTONES` above.
+
+  `CUSTOM_IMAGES` (id -> `/assets/images/achievements/{id}.png`) attaches real illustrated badge
+  art to specific achievements via a final `.map()` pass over `ACHIEVEMENTS`, decoupled from the
+  definitions themselves so adding more art later never means hand-editing an achievement's own
+  entry. Currently Wordle-only (18 ids: the 3 Level tiers plus all 15 Daily/Weekly/Monthly
+  Championship tiers) -- every achievement without an entry here, including every Sudoku/Word
+  Search achievement, falls back to its category's plain emoji icon
+  (`profile.js`'s `ACHIEVEMENT_CATEGORY_ICON`). All 18 images live in
+  `src/assets/images/achievements/` (moved there from a flat `src/assets/images/` alongside the
+  site's other, unrelated image assets, once the badge count made a dedicated subfolder worth it,
+  mirroring the existing `sub-ranks/` precedent) -- the originals as first uploaded (full
+  resolution, before crop/resize/transparency-fix processing) are kept separately under
+  `src/assets/images/New/`, renamed to the same clean per-achievement ids, not deleted.
 - **`achievement-engine.js`** — the Phase 5 engine. `getPlayerAchievements(uid)` (reads a player's
   own `playerAchievements` docs) and `syncPlayerAchievements(uid, context)` (evaluates every
   `ACHIEVEMENTS` entry that has an `evaluate()` against `context`, create-only-writes a doc for
   any newly-satisfied one the player doesn't already have, returns the full up-to-date earned
   list -- entries with no `evaluate()`, i.e. `championship`, are skipped here, not evaluated).
-  Called from exactly one place — `profile.js`, on every visit — per the "silent, shows up on next
-  profile visit" surfacing decision (no toasts/popups, no hooks added to any game page). This
-  function does no `profile.kind` check itself (it has no `registeredUsers` read of its own —
-  `context` arrives pre-computed), so **callers must already be scoped to registered players**.
+  Also awards `xp-service.js#awardAchievementXp()` (flat +250 XP) right after each individual doc
+  create actually succeeds, one call per newly-earned achievement. Called from exactly one place —
+  `profile.js`, on every visit — per the "silent, shows up on next profile visit" surfacing
+  decision (no toasts/popups, no hooks added to any game page). This function does no
+  `profile.kind` check itself (it has no `registeredUsers` read of its own — `context` arrives
+  pre-computed), so **callers must already be scoped to registered players**.
 - **`championship-service.js`** — Championships, now Daily + Weekly + Monthly (`periodType`
   `'day'`/`'week'`/`'month'`). Pure period-key functions `getPreviousDayPeriod()`/
   `getPreviousWeekPeriod()`/`getPreviousMonthPeriod()` (built on ISO-8601 week math in
@@ -223,6 +271,10 @@ read-only/derived-only follow-up to Phase 3, picked back up after being deferred
     would produce the wrong word ("dayly") for the daily case; the tier-1 id for each game/period
     (e.g. `wordle-daily-champion`) is unchanged from the original single-achievement design, so a
     player who'd already won once before this restructuring keeps that badge under the same id.
+    Also awards `xp-service.js#awardAchievementXp()` right after that tier's own doc-create
+    succeeds, same as `achievement-engine.js#syncPlayerAchievements()` does for every other
+    category -- championship tiers are awarded through this separate path (no `evaluate()` of
+    their own) but still count as a regular achievement unlock for XP purposes.
 
   `admin-page.js`'s "Manual Executions" section is the only caller of everything above except
   `claimChampionshipAchievements()`/`getChampionshipTallies()` — see `admin/CLAUDE.md`.
