@@ -36,6 +36,11 @@
         <priority>0.3</priority>
     </url>
     <url>
+        <loc>https://dailymindchallenge.com/terms-of-service</loc>
+        <changefreq>yearly</changefreq>
+        <priority>0.3</priority>
+    </url>
+    <url>
         <loc>https://dailymindchallenge.com/cookie-consent</loc>
         <changefreq>yearly</changefreq>
         <priority>0.3</priority>
