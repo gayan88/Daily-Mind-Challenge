@@ -87,6 +87,12 @@ export async function recordDailyResult(uid, profile, { challengeId, errors, tim
         scoreDate: today,
         challengeId,
         errors,
+        // Sudoku Daily has no loss condition (untimed, no guess limit -- see this file's own
+        // Points doc comment), so this is always true once recorded at all. Stored explicitly
+        // anyway, mirroring Wordle's real won/lost field, so anything reading "was this game won
+        // today" (e.g. the Perfect Day achievement) doesn't need separate per-game tribal
+        // knowledge about which games can even fail.
+        won: true,
         completionPoints,
         timeBonusPoints: earnedTimeBonus,
         errorBonusPoints: earnedErrorBonus,

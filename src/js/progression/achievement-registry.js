@@ -8,113 +8,227 @@ import { GAMES } from './game-registry.js';
  * game-specific logic of its own -- it's entirely driven by the Game Registry and the thresholds
  * below.
  *
- * `context` shape (assembled by callers, currently only profile.js):
+ * This is the user's own full replacement list (67 achievements total), superseding the earlier,
+ * smaller registry entirely -- old ids not in this list (wordle-master at the old Level 10
+ * threshold, explorer-5/10/20, puzzle-collector, and the old single non-tiered championship ids)
+ * just stop being evaluated; any already-earned `playerAchievements` docs under those ids are
+ * harmless orphans, no migration needed, same as every earlier id rename in this app.
+ *
+ * `context` shape (assembled by profile.js):
  *   {
  *     gameProgress: { [gameId]: { level, lifetimePoints, ... } }, // progression-service.js#getGameProgressByGame()
- *     totalPoints: number,   // combined lifetime Points across every game (+ loginPoints for
- *                            // registered players) -- the same number shown as "Total points"
- *     currentStreak: number, // registeredUsers.currentStreak (Phase 4)
- *     hasPerfectDay: boolean, // true once registeredUsers.lastPerfectDayDate has ever been set (Phase 3)
+ *     totalPoints: number,           // combined lifetime Points across every game (+ loginPoints for registered players)
+ *     totalGamesPlayed: number,      // sum of gameScores doc counts across every gameType, all 3 games
+ *     currentStreak: number,         // registeredUsers.currentStreak
+ *     hasPerfectDay: boolean,        // true once registeredUsers.lastPerfectDayDate has ever been set (completed all 3, any outcome)
+ *     hasFlawlessDay: boolean,       // true once registeredUsers.lastFlawlessDayDate has ever been set (completed AND won all 3)
+ *     perfectDayCount: number,       // registeredUsers.perfectDayCount -- lifetime count of distinct perfect (all-3-completed) days
+ *     championshipTallies: { [gameId]: { day, week, month } }, // championship-service.js#getChampionshipTallies()
  *   }
  *
- * Categories: 'game', 'streak', 'exploration', 'global', and 'championship' (Phase 6). Every
- * 'championship' entry below has **no `evaluate()`** -- unlike every other category, "did I win a
- * weekly/monthly championship" isn't something profile.js can locally evaluate from progression
- * data; it depends on global periodResults data and is awarded through a completely different code
- * path (progression/championship-service.js#claimChampionshipAchievements(), an accumulating
- * `count` per win, not a one-time badge). These entries exist here purely so profile.js's
- * Achievements section has a label/description/icon to render once one is earned -- callers that
- * iterate this array to *evaluate* achievements (achievement-engine.js) must skip entries with no
- * `evaluate` function.
+ * Categories: 'game', 'streak', 'global', and 'championship'.
+ *
+ * Every 'championship' entry has **no `evaluate()`** -- unlike every other category, "did I win a
+ * period" isn't something profile.js can locally evaluate from progression data alone; it depends
+ * on global periodResults data and is awarded through a completely different code path
+ * (progression/championship-service.js#claimChampionshipAchievements()). Each win-count milestone
+ * (1/7/30/50/100 Daily wins, etc.) is its own separate one-time achievement id -- not one
+ * achievement whose `count` accumulates -- see championship-service.js's own doc comment for why.
+ * These entries DO have a `progress()`, sourced from `context.championshipTallies` (the running
+ * win count), so an unearned tier can still show "12 / 30" in the UI.
+ *
+ * Most other entries also carry an optional `progress(context)` + `target` pair -- used by
+ * profile.js to sort an unearned achievement into "In Progress" (progress > 0) vs. "Not Started"
+ * (progress === 0), and to render a "current / target" line + bar for the former. `progress()`
+ * always returns the same unit as `target` (already clamped to it), not a percentage. A few
+ * entries deliberately have **no** `progress()` -- `daily-mind-champion` and `perfect-day` --
+ * because "did I have one" isn't a cumulative fraction; those stay binary (Completed once true,
+ * Not Started until then, never "In Progress").
  *
  * IMPORTANT: every `id` here must also be listed in firestore.rules' playerAchievements
- * `allow create`/`allow update` allow-lists (rules can't import this file) -- adding an achievement
- * means updating both places, same maintenance coupling as maxCreateScore()'s gameType list.
+ * `allow create` allow-list (rules can't import this file) -- adding an achievement means updating
+ * both places, same maintenance coupling as maxCreateScore()'s gameType list.
  */
 
-// Level 10 = 50,000 lifetime points in one game (progression-service.js's 5,000-points-per-level
-// formula) -- a deliberately high bar for genuine mastery, not just having played a lot.
-const GAME_MASTER_LEVEL = 10;
-
-// Mirrors streak-service.js's own MILESTONES -- kept as a separate literal (not imported) so this
-// file has zero dependency on Firestore-touching modules; if the two ever need to diverge, that's
-// a deliberate future decision, not an accidental drift.
-const STREAK_MILESTONES = [7, 30, 100, 365];
-
-const EXPLORATION_TIERS = [
-    { count: 5, id: 'explorer-5', label: 'Puzzle Explorer' },
-    { count: 10, id: 'explorer-10', label: 'Mind Adventurer' },
-    { count: 20, id: 'explorer-20', label: 'Mind Explorer' },
+// Per-game level tiers -- raw 0-indexed thresholds (progression-service.js's Game Level is
+// 0-indexed; profile.js's "Your Games" cards display level+1, so "Level 25" as stated by the user
+// means raw threshold 24 -- same +1 display convention used throughout this file).
+const LEVEL_TIERS = [
+    { suffix: 'expert', label: 'Expert', rawLevel: 24 },
+    { suffix: 'master', label: 'Master', rawLevel: 49 },
+    { suffix: 'grandmaster', label: 'Grand Master', rawLevel: 99 },
 ];
 
-const ALL_ROUNDER_LEVEL = 1; // 5,000+ lifetime points in every registered game
-const PUZZLE_COLLECTOR_POINTS = 100000;
+// Championship win-count tiers per period type -- must exactly match
+// championship-service.js#CHAMPIONSHIP_TIERS. Kept as a separate literal here (this file stays
+// Firestore-free and can't import that one), same precedent as streak-service.js's own milestones
+// vs. this file's STREAK_MILESTONES below.
+const CHAMPIONSHIP_TIERS = { day: [1, 7, 30, 50, 100], week: [1, 5, 10, 25, 50], month: [1, 3, 6, 9, 12] };
+const PERIOD_LABEL = { day: 'Daily', week: 'Weekly', month: 'Monthly' };
+const PERIOD_ID = { day: 'daily', week: 'weekly', month: 'monthly' };
+
+const STREAK_MILESTONES = [7, 30, 100, 200, 365];
+
+// Custom illustrated badge art for specific achievements, keyed by id -- everything else just
+// uses its category's emoji (profile.js's own ACHIEVEMENT_CATEGORY_ICON). User-supplied artwork,
+// cropped/resized from originals in src/assets/images/New/. Applied as a final pass over the
+// ACHIEVEMENTS array below rather than inlined into each entry, so dropping in more art later
+// never means hand-editing the achievement definitions themselves.
+const CUSTOM_IMAGES = {
+    'wordle-expert': '/assets/images/achievements/wordle-expert.png',
+    'wordle-master': '/assets/images/achievements/wordle-master.png',
+    'wordle-grandmaster': '/assets/images/achievements/wordle-grandmaster.png',
+
+    'wordle-daily-champion': '/assets/images/achievements/wordle-daily-champion.png',
+    'wordle-daily-champion-7': '/assets/images/achievements/wordle-daily-champion-7.png',
+    'wordle-daily-champion-30': '/assets/images/achievements/wordle-daily-champion-30.png',
+    'wordle-daily-champion-50': '/assets/images/achievements/wordle-daily-champion-50.png',
+    'wordle-daily-champion-100': '/assets/images/achievements/wordle-daily-champion-100.png',
+
+    'wordle-weekly-champion': '/assets/images/achievements/wordle-weekly-champion.png',
+    'wordle-weekly-champion-5': '/assets/images/achievements/wordle-weekly-champion-5.png',
+    'wordle-weekly-champion-10': '/assets/images/achievements/wordle-weekly-champion-10.png',
+    'wordle-weekly-champion-25': '/assets/images/achievements/wordle-weekly-champion-25.png',
+    'wordle-weekly-champion-50': '/assets/images/achievements/wordle-weekly-champion-50.png',
+
+    'wordle-monthly-champion': '/assets/images/achievements/wordle-monthly-champion.png',
+    'wordle-monthly-champion-3': '/assets/images/achievements/wordle-monthly-champion-3.png',
+    'wordle-monthly-champion-6': '/assets/images/achievements/wordle-monthly-champion-6.png',
+    'wordle-monthly-champion-9': '/assets/images/achievements/wordle-monthly-champion-9.png',
+    'wordle-monthly-champion-12': '/assets/images/achievements/wordle-monthly-champion-12.png',
+};
+
+// "All 3 games at once" level tiers -- a lower per-game bar than LEVEL_TIERS above, since it
+// requires every game simultaneously. Same raw-0-indexed / +1-display convention.
+const ALL_GAMES_TIERS = [
+    { id: 'all-rounder', label: 'All-Rounder', rawLevel: 1 },
+    { id: 'puzzle-enthusiast', label: 'Puzzle Enthusiast', rawLevel: 4 },
+    { id: 'mind-master', label: 'Mind Master', rawLevel: 9 },
+];
+
+const PUZZLE_ADDICT_GAMES_PLAYED = 100;
+const MIND_ATHLETE_POINTS = 10000;
+const TRIPLE_THREAT_DAYS = 7;
 
 export const ACHIEVEMENTS = [
-    // Description text uses GAME_MASTER_LEVEL + 1 -- profile.js's "Your Games" cards display
-    // Level as 1-indexed (Level 1 at 0 points) while this threshold is checked against the raw
-    // 0-indexed value below, so the +1 keeps the wording matching what a player actually sees.
-    ...Object.entries(GAMES).map(([gameId, game]) => ({
-        id: `${gameId}-master`,
-        category: 'game',
-        label: `${game.label} Master`,
-        description: `Reach Level ${GAME_MASTER_LEVEL + 1} in ${game.label}.`,
-        evaluate: (ctx) => (ctx.gameProgress[gameId]?.level || 0) >= GAME_MASTER_LEVEL,
-    })),
+    // Per-game level tiers (Expert / Master / Grand Master). `family` groups tiers that share the
+    // same underlying progress number (here, one game's Level) -- see profile.js's
+    // renderAchievements() for why: without it, every not-yet-reached tier in a family would show
+    // the exact same "in progress" number simultaneously (e.g. Level 16 showing as "in progress"
+    // toward Expert *and* Master *and* Grand Master at once), instead of just the next one up.
+    ...Object.entries(GAMES).flatMap(([gameId, game]) =>
+        LEVEL_TIERS.map(({ suffix, label, rawLevel }) => ({
+            id: `${gameId}-${suffix}`,
+            category: 'game',
+            label: `${game.label} ${label}`,
+            description: `Reach Level ${rawLevel + 1} in ${game.label}.`,
+            evaluate: (ctx) => (ctx.gameProgress[gameId]?.level || 0) >= rawLevel,
+            progress: (ctx) => Math.min((ctx.gameProgress[gameId]?.level || 0) + 1, rawLevel + 1),
+            target: rawLevel + 1,
+            family: `${gameId}-level`,
+        }))
+    ),
 
+    // Per-game Championship win tiers (Daily/Weekly/Monthly x each game). No evaluate() -- awarded
+    // externally by championship-service.js#claimChampionshipAchievements(); progress() reads the
+    // running win tally from context.championshipTallies.
+    ...Object.entries(GAMES).flatMap(([gameId, game]) =>
+        Object.keys(CHAMPIONSHIP_TIERS).flatMap((periodType) =>
+            CHAMPIONSHIP_TIERS[periodType].map((tierCount) => {
+                const periodLabel = PERIOD_LABEL[periodType];
+                const isFirstTier = tierCount === 1;
+                return {
+                    id: isFirstTier
+                        ? `${gameId}-${PERIOD_ID[periodType]}-champion`
+                        : `${gameId}-${PERIOD_ID[periodType]}-champion-${tierCount}`,
+                    category: 'championship',
+                    label: isFirstTier
+                        ? `${game.label} ${periodLabel} Champion`
+                        : `${game.label} ${periodLabel} Champion - ${tierCount} Times`,
+                    description: isFirstTier
+                        ? `Become ${game.label} ${periodLabel} Champion once.`
+                        : `Become ${game.label} ${periodLabel} Champion ${tierCount} times.`,
+                    progress: (ctx) => Math.min(ctx.championshipTallies?.[gameId]?.[periodType] || 0, tierCount),
+                    target: tierCount,
+                    family: `${gameId}-${periodType}-champion`,
+                };
+            })
+        )
+    ),
+
+    // Global: streaks. One family -- there's only one currentStreak number, so without grouping,
+    // every not-yet-reached milestone would show it as "in progress" simultaneously.
     ...STREAK_MILESTONES.map((days) => ({
         id: `streak-${days}`,
         category: 'streak',
         label: `${days} Day Streak`,
-        description: `Reach a ${days}-day streak.`,
+        family: 'streak',
+        description: `Play for ${days} consecutive days.`,
         evaluate: (ctx) => ctx.currentStreak >= days,
-    })),
-
-    ...EXPLORATION_TIERS.map(({ count, id, label }) => ({
-        id,
-        category: 'exploration',
-        label,
-        description: `Play ${count} different games.`,
-        evaluate: (ctx) => Object.values(ctx.gameProgress).filter((g) => g.lifetimePoints > 0).length >= count,
+        progress: (ctx) => Math.min(ctx.currentStreak, days),
+        target: days,
     })),
 
     {
         id: 'daily-mind-champion',
         category: 'global',
         label: 'Daily Mind Champion',
-        description: "Complete every game's Daily Challenge in a single day.",
+        description: 'Complete all 3 Daily Challenges in a single day.',
         evaluate: (ctx) => ctx.hasPerfectDay,
+        // No progress() -- "did I ever have one" isn't a cumulative fraction.
     },
     {
-        id: 'all-rounder',
+        id: 'perfect-day',
         category: 'global',
-        label: 'All-Rounder',
-        // See the game-master comment above re: the +1 -- same 0-indexed-vs-displayed mismatch.
-        description: `Reach Level ${ALL_ROUNDER_LEVEL + 1} in every game.`,
-        evaluate: (ctx) => Object.keys(GAMES).every((gameId) => (ctx.gameProgress[gameId]?.level || 0) >= ALL_ROUNDER_LEVEL),
+        label: 'Perfect Day',
+        description: 'Complete all 3 Daily Challenges without making an error.',
+        // Stricter than Daily Mind Champion above: also requires having *won* all 3, not just
+        // completed them (Wordle can record a score on a loss; Sudoku/Word Search Daily have no
+        // loss condition at all, so this only ever meaningfully gates on Wordle -- see
+        // xp-service.js#awardDailyCompletionXp()'s own doc comment for the full reasoning).
+        evaluate: (ctx) => ctx.hasFlawlessDay,
     },
     {
-        id: 'puzzle-collector',
+        id: 'triple-threat',
         category: 'global',
-        label: 'Puzzle Collector',
-        description: `Earn ${PUZZLE_COLLECTOR_POINTS.toLocaleString()} total lifetime Points.`,
-        evaluate: (ctx) => ctx.totalPoints >= PUZZLE_COLLECTOR_POINTS,
+        label: 'Triple Threat',
+        description: `Complete all 3 Daily Challenges on ${TRIPLE_THREAT_DAYS} different days.`,
+        evaluate: (ctx) => (ctx.perfectDayCount || 0) >= TRIPLE_THREAT_DAYS,
+        progress: (ctx) => Math.min(ctx.perfectDayCount || 0, TRIPLE_THREAT_DAYS),
+        target: TRIPLE_THREAT_DAYS,
     },
 
-    // Championship achievements (Phase 6) -- awarded by championship-service.js, not evaluate().
-    // id format `${gameId}-${periodType}ly-champion` must match that file's own construction of it.
-    ...Object.entries(GAMES).flatMap(([gameId, game]) => [
-        {
-            id: `${gameId}-weekly-champion`,
-            category: 'championship',
-            label: `Weekly ${game.label} Champion`,
-            description: `Top that week's ${game.label} leaderboard.`,
-        },
-        {
-            id: `${gameId}-monthly-champion`,
-            category: 'championship',
-            label: `Monthly ${game.label} Champion`,
-            description: `Top that month's ${game.label} leaderboard.`,
-        },
-    ]),
-];
+    // family: 'all-games-level' -- these three all share `target` (3, always -- "how many of the
+    // 3 games meet the threshold"), so `familyOrder` (the actual rawLevel each tier needs) is what
+    // determines which one is "next" within the family, not `target` itself.
+    ...ALL_GAMES_TIERS.map(({ id, label, rawLevel }) => ({
+        id,
+        category: 'global',
+        label,
+        description: `Reach Level ${rawLevel + 1} in all 3 games.`,
+        evaluate: (ctx) => Object.keys(GAMES).every((gameId) => (ctx.gameProgress[gameId]?.level || 0) >= rawLevel),
+        progress: (ctx) => Object.keys(GAMES).filter((gameId) => (ctx.gameProgress[gameId]?.level || 0) >= rawLevel).length,
+        target: Object.keys(GAMES).length,
+        family: 'all-games-level',
+        familyOrder: rawLevel,
+    })),
+
+    {
+        id: 'puzzle-addict',
+        category: 'global',
+        label: 'Puzzle Addict',
+        description: `Play ${PUZZLE_ADDICT_GAMES_PLAYED} games.`,
+        evaluate: (ctx) => (ctx.totalGamesPlayed || 0) >= PUZZLE_ADDICT_GAMES_PLAYED,
+        progress: (ctx) => Math.min(ctx.totalGamesPlayed || 0, PUZZLE_ADDICT_GAMES_PLAYED),
+        target: PUZZLE_ADDICT_GAMES_PLAYED,
+    },
+    {
+        id: 'mind-athlete',
+        category: 'global',
+        label: 'Mind Athlete',
+        description: `Earn ${MIND_ATHLETE_POINTS.toLocaleString()} total points.`,
+        evaluate: (ctx) => ctx.totalPoints >= MIND_ATHLETE_POINTS,
+        progress: (ctx) => Math.min(ctx.totalPoints, MIND_ATHLETE_POINTS),
+        target: MIND_ATHLETE_POINTS,
+    },
+].map((a) => (CUSTOM_IMAGES[a.id] ? { ...a, image: CUSTOM_IMAGES[a.id] } : a));

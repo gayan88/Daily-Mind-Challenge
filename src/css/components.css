@@ -310,11 +310,114 @@
     }
 }
 
+/* Wraps .status-header (avatar/name/rank) and .status-level-card side by side -- wraps to a
+   stacked layout on narrow screens since the level card has its own minimum useful width. */
+.status-top-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.status-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+}
+
+.status-level-card {
+    flex: 1 1 260px;
+    max-width: 340px;
+    background: var(--color-primary-tint);
+    border-radius: var(--radius-lg);
+    padding: 16px 18px;
+}
+
+.status-level-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.status-level-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.status-level-xp {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+}
+
+.status-level-bar {
+    height: 8px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.6);
+    overflow: hidden;
+}
+
+.status-level-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-primary-dark));
+}
+
+.status-level-caption {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+}
+
+.status-avatar {
+    flex: 0 0 auto;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--color-primary-tint);
+    border: 2px solid var(--color-primary-tint);
+}
+
+.status-header-text {
+    min-width: 0;
+}
+
+/* Also used standalone (no .status-avatar/.status-header wrapper) by the logged-out dashboard's
+   own "Welcome to Daily Mind Challenge!" title, which needs its own bottom margin since there's no
+   .status-header to supply one -- the registered/guest case below overrides it back to 0, since
+   .status-header's own margin-bottom already spaces the whole block and the name should sit tight
+   against the rank label directly under it. */
 .status-welcome {
     font-size: 28px;
     font-weight: 700;
     color: var(--color-primary);
     margin-bottom: 16px;
+}
+
+.status-header-text .status-welcome {
+    margin-bottom: 0;
+}
+
+.status-rank-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+}
+
+@media (max-width: 640px) {
+    .status-avatar {
+        width: 44px;
+        height: 44px;
+    }
+
+    .status-welcome {
+        font-size: 22px;
+    }
 }
 
 .status-row {
@@ -471,84 +574,148 @@
 }
 
 /* ---------- Daily Brain Workout summary (Phase 8) ---------- */
-.status-progression-row {
+.status-streak-label {
     display: flex;
     flex-wrap: wrap;
-    gap: 16px;
-    margin-bottom: 12px;
-}
-
-.status-progression-item {
+    gap: 4px 14px;
+    margin-top: 4px;
     font-size: 14px;
     font-weight: 600;
-    color: var(--color-text);
+    color: var(--color-text-secondary);
 }
 
-.status-progression-muted {
-    font-weight: 400;
-    color: var(--color-text-muted);
+.workout-extras-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
 }
 
-.status-workout-hint {
-    font-size: 13px;
-    color: var(--color-text-muted);
-    margin-bottom: 16px;
+@media (max-width: 700px) {
+    .workout-extras-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 .workout-extras-card {
     display: flex;
-    flex-direction: column;
-    gap: 10px;
+    align-items: center;
+    gap: 16px;
     background: var(--color-surface);
     border: 0.5px solid var(--color-border);
     border-radius: var(--radius-lg);
-    padding: 16px 20px;
+    padding: 20px;
 }
 
-@media (min-width: 640px) {
-    .workout-extras-card {
-        flex-direction: row;
-    }
-}
-
-.workout-extras-item {
-    flex: 1 1 0;
+.workout-extras-icon-wrap {
+    position: relative;
+    flex: 0 0 auto;
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: var(--color-primary-tint);
     display: flex;
     align-items: center;
-    gap: 10px;
-    min-width: 0;
+    justify-content: center;
 }
 
 .workout-extras-icon {
-    flex: 0 0 auto;
-    color: var(--color-primary);
-    font-size: 18px;
+    font-size: 32px;
+    line-height: 1;
 }
 
-.workout-extras-text {
+/* Purely decorative sparkle accents, matching the mockup -- pseudo-elements rather than extra
+   markup since they carry no content of their own. */
+.workout-extras-icon-wrap::before,
+.workout-extras-icon-wrap::after {
+    content: '\2726';
+    position: absolute;
+    color: var(--color-primary-light);
+    opacity: 0.8;
+}
+
+.workout-extras-icon-wrap::before {
+    top: -4px;
+    right: 0;
+    font-size: 13px;
+}
+
+.workout-extras-icon-wrap::after {
+    bottom: 2px;
+    left: -8px;
+    font-size: 9px;
+}
+
+.workout-extras-body {
     flex: 1 1 auto;
-    font-size: 14px;
-    color: var(--color-text-secondary);
+    min-width: 0;
 }
 
-.workout-extras-text strong {
+.workout-extras-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.workout-extras-subtitle {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin-bottom: 12px;
+}
+
+.workout-extras-stat {
+    font-size: 15px;
+    color: var(--color-text-secondary);
+    margin-bottom: 8px;
+}
+
+.workout-extras-stat strong {
+    font-size: 26px;
+    font-weight: 800;
     color: var(--color-primary);
+    margin-right: 4px;
+}
+
+.workout-extras-progress {
+    height: 6px;
+    border-radius: 999px;
+    background: var(--color-border);
+    overflow: hidden;
+}
+
+.workout-extras-progress-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-primary-dark));
 }
 
 .workout-extras-link {
     flex: 0 0 auto;
-    font-size: 13px;
-    font-weight: 600;
+    padding: 10px 18px;
+    border-radius: 999px;
+    background: var(--color-primary-tint);
     color: var(--color-primary);
+    font-size: 14px;
+    font-weight: 700;
     text-decoration: none;
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
     white-space: nowrap;
 }
 
 .workout-extras-link:hover {
-    text-decoration: underline;
+    background: var(--color-primary-light);
+    color: #FFFFFF;
+}
+
+@media (max-width: 480px) {
+    .workout-extras-card {
+        flex-wrap: wrap;
+    }
+
+    .workout-extras-link {
+        margin-left: 88px;
+    }
 }
 
 /* ---------- Ad slot (placeholder by default, admin-configurable via config/ads) ---------- */
@@ -817,6 +984,21 @@
     background: var(--color-primary-tint);
 }
 
+.hlb-row-clickable {
+    cursor: pointer;
+}
+
+.hlb-row-clickable:hover,
+.hlb-row-clickable:focus-visible {
+    background: var(--color-bg);
+}
+
+.hlb-row-clickable.hlb-you:hover,
+.hlb-row-clickable.hlb-you:focus-visible {
+    background: var(--color-primary-tint);
+    filter: brightness(0.97);
+}
+
 .hlb-rank {
     flex: 0 0 40px;
     display: flex;
@@ -840,6 +1022,15 @@
     width: 1px;
     height: 18px;
     background: var(--color-border-strong);
+}
+
+.hlb-avatar {
+    flex: 0 0 auto;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--color-primary-tint);
 }
 
 .hlb-name {
@@ -891,6 +1082,11 @@
 
     .hlb-name {
         font-size: 15px;
+    }
+
+    .hlb-avatar {
+        width: 26px;
+        height: 26px;
     }
 
     .hlb-medal {
@@ -1388,4 +1584,290 @@
 .modal-close:hover {
     background: var(--color-bg);
     color: var(--color-text);
+}
+
+/* ---------- Player profile popup (leaderboard-page.js / home.js, click any row) ----------
+   Header background color is set inline per-open (the clicked player's main-rank accent color, or
+   a fixed neutral for guests -- see player-profile-modal.js). The dialog itself stays padding-free
+   so the header can bleed full-width/rounded-top behind it; every section below supplies its own
+   padding.
+
+   Deliberately does NOT set `overflow: hidden` here (an earlier version did, to clip the header's
+   square corners to the dialog's rounded ones) -- that silently overrode the base .modal-dialog's
+   own `overflow-y: auto`, so a player with enough achievements to exceed the 90vh max-height got
+   the bottom of the list cut off with no way to scroll to it, rather than a scrollbar appearing.
+   The header rounds its own top corners instead (see .player-profile-header below), so the dialog
+   can keep the base component's scroll behavior. */
+.player-profile-dialog {
+    padding: 0;
+    overflow-x: hidden;
+    text-align: center;
+}
+
+.player-profile-dialog .modal-close {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.player-profile-dialog .modal-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: #FFFFFF;
+}
+
+.player-profile-header {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 40px 20px 52px;
+    transition: background 0.15s;
+    overflow: hidden;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    /* Faint repeating crown texture -- a small inline SVG data-URI, not a real asset, since it's
+       purely decorative and needs to inherit no particular color from the rank palette. */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Ctext x='6' y='40' font-size='28' fill='white' opacity='0.10'%3E%E2%99%9A%3C/text%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-blend-mode: overlay;
+}
+
+.player-profile-avatar {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: rgba(255, 255, 255, 0.2);
+    border: 3px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+}
+
+.player-profile-name {
+    font-size: 21px;
+    font-weight: 700;
+    color: #FFFFFF;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+.player-profile-rank-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.player-profile-rank-pill {
+    margin-top: 4px;
+    padding: 6px 16px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.85);
+    color: var(--color-text);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+/* Stats/level/achievements sit on the dialog's own light surface, overlapping up into the colored
+   header via a negative margin -- keeps busy content off the rank color so it stays legible
+   regardless of how saturated/dark that particular tier's color is. */
+#player-profile-body {
+    background: var(--color-bg);
+    padding: 16px;
+    margin-top: -32px;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    position: relative;
+}
+
+.player-profile-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+    margin-bottom: 14px;
+}
+
+.player-profile-stat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-align: left;
+}
+
+.player-profile-stat-icon {
+    flex: 0 0 auto;
+    font-size: 22px;
+    line-height: 1;
+}
+
+.player-profile-stat-value {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--color-text);
+    line-height: 1.2;
+}
+
+.player-profile-stat-label {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+}
+
+.player-profile-level-card {
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    margin-bottom: 14px;
+    text-align: left;
+}
+
+.player-profile-level-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.player-profile-level-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.player-profile-level-xp {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+}
+
+.player-profile-level-bar {
+    height: 8px;
+    border-radius: 999px;
+    background: var(--color-border);
+    overflow: hidden;
+}
+
+.player-profile-level-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-primary-dark));
+}
+
+.player-profile-level-caption {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--color-text-muted);
+}
+
+.player-profile-badges-section {
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    min-height: 40px;
+    text-align: left;
+}
+
+.player-profile-badges-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: 14px;
+}
+
+.player-profile-badges-count {
+    font-weight: 600;
+    color: var(--color-text-secondary);
+}
+
+/* Capped to exactly one row's height (badge + its label) regardless of how many achievements the
+   player has earned -- keeps the popup's overall height predictable instead of growing without
+   bound, with any additional rows reachable via this grid's own internal scroll rather than
+   pushing the whole dialog taller. */
+.player-profile-badges-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px 8px;
+    max-height: 130px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.player-profile-badge-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    text-align: center;
+}
+
+.player-profile-badge-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--color-text);
+    line-height: 1.25;
+}
+
+.player-profile-badge {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    max-width: 80px;
+    border-radius: 50%;
+    background: var(--color-primary-tint);
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    cursor: help;
+    outline: none;
+}
+
+.player-profile-badge-image {
+    background: none;
+}
+
+.player-profile-badge img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* Same custom-CSS-tooltip mechanism as profile.css's .achievement-strip-item -- duplicated here
+   rather than shared since this modal renders on pages that don't load pages/profile.css at all. */
+.player-profile-badge::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-8px);
+    background: var(--color-text);
+    color: white;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: normal;
+    width: 150px;
+    text-align: center;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.15s;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.player-profile-badge:hover::after,
+.player-profile-badge:focus::after,
+.player-profile-badge:focus-within::after {
+    opacity: 1;
+    visibility: visible;
+}
+
+.player-profile-guest-note,
+.player-profile-no-badges {
+    color: var(--color-text-secondary);
+    font-size: 14px;
+    line-height: 1.5;
+    text-align: center;
+    padding: 8px 4px;
 }

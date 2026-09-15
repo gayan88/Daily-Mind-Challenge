@@ -18,6 +18,11 @@ import {
 } from './wordsearch-admin.js';
 import { getDailyActivitySummary } from './activity-summary-data.js';
 import { escapeHtml, showToast, getTodayDateString } from '../utils/helpers.js';
+import { GAMES } from '../progression/game-registry.js';
+import {
+    getAllPeriodStatuses, finalizeAllPending, finalizePendingFor, getPeriodResult, refinalizePeriod,
+} from '../progression/championship-service.js';
+import { getGameScoresForDateRange, getOverallScoresForDateRange } from '../leaderboard/leaderboard-data.js';
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -575,7 +580,7 @@ async function renderTournamentsTable() {
     container.innerHTML = tournaments.map((t) => `
         <div class="tournament-row">
             <span class="tournament-row-name">${escapeHtml(t.name)}</span>
-            <span class="tournament-row-meta">${t.words.length} words &bull; ${t.timePerWordSeconds}s/word &bull; +${t.bonusPoints} bonus</span>
+            <span class="tournament-row-meta">${t.words.length} words &bull; ${t.timePerWordSeconds}s/word &bull; +${t.bonusPoints.toLocaleString()} bonus</span>
             <span class="status-pill ${t.active ? 'on' : ''}">${t.active ? 'Active' : 'Inactive'}</span>
             <div class="tournament-row-actions">
                 <button class="btn" data-toggle-tournament="${t.id}" data-active="${t.active}" type="button">${t.active ? 'Deactivate' : 'Activate'}</button>
@@ -1526,6 +1531,284 @@ function renderModResult(user) {
     });
 }
 
+const PERIOD_TYPE_LABELS = { day: 'Daily', week: 'Weekly', month: 'Monthly' };
+
+function formatCountdown(ms) {
+    if (ms <= 0) return 'now';
+    const totalSeconds = Math.floor(ms / 1000);
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+    return `${h}h ${String(m).padStart(2, '0')}m ${String(s).padStart(2, '0')}s`;
+}
+
+/** Ticks every second, updating each pending countdown's text from its target instant (embedded
+ * in `data-countdown` at render time). The moment any one crosses zero, stops and triggers a full
+ * table re-render -- simpler than tracking each row's state independently, and admin-panel-cheap. */
+function wireCountdowns(container) {
+    const elements = Array.from(container.querySelectorAll('[data-countdown]'));
+    if (elements.length === 0) return;
+    const intervalId = setInterval(() => {
+        let needsRefresh = false;
+        elements.forEach((el) => {
+            const remaining = Number(el.dataset.countdown) - Date.now();
+            if (remaining <= 0) {
+                needsRefresh = true;
+            } else {
+                const span = el.querySelector('.championship-countdown');
+                if (span) span.textContent = formatCountdown(remaining);
+            }
+        });
+        if (needsRefresh) {
+            clearInterval(intervalId);
+            renderChampionshipStatusTable();
+        }
+    }, 1000);
+}
+
+/** The Finalize Periods status table -- one row per game x period type, each showing whether it's
+ * already finalized (with the winner), safe and ready to run, or still counting down to its safe
+ * instant (12h past UTC's own period rollover, so every timezone has crossed over -- see
+ * progression/championship-service.js#periodSafeInstant()). */
+async function renderChampionshipStatusTable() {
+    const container = document.getElementById('championship-status-table');
+    let statuses;
+    try {
+        statuses = await getAllPeriodStatuses();
+    } catch {
+        container.innerHTML = `<div class="empty-state">Couldn't load &mdash; check Firestore rules are deployed and try again.</div>`;
+        return;
+    }
+
+    container.innerHTML = statuses.map((s) => {
+        const gameLabel = GAMES[s.gameId].label;
+        const periodLabel = PERIOD_TYPE_LABELS[s.periodType];
+
+        let statusHtml;
+        if (s.finalized) {
+            statusHtml = s.finalized.winnerUid
+                ? `<span class="status-pill on">Finalized</span> <span class="championship-winner">${escapeHtml(s.finalized.winnerDisplayName)}</span> (${s.finalized.winnerPoints.toLocaleString()} pts)`
+                : `<span class="status-pill">Finalized</span> No plays that period`;
+        } else if (s.isSafe) {
+            statusHtml = `<span class="status-pill on">Ready</span>`;
+        } else {
+            statusHtml = `<span data-countdown="${s.safeInstant}">Safe in <span class="championship-countdown">${formatCountdown(s.safeInstant - Date.now())}</span></span>`;
+        }
+
+        const olderMissingCount = s.missing.length - (s.isSafe && !s.finalized ? 1 : 0);
+        const extraHtml = olderMissingCount > 0
+            ? ` <span class="tournament-row-meta">+${olderMissingCount} older missing</span>`
+            : '';
+        const canRun = s.missing.length > 0;
+
+        return `
+            <div class="tournament-row">
+                <span class="tournament-row-name">${gameLabel} &mdash; ${periodLabel}</span>
+                <span class="tournament-row-meta">${statusHtml}${extraHtml}</span>
+                <div class="tournament-row-actions">
+                    <button class="btn" data-finalize-game="${s.gameId}" data-finalize-period="${s.periodType}" type="button" ${canRun ? '' : 'disabled'}>Finalize</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    // "Run All Eligible" is only ever useful when at least one row actually has something safe
+    // and unfinalized -- disabled otherwise instead of leaving it clickable-but-a-no-op.
+    const anyRunnable = statuses.some((s) => s.missing.length > 0);
+    document.getElementById('championship-run-all-btn').disabled = !anyRunnable;
+
+    wireCountdowns(container);
+
+    container.querySelectorAll('[data-finalize-game]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+            btn.disabled = true;
+            try {
+                const count = await finalizePendingFor(btn.dataset.finalizeGame, btn.dataset.finalizePeriod);
+                showToast(count > 0 ? `Finalized ${count} period(s)` : 'Nothing to finalize');
+                await renderChampionshipStatusTable();
+            } catch {
+                showToast("Couldn't finalize -- check Firestore rules are deployed");
+                btn.disabled = false;
+            }
+        });
+    });
+}
+
+function wireChampionshipRunAll() {
+    document.getElementById('championship-run-all-btn').addEventListener('click', async (e) => {
+        const btn = e.currentTarget;
+        btn.disabled = true;
+        try {
+            const count = await finalizeAllPending();
+            showToast(count > 0 ? `Finalized ${count} period(s)` : 'Nothing eligible right now');
+            // renderChampionshipStatusTable() sets this button's own disabled state based on
+            // whether anything is still runnable -- don't blindly re-enable it after, or a
+            // successful run that cleared the backlog would leave a now-pointless button clickable.
+            await renderChampionshipStatusTable();
+        } catch {
+            showToast("Couldn't finalize -- check Firestore rules are deployed");
+            btn.disabled = false;
+        }
+    });
+}
+
+function populateTop10ScopeSelect() {
+    const gameOptions = Object.entries(GAMES).map(([id, g]) => `<option value="${id}">${escapeHtml(g.label)}</option>`).join('');
+    document.getElementById('top10-scope-select').innerHTML = `<option value="overall">Overall</option>${gameOptions}`;
+}
+
+function wireTop10PeriodTypeToggle() {
+    const select = document.getElementById('top10-period-type-select');
+    const fields = {
+        day: document.getElementById('top10-day-field'),
+        week: document.getElementById('top10-week-field'),
+        month: document.getElementById('top10-month-field'),
+    };
+    const sync = () => {
+        Object.entries(fields).forEach(([type, el]) => { el.hidden = type !== select.value; });
+    };
+    select.addEventListener('change', sync);
+    sync();
+}
+
+/** Converts an <input type="week"> value ("2026-W05") into a [Monday, Sunday] date range -- the
+ * reverse of progression/championship-service.js's own week-key construction, needed here only
+ * for this admin picker (nothing else in the app goes from a week string back to dates). Jan 4 is
+ * always in ISO week 1, per the standard. */
+function isoWeekStringToRange(weekString) {
+    const [yearStr, weekStr] = weekString.split('-W');
+    const year = Number(yearStr);
+    const week = Number(weekStr);
+    const jan4 = new Date(Date.UTC(year, 0, 4));
+    const jan4DayNum = (jan4.getUTCDay() + 6) % 7; // Mon=0..Sun=6
+    const week1MondayMs = jan4.getTime() - jan4DayNum * 86400000;
+    const monday = new Date(week1MondayMs + (week - 1) * 7 * 86400000);
+    const sunday = new Date(monday.getTime() + 6 * 86400000);
+    const fmt = (d) => `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+    return { startDate: fmt(monday), endDate: fmt(sunday) };
+}
+
+/** Converts an <input type="month"> value ("2026-05") into a [first day, last day] date range. */
+function monthStringToRange(monthString) {
+    const [year, month] = monthString.split('-').map(Number);
+    const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
+    return { startDate: `${monthString}-01`, endDate: `${monthString}-${String(lastDay).padStart(2, '0')}` };
+}
+
+/**
+ * The official Championship result for whatever period is currently selected, shown alongside the
+ * live Top 10 -- lets an admin see "official winner: X" next to the raw numbers and immediately
+ * spot a mismatch, with a Re-finalize action right there (folded in from what used to be a
+ * separate "History & Corrections" lookup -- merged since both need the exact same game/period
+ * inputs, so keeping them apart was pure duplication). Only applies to a specific game -- there's
+ * no such thing as an "Overall" Championship, so this is skipped entirely when scope is "overall".
+ */
+async function renderTop10ChampionResult(scope, periodType, periodKey) {
+    const el = document.getElementById('top10-champion-result');
+    if (scope === 'overall') {
+        el.innerHTML = '';
+        return;
+    }
+
+    let result;
+    try {
+        result = await getPeriodResult(scope, periodType, periodKey);
+    } catch {
+        el.innerHTML = '';
+        return;
+    }
+
+    if (!result) {
+        el.innerHTML = `
+            <div class="tournament-row">
+                <span class="tournament-row-meta">Not finalized yet as a Champion -- use "Finalize Periods" above once this period is safe.</span>
+            </div>
+        `;
+        return;
+    }
+
+    el.innerHTML = `
+        <div class="tournament-row">
+            <span class="tournament-row-name">Official Champion</span>
+            <span class="tournament-row-meta">${result.winnerUid ? `<span class="championship-winner">${escapeHtml(result.winnerDisplayName)}</span> &mdash; ${result.winnerPoints.toLocaleString()} pts` : 'No plays recorded'}</span>
+            <div class="tournament-row-actions">
+                <button class="btn" id="top10-refinalize-btn" type="button">Re-finalize</button>
+            </div>
+        </div>
+    `;
+
+    document.getElementById('top10-refinalize-btn').addEventListener('click', async () => {
+        if (!window.confirm("Recompute this period's winner from current scores? This overwrites the existing result.")) return;
+        const btn = document.getElementById('top10-refinalize-btn');
+        btn.disabled = true;
+        try {
+            await refinalizePeriod(scope, periodType, periodKey);
+            showToast('Re-finalized');
+            await renderTop10ChampionResult(scope, periodType, periodKey);
+            await renderChampionshipStatusTable();
+        } catch {
+            showToast("Couldn't re-finalize -- check Firestore rules are deployed");
+            btn.disabled = false;
+        }
+    });
+}
+
+function wireTop10Run() {
+    document.getElementById('top10-run-btn').addEventListener('click', async () => {
+        const periodType = document.getElementById('top10-period-type-select').value;
+        const scope = document.getElementById('top10-scope-select').value;
+        const resultsEl = document.getElementById('top10-results');
+        document.getElementById('top10-champion-result').innerHTML = '';
+
+        // The raw <input type="date/week/month"> value already IS the exact periodKey format
+        // progression/championship-service.js uses ("YYYY-MM-DD" / "YYYY-Www" / "YYYY-MM") -- no
+        // extra derivation needed to go from "what the admin picked" to "which period this is".
+        let periodKey, range;
+        if (periodType === 'day') {
+            periodKey = document.getElementById('top10-day-input').value;
+            if (!periodKey) { showToast('Pick a date first'); return; }
+            range = { startDate: periodKey, endDate: periodKey };
+        } else if (periodType === 'week') {
+            periodKey = document.getElementById('top10-week-input').value;
+            if (!periodKey) { showToast('Pick a week first'); return; }
+            range = isoWeekStringToRange(periodKey);
+        } else {
+            periodKey = document.getElementById('top10-month-input').value;
+            if (!periodKey) { showToast('Pick a month first'); return; }
+            range = monthStringToRange(periodKey);
+        }
+
+        resultsEl.innerHTML = `<div class="loading-text">Loading&hellip;</div>`;
+        try {
+            const rows = scope === 'overall'
+                ? await getOverallScoresForDateRange(range.startDate, range.endDate)
+                : await getGameScoresForDateRange(scope, range.startDate, range.endDate);
+            const top10 = rows.slice(0, 10);
+
+            if (top10.length === 0) {
+                resultsEl.innerHTML = `<div class="empty-state">No scores in that period.</div>`;
+            } else {
+                resultsEl.innerHTML = `
+                    <div class="top10-table">
+                        <div class="top10-row top10-header"><span>Rank</span><span>Player</span><span>Points</span></div>
+                        ${top10.map((row, i) => `
+                            <div class="top10-row">
+                                <span class="top10-rank">#${i + 1}</span>
+                                <span>${escapeHtml(row.displayName)}${row.isGuest ? ' <span class="tournament-row-meta">(Guest)</span>' : ''}</span>
+                                <span class="top10-points">${row.points.toLocaleString()}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+        } catch {
+            resultsEl.innerHTML = `<div class="empty-state">Couldn't load &mdash; check Firestore rules are deployed.</div>`;
+        }
+
+        await renderTop10ChampionResult(scope, periodType, periodKey);
+    });
+}
+
 function wireModeration() {
     document.getElementById('mod-search-btn').addEventListener('click', async () => {
         const username = document.getElementById('mod-search-input').value.trim();
@@ -1545,6 +1828,11 @@ async function init() {
 
     wireCollapsibleSections();
     wireActivitySummary();
+    wireChampionshipRunAll();
+    await renderChampionshipStatusTable();
+    populateTop10ScopeSelect();
+    wireTop10PeriodTypeToggle();
+    wireTop10Run();
     const gameSectionConfigIds = ['challengeExpiration', 'sudokuTournamentSettings', 'wordsearchTournamentSettings'];
     const generalConfigIds = CONFIG_FORMS
         .map((form) => form.id)

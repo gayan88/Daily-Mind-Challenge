@@ -1,10 +1,12 @@
 import { loadHeaderFooter, trySession } from '../app.js';
 import { applyIcons, icon } from '../utils/icons.js';
-import { getOverallLeaderboard, findUserInLeaderboard } from '../leaderboard/leaderboard-data.js';
+import { getOverallLeaderboard, findUserInLeaderboard, getXpForUids } from '../leaderboard/leaderboard-data.js';
 import { checkPlayedTodayAll, getUserLifetimeStats } from '../utils/points.js';
 import { getConfig } from '../utils/config.js';
 import { escapeHtml, getQueryParam, getTodayDateString } from '../utils/helpers.js';
-import { calculateOverallProgress, XP_AMOUNTS } from '../progression/xp-service.js';
+import { calculateOverallProgress } from '../progression/xp-service.js';
+import { calculateRankProgress, GUEST_RANK_IMAGE } from '../progression/rank-service.js';
+import { showPlayerProfileModal } from '../leaderboard/player-profile-modal.js';
 import { syncDailyMissions, DAILY_MISSIONS } from '../progression/mission-service.js';
 import { getPlayerAchievements } from '../progression/achievement-engine.js';
 import {
@@ -196,29 +198,7 @@ function renderStatusCardLoggedOut() {
     applyIcons(card);
 }
 
-/** Streak + Overall Level/XP + a workout-completion hint -- Phase 8's "Daily Brain Workout"
- * home-page summary, all registered-player-only concepts (Section 4 of the progression spec).
- * Deliberately reuses Phase 3/4's exact existing numbers (the real perfect-day bonus amount, via
- * XP_AMOUNTS.PERFECT_DAY_BONUS) rather than a new, separate one -- the mockup's own "+100 XP"
- * would have meant a second, conflicting "finish everything today" bonus on top of the one Phase 3
- * already built; see docs/progression-gamification-roadmap.md's Phase 8 section for the decision. */
-function renderProgressionRowHtml(profile, allGamesDoneToday) {
-    const streak = profile.raw.currentStreak || 0;
-    const overall = calculateOverallProgress(profile.xp);
-    const workoutHint = allGamesDoneToday
-        ? `${icon('CHECK')} Today's workout complete!`
-        : `Complete every game today for a bonus (+${XP_AMOUNTS.PERFECT_DAY_BONUS} XP)`;
-
-    return `
-        <div class="status-progression-row">
-            <span class="status-progression-item">${icon('FLAME')} ${streak} day streak</span>
-            <span class="status-progression-item">${icon('STAR')} Level ${overall.level} <span class="status-progression-muted">(${overall.xp.toLocaleString()} XP)</span></span>
-        </div>
-        <div class="status-workout-hint">${workoutHint}</div>
-    `;
-}
-
-function renderStatusCard(profile, todayRank, todayPoints, bonusApplied, totalPoints, allGamesDoneToday) {
+function renderStatusCard(profile, todayRank, todayPoints, bonusApplied, totalPoints) {
     const card = document.getElementById('status-card');
 
     const bonusRow = bonusApplied
@@ -228,14 +208,60 @@ function renderStatusCard(profile, todayRank, todayPoints, bonusApplied, totalPo
             : '';
 
     const highlight = highlightForTodayRank(todayRank);
-    const progressionRow = profile.kind === 'registered' ? renderProgressionRowHtml(profile, allGamesDoneToday) : '';
+
+    // Same avatar/rank-label treatment as the leaderboard row/player-profile popup -- sub-rank
+    // badge + "{Rank} {Numeral}" for a registered player, the fixed Guest badge otherwise (guests
+    // don't earn XP/Rank, Section 4 of the progression spec).
+    const rankInfo = profile.kind === 'registered'
+        ? calculateRankProgress(profile.xp || 0)
+        : null;
+    const avatarImage = rankInfo ? rankInfo.subRankImage : GUEST_RANK_IMAGE;
+    const rankLabel = rankInfo ? rankInfo.label : 'Guest';
+
+    // Same Level/XP card as the player-profile popup (leaderboard/player-profile-modal.js) --
+    // guests don't earn XP/Level either, so this is omitted entirely for them rather than showing
+    // a meaningless "Level 1 (0 XP)". +1 display shift, same convention as Game Level's own cards
+    // -- see xp-service.js's own doc comment on calculateOverallLevel().
+    const levelProgress = profile.kind === 'registered' ? calculateOverallProgress(profile.xp || 0) : null;
+
+    // Streak + Total XP, right under the rank label -- registered players only (Section 4). Total
+    // XP (not the full Level breakdown -- that's already shown in the card beside the header) so
+    // the compact identity block still surfaces the one number that's a running lifetime total.
+    const streakLabel = profile.kind === 'registered'
+        ? `
+            <div class="status-streak-label">
+                <span>${icon('FLAME')} ${profile.raw.currentStreak || 0} day streak</span>
+                <span>${icon('STAR')} ${levelProgress.xp.toLocaleString()} Total XP</span>
+            </div>
+        `
+        : '';
+
+    const levelCard = levelProgress ? `
+        <div class="status-level-card">
+            <div class="status-level-row">
+                <span class="status-level-title">Level ${levelProgress.level + 1}</span>
+                <span class="status-level-xp">${(levelProgress.xp - levelProgress.level * 500).toLocaleString()} / 500 XP</span>
+            </div>
+            <div class="status-level-bar"><div class="status-level-fill" style="width:${levelProgress.progressPercent}%"></div></div>
+            <div class="status-level-caption">${levelProgress.xpToNextLevel.toLocaleString()} XP to reach Level ${levelProgress.nextLevel + 1}</div>
+        </div>
+    ` : '';
 
     card.innerHTML = `
-        <div class="status-welcome">Welcome back, ${escapeHtml(profile.displayName)}!</div>
-        ${progressionRow}
+        <div class="status-top-row">
+            <div class="status-header">
+                <img class="status-avatar" src="${avatarImage}" alt="">
+                <div class="status-header-text">
+                    <div class="status-welcome">Welcome back, ${escapeHtml(profile.displayName)}!</div>
+                    <div class="status-rank-label">${rankLabel}</div>
+                    ${streakLabel}
+                </div>
+            </div>
+            ${levelCard}
+        </div>
         ${bonusRow}
         <div class="status-stats-grid">
-            ${statTile(ICON_STAR, "Today's Points", todayPoints)}
+            ${statTile(ICON_STAR, "Today's Points", todayPoints.toLocaleString())}
             ${statTile(ICON_TROPHY, "Today's Rank", todayRank ? `#${todayRank}` : '&mdash;')}
             ${statTile(ICON_CHART, 'Total Points', totalPoints.toLocaleString())}
             ${statTile(ICON_MEDAL, 'Overall Rank', '&hellip;', 'status-overall-rank')}
@@ -267,15 +293,25 @@ function renderWorkoutExtras(profile, missionResult, achievementsCount) {
     section.hidden = false;
 
     const doneCount = DAILY_MISSIONS.filter((m) => missionResult.completedMissionIds.has(m.id)).length;
+    const missionsPercent = Math.round((doneCount / DAILY_MISSIONS.length) * 100);
 
     document.getElementById('workout-missions').innerHTML = `
-        <span class="workout-extras-icon" data-icon="TARGET"></span>
-        <span class="workout-extras-text">Daily Missions: <strong>${doneCount}/${DAILY_MISSIONS.length}</strong> complete</span>
+        <div class="workout-extras-icon-wrap"><span class="workout-extras-icon" data-icon="TARGET"></span></div>
+        <div class="workout-extras-body">
+            <div class="workout-extras-title">Daily Missions</div>
+            <div class="workout-extras-subtitle">Complete your daily missions</div>
+            <div class="workout-extras-stat"><strong>${doneCount}/${DAILY_MISSIONS.length}</strong> completed</div>
+            <div class="workout-extras-progress"><div class="workout-extras-progress-fill" style="width:${missionsPercent}%"></div></div>
+        </div>
         <a href="/profile" class="workout-extras-link">View <span data-icon="ARROW_RIGHT"></span></a>
     `;
     document.getElementById('workout-achievements').innerHTML = `
-        <span class="workout-extras-icon" data-icon="GOLD_MEDAL"></span>
-        <span class="workout-extras-text"><strong>${achievementsCount}</strong> badge${achievementsCount === 1 ? '' : 's'} earned</span>
+        <div class="workout-extras-icon-wrap"><span class="workout-extras-icon" data-icon="GOLD_MEDAL"></span></div>
+        <div class="workout-extras-body">
+            <div class="workout-extras-title">Achievements</div>
+            <div class="workout-extras-subtitle">Badges you've earned</div>
+            <div class="workout-extras-stat"><strong>${achievementsCount}</strong> badge${achievementsCount === 1 ? '' : 's'} earned</div>
+        </div>
         <a href="/profile" class="workout-extras-link">View <span data-icon="ARROW_RIGHT"></span></a>
     `;
     applyIcons(section);
@@ -304,32 +340,70 @@ function badgeHtml(row, uid) {
     return '';
 }
 
-function renderLeaderboardPreview(rows, uid) {
+/** Sub-rank avatars for just these 5 rows -- see leaderboard-data.js#getXpForUids()'s own doc
+ * comment for why this stays scoped to what's actually rendered rather than every leaderboard row. */
+async function avatarsForRows(rows) {
+    const uids = [...new Set(rows.filter((r) => !r.isGuest).map((r) => r.uid))];
+    const xpByUid = uids.length > 0 ? await getXpForUids(uids) : new Map();
+    return new Map(rows.map((r) => [
+        r.uid,
+        r.isGuest ? GUEST_RANK_IMAGE : calculateRankProgress(xpByUid.get(r.uid) || 0).subRankImage,
+    ]));
+}
+
+// Current top-5 preview rows, keyed by uid -- updated on every renderLeaderboardPreview() call so
+// the single delegated click listener below (wired once) always resolves against whatever's
+// actually on screen, not a stale snapshot from the first render.
+let previewRowsByUid = new Map();
+
+async function renderLeaderboardPreview(rows, uid) {
     const el = document.getElementById('leaderboard-preview');
     if (rows.length === 0) {
         el.innerHTML = `<div class="empty-state">No scores yet today. Be the first!</div>`;
         return;
     }
 
-    el.innerHTML = rows
-        .slice(0, 5)
+    const topRows = rows.slice(0, 5);
+    const avatarByUid = await avatarsForRows(topRows);
+    previewRowsByUid = new Map(topRows.map((row) => [row.uid, row]));
+
+    el.innerHTML = topRows
         .map((row) => `
-            <div class="hlb-row ${row.uid === uid ? 'hlb-you' : ''}">
+            <div class="hlb-row hlb-row-clickable ${row.uid === uid ? 'hlb-you' : ''}" data-uid="${row.uid}" tabindex="0">
                 <div class="hlb-rank">${rankMarkerHtml(row.rank)}</div>
                 <div class="hlb-divider"></div>
+                <img class="hlb-avatar" src="${avatarByUid.get(row.uid)}" alt="" />
                 <div class="hlb-name">${escapeHtml(row.displayName)}</div>
                 ${badgeHtml(row, uid)}
-                <div class="hlb-score"><span class="hlb-score-num">${row.points}</span><span class="hlb-score-label">pts</span></div>
+                <div class="hlb-score"><span class="hlb-score-num">${row.points.toLocaleString()}</span><span class="hlb-score-label">pts</span></div>
             </div>
         `)
         .join('');
+
+    if (!el.dataset.clickWired) {
+        el.dataset.clickWired = '1';
+        el.addEventListener('click', (e) => {
+            const rowEl = e.target.closest('.hlb-row');
+            if (!rowEl) return;
+            const row = previewRowsByUid.get(rowEl.dataset.uid);
+            if (row) showPlayerProfileModal(row);
+        });
+        el.addEventListener('keydown', (e) => {
+            if (e.key !== 'Enter' && e.key !== ' ') return;
+            const rowEl = e.target.closest('.hlb-row');
+            if (!rowEl) return;
+            e.preventDefault();
+            const row = previewRowsByUid.get(rowEl.dataset.uid);
+            if (row) showPlayerProfileModal(row);
+        });
+    }
 }
 
 async function renderLoggedOutDashboard() {
     renderStatusCardLoggedOut();
 
     const leaderboardRows = await getOverallLeaderboard('today', 20);
-    renderLeaderboardPreview(leaderboardRows, null);
+    await renderLeaderboardPreview(leaderboardRows, null);
 }
 
 async function renderLoggedInDashboard(uid, profile, bonusApplied) {
@@ -359,13 +433,12 @@ async function renderLoggedInDashboard(uid, profile, bonusApplied) {
     const userRow = findUserInLeaderboard(leaderboardRows, uid);
     const todayPoints = (userRow?.points ?? 0) + (needsBonusConfig ? dailyRewardConfig.points : 0);
     const totalPoints = isRegistered ? profile.loginPoints + lifetimeStats.totalScore : lifetimeStats.totalScore;
-    const allGamesDoneToday = !!playedToday.wordle && !!playedToday.sudoku && !!playedToday.wordsearch;
 
     // Keeps the in-memory profile in sync with any XP a mission reward just awarded -- same
     // reasoning as app.js's login-bonus XP sync and profile.js's own mission-sync call.
     if (missionResult) profile.xp = (profile.xp || 0) + missionResult.xpAwarded;
 
-    renderStatusCard(profile, userRow?.rank ?? null, todayPoints, bonusApplied, totalPoints, allGamesDoneToday);
+    renderStatusCard(profile, userRow?.rank ?? null, todayPoints, bonusApplied, totalPoints);
 
     markTileCompleted('wordle', !!playedToday.wordle);
     markTileCompleted('sudoku', !!playedToday.sudoku);

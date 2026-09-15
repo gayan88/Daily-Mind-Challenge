@@ -21,6 +21,14 @@ export const XP_AMOUNTS = {
 
 // Overall Level, same fixed-threshold style as Game Level (progression-service.js) -- always
 // derived from XP at call time, never stored, so the two can never drift apart.
+//
+// Stays 0-indexed internally (0-499 XP = level 0, 500-999 XP = level 1, ...), same as Game Level's
+// own raw `level` field -- callers display `level + 1` so a brand-new player with 0 XP sees "Level
+// 1" instead of "Level 0", exactly mirroring profile.js's `g.level + 1` display shift for Game
+// Level cards (see progression/CLAUDE.md). Kept 0-indexed here rather than shifting the math
+// itself since `nextLevel`/`nextLevelThreshold`/`xpToNextLevel`/`progressPercent` below are all
+// clean band-boundary arithmetic in the raw numbering; the current call sites (home.js's status
+// card, leaderboard/player-profile-modal.js) apply the +1 themselves at render time only.
 const XP_PER_LEVEL = 500;
 
 export function calculateOverallLevel(xp) {
@@ -45,8 +53,17 @@ export function calculateOverallProgress(xp) {
  * so call sites don't need their own profile.kind check. `lastPerfectDayDate` guards the bonus to
  * once per calendar day even if this somehow gets called more than once after the last game
  * completes.
+ *
+ * `allDailyGamesWonToday` is a separate signal from completion -- Wordle can record a score on a
+ * *loss* (6 failed guesses still writes a doc, just with fewer bonus points), so "completed all 3"
+ * and "won all 3" aren't the same fact. Sudoku/Word Search Daily have no loss condition at all
+ * (see their own `won: true` doc comments), so in practice only Wordle can make this false. When
+ * true, on top of the perfect-day bonus above: records `lastFlawlessDayDate` (achievement-registry.js's
+ * "Perfect Day", a *different*, stricter achievement than "Daily Mind Champion" -- completed vs.
+ * completed-and-won) and increments `perfectDayCount` (a running lifetime tally, for "Triple
+ * Threat" -- N *different* days with a perfect day, not a streak of consecutive ones).
  */
-export async function awardDailyCompletionXp(uid, allDailyGamesCompletedToday) {
+export async function awardDailyCompletionXp(uid, allDailyGamesCompletedToday, allDailyGamesWonToday) {
     const today = getTodayDateString();
     const ref = doc(db, 'registeredUsers', uid);
 
@@ -60,6 +77,11 @@ export async function awardDailyCompletionXp(uid, allDailyGamesCompletedToday) {
         if (allDailyGamesCompletedToday && user.lastPerfectDayDate !== today) {
             update.xp += XP_AMOUNTS.PERFECT_DAY_BONUS;
             update.lastPerfectDayDate = today;
+
+            if (allDailyGamesWonToday && user.lastFlawlessDayDate !== today) {
+                update.lastFlawlessDayDate = today;
+                update.perfectDayCount = (user.perfectDayCount || 0) + 1;
+            }
         }
 
         tx.update(ref, update);

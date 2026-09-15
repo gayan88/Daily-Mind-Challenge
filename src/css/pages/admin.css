@@ -456,10 +456,74 @@
 .tournament-form-row {
     display: flex;
     gap: 12px;
+    flex-wrap: wrap;
 }
 
 .tournament-form-row .form-field {
     flex: 1;
+    min-width: 140px;
+}
+
+/* ---------- Championships ---------- */
+.admin-section-hint {
+    font-size: 13px;
+    color: var(--color-text-muted);
+    margin: -8px 0 12px;
+}
+
+.championship-countdown {
+    font-variant-numeric: tabular-nums;
+    color: var(--color-primary);
+    font-weight: 700;
+}
+
+.championship-winner {
+    color: var(--color-success);
+    font-weight: 700;
+}
+
+#championship-run-all-btn {
+    margin-bottom: 16px;
+}
+
+.top10-table {
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin-top: 16px;
+}
+
+.top10-row {
+    display: grid;
+    grid-template-columns: 48px 1fr 110px;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    font-size: 14px;
+    border-bottom: 0.5px solid var(--color-border);
+}
+
+.top10-row:last-child {
+    border-bottom: none;
+}
+
+.top10-header {
+    background: var(--color-primary);
+    color: white;
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+}
+
+.top10-rank {
+    font-weight: 700;
+    color: var(--color-text-muted);
+}
+
+.top10-points {
+    text-align: right;
+    font-weight: 700;
+    color: var(--color-primary);
 }
 
 /* ---------- Daily Activity Summary ---------- */

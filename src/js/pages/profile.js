@@ -3,12 +3,12 @@ import { icon } from '../utils/icons.js';
 import { updateRegisteredProfile } from '../auth/user-profile.js';
 import { containsBlockedWord } from '../utils/profanity.js';
 import { getUserScoreByGameType, getUserGameHistory } from '../utils/points.js';
-import { showToast } from '../utils/helpers.js';
+import { showToast, escapeHtml } from '../utils/helpers.js';
 import { getGameProgressByGame } from '../progression/progression-service.js';
 import { getStreakMilestoneTier } from '../progression/streak-service.js';
 import { ACHIEVEMENTS } from '../progression/achievement-registry.js';
 import { syncPlayerAchievements } from '../progression/achievement-engine.js';
-import { claimChampionshipAchievements } from '../progression/championship-service.js';
+import { claimChampionshipAchievements, getChampionshipTallies } from '../progression/championship-service.js';
 import { DAILY_MISSIONS, syncDailyMissions } from '../progression/mission-service.js';
 import { calculateRankProgress, GUEST_RANK_IMAGE, MAIN_RANKS } from '../progression/rank-service.js';
 
@@ -325,19 +325,80 @@ function renderMissions(context, completedMissionIds, isRegistered) {
 const ACHIEVEMENT_CATEGORY_ICON = {
     game: 'TROPHY',
     streak: 'FLAME',
-    exploration: 'GLOBE',
     global: 'STAR',
     championship: 'GOLD_MEDAL',
 };
 
-/** Every achievement in the registry, earned ones highlighted with their category icon, unearned
- * ones shown locked/dimmed with their real (not fabricated) condition as a description -- Phase 5
- * of the progression spec, "silent" surfacing (no toast/popup): a badge just appears here the next
+/** Inner content for an achievement's icon slot -- most achievements just use their category's
+ * emoji, but a few (achievement-registry.js's `CUSTOM_IMAGES`) have real illustrated badge art
+ * instead. Callers add an `-image` modifier class to the wrapper when this returns an `<img>`, so
+ * the generic colored-circle tint (meant for a single emoji glyph) doesn't double up behind
+ * artwork that's already a complete, full-color badge illustration. */
+function achievementIconContent(a) {
+    return a.image
+        ? `<img src="${a.image}" alt="" class="achievement-icon-image">`
+        : icon(ACHIEVEMENT_CATEGORY_ICON[a.category]);
+}
+
+/** Compact icon-strip item (Completed / Not Started tiers) -- a tooltip-on-hover badge, same
+ * custom-CSS-tooltip mechanism as the "All Ranks" strip elsewhere on this page (the native `title`
+ * attribute doesn't reliably show text across browsers). Always shows the achievement's own icon
+ * (not a generic lock) -- `locked` just desaturates it via CSS grayscale, so a Not Started item
+ * still hints at *what* it is, not just that it's inaccessible. Every achievement is a one-time,
+ * create-once badge now (even Championships -- each win-count milestone is its own separate
+ * achievement id, see achievement-registry.js's own doc comment), so there's no accumulating
+ * count to show here anymore. */
+function achievementStripItemHtml(a, locked) {
+    const tooltip = `${a.label} — ${a.description}`;
+    const iconClass = a.image ? 'achievement-strip-icon achievement-strip-icon-image' : 'achievement-strip-icon';
+    return `
+        <div class="achievement-strip-item ${locked ? 'achievement-strip-item-locked' : ''}" data-tooltip="${escapeHtml(tooltip)}" tabindex="0">
+            <div class="${iconClass}">${achievementIconContent(a)}</div>
+        </div>
+    `;
+}
+
+/** Detailed row (In Progress tier only) -- icon, label/description, and a live "current / target"
+ * progress bar, using each achievement's own `progress()`/`target` (see achievement-registry.js's
+ * own doc comment for which achievements have one at all -- `daily-mind-champion` and
+ * `perfect-day` never appear in this tier, since "did I ever have one" has no cumulative fraction
+ * to show; Championship tiers DO appear here, via `context.championshipTallies`). */
+function achievementProgressRowHtml(a, current) {
+    const percent = Math.round((current / a.target) * 100);
+    const iconClass = a.image ? 'achievement-progress-icon achievement-progress-icon-image' : 'achievement-progress-icon';
+    return `
+        <div class="achievement-progress-row">
+            <div class="${iconClass}">${achievementIconContent(a)}</div>
+            <div class="achievement-progress-body">
+                <div class="achievement-progress-top-row">
+                    <div class="achievement-progress-label">${a.label}</div>
+                    <div class="achievement-progress-fraction">${current.toLocaleString()} <span class="achievement-progress-fraction-muted">/ ${a.target.toLocaleString()}</span></div>
+                </div>
+                <div class="achievement-progress-description">${a.description}</div>
+                <div class="progress-bar"><div class="progress-bar-fill" style="width: ${percent}%"></div></div>
+            </div>
+        </div>
+    `;
+}
+
+/** Every achievement in the registry, grouped by *status* -- Completed / In Progress / Not Started
+ * -- rather than by category, per a user-supplied mockup: this scales better as the registry
+ * grows (Championships alone are 45 of 67 achievements today, and only grow with every future
+ * game), since it surfaces what's actually actionable (In Progress) instead of mixing earned and
+ * locked together within a category. Completed and Not Started get the compact icon-strip
+ * treatment (a wall of full detail cards for 60+ achievements, most of them either already done or
+ * not yet begun, doesn't earn its space); In Progress gets the rich row treatment (icon, live
+ * "current/target" bar), sorted furthest-along-first so the closest wins surface at the top.
+ * Earned achievements are "silent" surfacing (no toast/popup): a badge just appears here the next
  * time this page is visited after it's earned. Registered-only, same as the rest of this page's
- * progression UI. `earnedCounts` is a Map of achievementId -> count -- Championship achievements
- * (Phase 6) accumulate across repeat wins, so a "×N" is shown alongside those once count > 1;
- * every other category is one-time and never shows a count. */
-function renderAchievements(earnedCounts, isRegistered) {
+ * progression UI. `earnedCounts` is a Map of achievementId -> count -- every achievement is
+ * create-once now (count always 1 when present, see achievement-registry.js), so this is really
+ * just an earned/not-earned lookup. `context` is the same object passed to
+ * `syncPlayerAchievements()` -- needed here too, to evaluate each unearned achievement's own
+ * `progress()` against current data (including `context.championshipTallies`, which is what lets
+ * an unearned Championship tier show real "12 / 30"-style progress despite having no `evaluate()`
+ * of its own). */
+function renderAchievements(earnedCounts, context, isRegistered) {
     const el = document.getElementById('profile-achievements');
     const guestNote = document.getElementById('profile-achievements-guest-note');
     guestNote.hidden = isRegistered;
@@ -347,19 +408,78 @@ function renderAchievements(earnedCounts, isRegistered) {
         return;
     }
 
-    el.innerHTML = ACHIEVEMENTS.map((a) => {
-        const count = earnedCounts.get(a.id) || 0;
-        const earned = count > 0;
-        const iconName = earned ? ACHIEVEMENT_CATEGORY_ICON[a.category] : 'LOCK';
-        const countBadge = count > 1 ? ` <span class="achievement-count">×${count}</span>` : '';
-        return `
-            <div class="achievement-card ${earned ? 'achievement-card-earned' : 'achievement-card-locked'}">
-                <div class="achievement-icon">${icon(iconName)}</div>
-                <div class="achievement-label">${a.label}${countBadge}</div>
-                <div class="achievement-description">${a.description}</div>
+    const completed = [];
+    const inProgress = [];
+    const notStarted = [];
+
+    // Tiered families (e.g. Wordle Daily Champion 1/7/30/50/100) all share one underlying progress
+    // number, so every unearned sibling would otherwise show "in progress" at once. Only the
+    // lowest-order not-yet-earned member of each family is allowed to surface as "in progress" --
+    // the rest are deferred to "not started" until it's actually earned.
+    const byFamily = new Map();
+    ACHIEVEMENTS.forEach((a) => {
+        if (!a.family) return;
+        if (!byFamily.has(a.family)) byFamily.set(a.family, []);
+        byFamily.get(a.family).push(a);
+    });
+    const familyNextUnearned = new Map();
+    byFamily.forEach((members, family) => {
+        const sorted = [...members].sort((x, y) => (x.familyOrder ?? x.target) - (y.familyOrder ?? y.target));
+        const next = sorted.find((a) => !(earnedCounts.get(a.id) > 0));
+        if (next) familyNextUnearned.set(family, next.id);
+    });
+
+    ACHIEVEMENTS.forEach((a) => {
+        if (earnedCounts.get(a.id) > 0) {
+            completed.push(a);
+            return;
+        }
+        const isNextInFamily = !a.family || familyNextUnearned.get(a.family) === a.id;
+        const current = (isNextInFamily && a.progress) ? a.progress(context) : 0;
+        if (current > 0) {
+            inProgress.push({ a, current });
+        } else {
+            notStarted.push({ a });
+        }
+    });
+
+    inProgress.sort((x, y) => (y.current / y.a.target) - (x.current / x.a.target));
+
+    const totalCount = ACHIEVEMENTS.length;
+    const unlockedPercent = totalCount ? Math.round((completed.length / totalCount) * 100) : 0;
+
+    const summaryHtml = `
+        <div class="achievements-summary">
+            <div class="achievements-summary-text">
+                <span class="achievements-summary-count">${completed.length} / ${totalCount}</span>
+                <span class="achievements-summary-label">Achievements Unlocked</span>
             </div>
-        `;
-    }).join('');
+            <div class="progress-bar achievements-summary-bar"><div class="progress-bar-fill" style="width: ${unlockedPercent}%"></div></div>
+        </div>
+    `;
+
+    const completedHtml = completed.length ? `
+        <div class="achievements-status-group">
+            <div class="achievements-status-title">Completed <span class="achievements-status-count">${completed.length}</span></div>
+            <div class="achievement-strip">${completed.map((a) => achievementStripItemHtml(a, false)).join('')}</div>
+        </div>
+    ` : '';
+
+    const inProgressHtml = inProgress.length ? `
+        <div class="achievements-status-group">
+            <div class="achievements-status-title">In Progress <span class="achievements-status-count">${inProgress.length}</span></div>
+            <div class="achievement-progress-list">${inProgress.map(({ a, current }) => achievementProgressRowHtml(a, current)).join('')}</div>
+        </div>
+    ` : '';
+
+    const notStartedHtml = notStarted.length ? `
+        <div class="achievements-status-group">
+            <div class="achievements-status-title">Not Started <span class="achievements-status-count">${notStarted.length}</span></div>
+            <div class="achievement-strip">${notStarted.map(({ a }) => achievementStripItemHtml(a, true)).join('')}</div>
+        </div>
+    ` : '';
+
+    el.innerHTML = summaryHtml + completedHtml + inProgressHtml + notStartedHtml;
 }
 
 function renderHistory(history) {
@@ -382,7 +502,7 @@ function renderHistory(history) {
             return `
                 <div class="history-row">
                     <div class="history-game">${GAME_LABELS[entry.gameType] || entry.gameType}</div>
-                    <div class="history-detail">${date} — ${entry.score} pts${timeSuffix}</div>
+                    <div class="history-detail">${date} — ${entry.score.toLocaleString()} pts${timeSuffix}</div>
                 </div>
             `;
         })
@@ -445,6 +565,7 @@ async function init() {
     let earnedCounts = new Map();
     let missionContext = null;
     let completedMissionIds = new Set();
+    let achievementContext = null;
     if (isRegistered) {
         // Claiming (Phase 6) happens before syncing (Phase 5) so a championship win claimed just
         // now shows up in the same render, not only on the next visit.
@@ -457,13 +578,20 @@ async function init() {
         // reasoning as app.js's login-bonus XP sync (see there for the full rationale).
         profile.xp = (profile.xp || 0) + missionResult.xpAwarded;
 
-        const context = {
+        const championshipTallies = await getChampionshipTallies(uid);
+        const totalGamesPlayed = Object.values(byGameType).reduce((sum, v) => sum + (v.count || 0), 0);
+
+        achievementContext = {
             gameProgress,
             totalPoints,
+            totalGamesPlayed,
             currentStreak: profile.raw.currentStreak || 0,
             hasPerfectDay: !!profile.raw.lastPerfectDayDate,
+            hasFlawlessDay: !!profile.raw.lastFlawlessDayDate,
+            perfectDayCount: profile.raw.perfectDayCount || 0,
+            championshipTallies,
         };
-        const earned = await syncPlayerAchievements(uid, context);
+        const earned = await syncPlayerAchievements(uid, achievementContext);
         earnedCounts = new Map(earned.map((a) => [a.achievementId, a.count || 1]));
     }
     // Total distinct achievements earned, any category -- replaces the old narrower
@@ -480,7 +608,7 @@ async function init() {
     renderStats(isRegistered, totalPoints, profile.xp || 0, gamesPlayedCount, achievementsEarnedCount);
     renderGameProgress(gameProgress, isRegistered);
     renderMissions(missionContext, completedMissionIds, isRegistered);
-    renderAchievements(earnedCounts, isRegistered);
+    renderAchievements(earnedCounts, achievementContext, isRegistered);
     renderHistory(history);
 }
 

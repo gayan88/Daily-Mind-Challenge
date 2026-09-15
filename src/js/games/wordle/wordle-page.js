@@ -70,7 +70,7 @@ function renderAlreadyPlayedDaily(mount, played) {
     const status = played.won ? `solved in ${played.attempts}/${MAX_GUESSES}` : 'not solved';
     mount.innerHTML = `
         <div class="empty-state">
-            ${icon('CHECK')} You already played today's Wordle #${played.challengeId} (${status}, +${played.score} points). Come back tomorrow for a new word!
+            ${icon('CHECK')} You already played today's Wordle #${played.challengeId} (${status}, +${played.score.toLocaleString()} points). Come back tomorrow for a new word!
         </div>
     `;
 }
@@ -79,7 +79,7 @@ function shareTextForDaily(challengeId, guessStates, won, attempts, score) {
     const attemptsLabel = won ? `${attempts}/${MAX_GUESSES}` : `X/${MAX_GUESSES}`;
     const resultLine = won ? `🎉 Solved in ${attemptsLabel}` : `😅 ${attemptsLabel} — so close!`;
     const grid = guessStates.map((row) => row.map((state) => SHARE_EMOJI[state]).join('')).join('\n');
-    return `🧠 Daily Mind Challenge\n\n🟩 Daily Wordle #${challengeId}\n${resultLine}\n⭐ Score: ${score} points\n\n${grid}\n\nCan you beat my result? 👀\n\nPlay today's challenge:\n${window.location.href}`;
+    return `🧠 Daily Mind Challenge\n\n🟩 Daily Wordle #${challengeId}\n${resultLine}\n⭐ Score: ${score.toLocaleString()} points\n\n${grid}\n\nCan you beat my result? 👀\n\nPlay today's challenge:\n${window.location.href}`;
 }
 
 async function renderDailyMode(mount, uid, profile, setActiveRound) {
@@ -121,7 +121,8 @@ async function renderDailyMode(mount, uid, profile, setActiveRound) {
             if (profile.kind === 'registered') {
                 const playedToday = await checkPlayedTodayAll(uid);
                 const allDone = Object.values(playedToday).every(Boolean);
-                await awardDailyCompletionXp(uid, allDone);
+                const allWon = Object.values(playedToday).every((d) => d?.won === true);
+                await awardDailyCompletionXp(uid, allDone, allWon);
                 await advanceStreakForDailyCompletion(uid);
             }
 
@@ -141,7 +142,7 @@ async function renderDailyMode(mount, uid, profile, setActiveRound) {
                 onShareCommunity: () => markDailySharedToFacebook(uid, getTodayDateString()),
                 onShareFriends: () => markDailySharedWithFriends(uid, getTodayDateString()),
             });
-            showToast(`+${result.score} points!`);
+            showToast(`+${result.score.toLocaleString()} points!`);
         },
     }));
 }
@@ -174,7 +175,7 @@ async function renderTournamentsMode(mount, uid, profile, setActiveRound) {
                                 <span class="wordle-tournament-sep">|</span>
                                 <span class="wordle-tournament-meta-item">${icon('STOPWATCH')} ${t.timePerWordSeconds}s/word</span>
                                 <span class="wordle-tournament-sep">|</span>
-                                <span class="wordle-tournament-meta-item">${icon('STAR')} +${t.bonusPoints} bonus</span>
+                                <span class="wordle-tournament-meta-item">${icon('STAR')} +${t.bonusPoints.toLocaleString()} bonus</span>
                             </div>
                             <button class="btn primary" data-play-tournament="${t.id}" ${attempt?.completed ? 'disabled' : ''} type="button">${statusLabel}</button>
                         </div>
@@ -194,7 +195,7 @@ async function renderTournamentsMode(mount, uid, profile, setActiveRound) {
 
 function shareTextForTournament(tournament, numWords, score, wordAttempts) {
     const wordLines = wordAttempts.map((attempts, i) => `Word ${i + 1} - ${attempts}/${MAX_GUESSES}`).join('\n');
-    return `🏆 Wordle Tournament Complete!\n\nI completed ${tournament.name} 🎉\n\n🧩 Puzzles: ${numWords}/${numWords}\n⭐ Score: ${score} points\n\n${wordLines}\n\nThink you can beat my score? 👀\n\nJoin the tournament:\n${TOURNAMENTS_TAB_URL}`;
+    return `🏆 Wordle Tournament Complete!\n\nI completed ${tournament.name} 🎉\n\n🧩 Puzzles: ${numWords}/${numWords}\n⭐ Score: ${score.toLocaleString()} points\n\n${wordLines}\n\nThink you can beat my score? 👀\n\nJoin the tournament:\n${TOURNAMENTS_TAB_URL}`;
 }
 
 async function finishTournament(mount, uid, profile, tournament, numWords, setActiveRound) {
@@ -239,7 +240,7 @@ async function finishTournament(mount, uid, profile, tournament, numWords, setAc
         onShareFriends: () => markTournamentSharedWithFriends(uid, tournament.id),
         onClose: () => renderTournamentsMode(mount, uid, profile, setActiveRound),
     });
-    showToast(`Tournament complete! +${result.score} points`);
+    showToast(`Tournament complete! +${result.score.toLocaleString()} points`);
 }
 
 async function playTournamentRound(mount, uid, profile, tournament, setActiveRound) {
@@ -625,7 +626,7 @@ async function renderChallengeMine(container, uid, profile) {
 function shareTextForChallenge(challenge, guessStates, won, attempts, score, challengeId) {
     const resultLine = won ? `Solved in ${attempts}/${MAX_GUESSES} 🎉` : `😅 X/${MAX_GUESSES} — so close!`;
     const grid = guessStates.map((row) => row.map((state) => SHARE_EMOJI[state]).join('')).join('\n');
-    return `🎯 Daily Mind Challenge\n\n${challengeTitle(challenge)}\n${resultLine}\nScore: ${score} points\n\n${grid}\n\nCan you beat my result? 👀\nPlay here:\n${shareLinkForChallenge(challengeId)}`;
+    return `🎯 Daily Mind Challenge\n\n${challengeTitle(challenge)}\n${resultLine}\nScore: ${score.toLocaleString()} points\n\n${grid}\n\nCan you beat my result? 👀\nPlay here:\n${shareLinkForChallenge(challengeId)}`;
 }
 
 async function renderChallengeSolve(mount, uid, profile, challengeId, setActiveRound) {
@@ -685,7 +686,7 @@ async function renderChallengeSolve(mount, uid, profile, challengeId, setActiveR
                 onShareCommunity: () => markChallengeSharedToFacebook(uid, challengeId),
                 onShareFriends: () => markChallengeSharedWithFriends(uid, challengeId),
             });
-            showToast(`+${result.score} points!`);
+            showToast(`+${result.score.toLocaleString()} points!`);
         },
     }));
 }

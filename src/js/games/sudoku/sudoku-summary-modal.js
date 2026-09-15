@@ -68,7 +68,7 @@ export function showSudokuSummaryModal({
         .map((line) => `
             <div class="sudoku-summary-line">
                 <span class="sudoku-summary-line-label">${line.icon ? `<span class="sudoku-summary-line-icon">${line.icon}</span>` : ''}${escapeHtml(line.label)}</span>
-                <span>+${line.points}</span>
+                <span>+${line.points.toLocaleString()}</span>
             </div>
         `).join('');
 
@@ -120,7 +120,7 @@ export function showSudokuSummaryModal({
                 ${breakdownHtml}
                 <div class="sudoku-summary-line sudoku-summary-total">
                     <span>Total Score</span>
-                    <span>+${totalPoints}</span>
+                    <span>+${totalPoints.toLocaleString()}</span>
                 </div>
             </div>
             ${shareOptionsHtml}

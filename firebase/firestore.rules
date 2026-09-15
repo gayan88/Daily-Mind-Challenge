@@ -62,10 +62,16 @@ service cloud.firestore {
                 // below. `lastStreakDate` is a separate field from `lastLoginDate` on purpose --
                 // see progression/streak-service.js for why.
                 let streakDelta = request.resource.data.get('currentStreak', 0) - resource.data.get('currentStreak', 0);
-                return changed.hasOnly(['displayName', 'email', 'updatedAt', 'loginPoints', 'lastLoginDate', 'currentStreak', 'lastStreakDate', 'xp', 'lastPerfectDayDate'])
+                // perfectDayCount (achievement-registry.js's "Triple Threat") only ever advances by
+                // exactly 1 per write, same bounded shape as currentStreak -- it's a lifetime tally
+                // of distinct flawless (all 3 games won) days, incremented at most once per day
+                // alongside lastFlawlessDayDate (see xp-service.js#awardDailyCompletionXp()).
+                let perfectDayCountDelta = request.resource.data.get('perfectDayCount', 0) - resource.data.get('perfectDayCount', 0);
+                return changed.hasOnly(['displayName', 'email', 'updatedAt', 'loginPoints', 'lastLoginDate', 'currentStreak', 'lastStreakDate', 'xp', 'lastPerfectDayDate', 'lastFlawlessDayDate', 'perfectDayCount'])
                     && pointsDelta >= 0 && pointsDelta <= 100
                     && xpDelta >= 0 && xpDelta <= 300
                     && (streakDelta == 0 || streakDelta == 1 || request.resource.data.get('currentStreak', 0) == 1)
+                    && (perfectDayCountDelta == 0 || perfectDayCountDelta == 1)
                     && request.resource.data.displayName is string
                     && request.resource.data.displayName.size() <= 24
                     && request.resource.data.isAdmin == resource.data.isAdmin
@@ -332,76 +338,110 @@ service cloud.firestore {
             allow delete: if isAdmin();
         }
 
-        // Player Achievements (Phase 5 of docs/progression-gamification-roadmap.md) -- one doc per
-        // earned achievement, id = {uid}_{achievementId}, create-only (same "one attempt" pattern
-        // as gameScores/tournament-attempt docs above: a repeat setDoc() on an existing id is an
-        // `update`, which no rule here allows, so the achievement-engine.js client code's own
-        // pre-filter against already-earned ids is backed up server-side, not just trusted).
-        // `count` is always exactly 1 at create time, for every achievement -- Championship
-        // achievements (Phase 6, below) still create at count 1 on the *first* win, then use the
-        // separate `allow update` block further down to accumulate on repeat wins. The
-        // achievementId allow-list must be kept in sync with achievement-registry.js by hand --
-        // rules can't import JS -- same maintenance coupling as maxCreateScore()'s gameType list
-        // above.
+        // Player Achievements -- one doc per earned achievement, id = {uid}_{achievementId},
+        // purely create-only (same "one attempt" pattern as gameScores/tournament-attempt docs
+        // above: a repeat setDoc() on an existing id is an `update`, which no rule here allows).
+        // `count` is always exactly 1 -- unlike the old design, Championship wins no longer
+        // accumulate on the achievement doc itself; each win-count milestone (7/30/50/100 wins,
+        // etc.) is its own separate one-time achievement id instead, and the actual running win
+        // tally lives in `championshipWinTallies` below. This is why every achievement, including
+        // Championships, is uniformly create-only now -- see progression/championship-service.js#
+        // claimChampionshipAchievements(). The achievementId allow-list must be kept in sync with
+        // achievement-registry.js by hand -- rules can't import JS -- same maintenance coupling as
+        // maxCreateScore()'s gameType list above.
         match /playerAchievements/{achievementDocId} {
             allow read: if true;
             allow create: if isRegisteredNonBanned()
                 && request.resource.data.uid == request.auth.uid
                 && achievementDocId == request.auth.uid + '_' + request.resource.data.achievementId
                 && request.resource.data.achievementId in [
-                    'wordle-master', 'sudoku-master', 'wordsearch-master',
-                    'streak-7', 'streak-30', 'streak-100', 'streak-365',
-                    'explorer-5', 'explorer-10', 'explorer-20',
-                    'daily-mind-champion', 'all-rounder', 'puzzle-collector',
-                    'wordle-weekly-champion', 'wordle-monthly-champion',
-                    'sudoku-weekly-champion', 'sudoku-monthly-champion',
-                    'wordsearch-weekly-champion', 'wordsearch-monthly-champion'
+                    'wordle-expert', 'wordle-master', 'wordle-grandmaster',
+                    'wordle-daily-champion', 'wordle-daily-champion-7', 'wordle-daily-champion-30',
+                    'wordle-daily-champion-50', 'wordle-daily-champion-100',
+                    'wordle-weekly-champion', 'wordle-weekly-champion-5', 'wordle-weekly-champion-10',
+                    'wordle-weekly-champion-25', 'wordle-weekly-champion-50',
+                    'wordle-monthly-champion', 'wordle-monthly-champion-3', 'wordle-monthly-champion-6',
+                    'wordle-monthly-champion-9', 'wordle-monthly-champion-12',
+
+                    'sudoku-expert', 'sudoku-master', 'sudoku-grandmaster',
+                    'sudoku-daily-champion', 'sudoku-daily-champion-7', 'sudoku-daily-champion-30',
+                    'sudoku-daily-champion-50', 'sudoku-daily-champion-100',
+                    'sudoku-weekly-champion', 'sudoku-weekly-champion-5', 'sudoku-weekly-champion-10',
+                    'sudoku-weekly-champion-25', 'sudoku-weekly-champion-50',
+                    'sudoku-monthly-champion', 'sudoku-monthly-champion-3', 'sudoku-monthly-champion-6',
+                    'sudoku-monthly-champion-9', 'sudoku-monthly-champion-12',
+
+                    'wordsearch-expert', 'wordsearch-master', 'wordsearch-grandmaster',
+                    'wordsearch-daily-champion', 'wordsearch-daily-champion-7', 'wordsearch-daily-champion-30',
+                    'wordsearch-daily-champion-50', 'wordsearch-daily-champion-100',
+                    'wordsearch-weekly-champion', 'wordsearch-weekly-champion-5', 'wordsearch-weekly-champion-10',
+                    'wordsearch-weekly-champion-25', 'wordsearch-weekly-champion-50',
+                    'wordsearch-monthly-champion', 'wordsearch-monthly-champion-3', 'wordsearch-monthly-champion-6',
+                    'wordsearch-monthly-champion-9', 'wordsearch-monthly-champion-12',
+
+                    'streak-7', 'streak-30', 'streak-100', 'streak-200', 'streak-365',
+                    'daily-mind-champion', 'perfect-day', 'triple-threat',
+                    'all-rounder', 'puzzle-enthusiast', 'mind-master',
+                    'puzzle-addict', 'mind-athlete'
                 ]
                 && request.resource.data.count == 1;
 
-            // Championship achievements (Phase 6) accumulate: every other achievement above is
-            // one-time (create-only, no update at all), but a player can win the same weekly/
-            // monthly championship repeatedly over time, so `count` may be incremented -- by
-            // exactly 1 per update, only by the achievement's own owner, only on a championship id,
-            // only touching `count` and nothing else. See progression/championship-service.js#
-            // claimChampionshipAchievements().
-            allow update: if isSignedIn() && request.auth.uid == resource.data.uid
-                && request.resource.data.uid == resource.data.uid
-                && request.resource.data.achievementId == resource.data.achievementId
-                && resource.data.achievementId in [
-                    'wordle-weekly-champion', 'wordle-monthly-champion',
-                    'sudoku-weekly-champion', 'sudoku-monthly-champion',
-                    'wordsearch-weekly-champion', 'wordsearch-monthly-champion'
-                ]
-                && request.resource.data.count == resource.data.count + 1
-                && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['count']);
-
+            allow update: if false;
             allow delete: if isAdmin();
         }
 
-        // Championships (Phase 6 of docs/progression-gamification-roadmap.md) -- one doc per
-        // game+period, id = {gameId}_{periodType}_{periodKey} (matches the exact periodKey format
-        // from Section 20 of the spec, e.g. "wordle_week_2026-W36"). Immutable once finalized,
-        // except for the one-field `claimed` flip below. Registered, non-banned users only may
-        // finalize a period (viewing/reading stays public, `allow read: if true`, so guests can
-        // still see who won) -- this doesn't verify the *computed* winner is actually correct
-        // (that would need re-running the same aggregation query server-side, which this app has
-        // no backend to do), consistent with this app's existing "v1-pragmatic, not fully
-        // cheat-proof" points/achievements model. `winnerUid` is null when nobody played that game
-        // during the period -- still written (with `claimed: true` immediately, nothing to claim),
-        // so the period is marked checked and never re-queried by
-        // progression/championship-service.js#finalizeRecentPeriodsIfNeeded().
+        // Championship win tallies -- one doc per player+game+period-type, id =
+        // {uid}_{gameId}_{periodType}, a plain running count of how many times this player has
+        // won that game's Daily/Weekly/Monthly leaderboard, ever (never resets, never capped).
+        // This is deliberately separate from playerAchievements: the tally is not itself a badge,
+        // just the raw number that progression/championship-service.js#claimChampionshipAchievements()
+        // checks against CHAMPIONSHIP_TIERS to decide when to mint a new tier achievement, and that
+        // profile.js reads to show "12 / 30"-style progress toward a not-yet-earned tier. Only the
+        // owner can write it, create at count 1, then +1 exactly per subsequent win -- same bounded-
+        // increment shape as registeredUsers.currentStreak.
+        match /championshipWinTallies/{tallyId} {
+            allow read: if true;
+            allow create: if isSignedIn()
+                && request.resource.data.uid == request.auth.uid
+                && tallyId == request.auth.uid + '_' + request.resource.data.gameId + '_' + request.resource.data.periodType
+                && request.resource.data.gameId in ['wordle', 'sudoku', 'wordsearch']
+                && request.resource.data.periodType in ['day', 'week', 'month']
+                && request.resource.data.count == 1;
+            allow update: if isSignedIn() && request.auth.uid == resource.data.uid
+                && request.resource.data.uid == resource.data.uid
+                && request.resource.data.gameId == resource.data.gameId
+                && request.resource.data.periodType == resource.data.periodType
+                && request.resource.data.count == resource.data.count + 1
+                && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['count']);
+            allow delete: if isAdmin();
+        }
+
+        // Championships -- one doc per game+period, id = {gameId}_{periodType}_{periodKey}
+        // (matches the exact periodKey format from Section 20 of the spec, e.g.
+        // "wordle_week_2026-W36"). Finalizing (computing + recording who won, including
+        // re-finalizing an already-existing period to correct it, e.g. after banning a cheater) is
+        // admin-only -- moved off the old "any registered visitor" lazy trigger specifically to
+        // remove the timezone race where whichever visitor's local clock crossed into a new period
+        // first got to decide the cutoff for everyone; see
+        // progression/championship-service.js's admin-triggered finalization functions. This
+        // doesn't verify the *computed* winner is actually correct against reality (that would
+        // need re-running the same aggregation query server-side, which this app has no backend to
+        // do), consistent with this app's existing "v1-pragmatic, not fully cheat-proof"
+        // points/achievements model -- it's just no longer *any* visitor's browser making that
+        // call, only the admin's. `winnerUid` is null when nobody played that game during the
+        // period -- still written (with `claimed: true` immediately, nothing to claim).
         match /periodResults/{periodResultId} {
             allow read: if true;
-            allow create: if isRegisteredNonBanned()
+            allow create, update: if isAdmin()
                 && request.resource.data.gameId in ['wordle', 'sudoku', 'wordsearch']
-                && request.resource.data.periodType in ['week', 'month']
+                && request.resource.data.periodType in ['day', 'week', 'month']
                 && periodResultId == request.resource.data.gameId + '_' + request.resource.data.periodType + '_' + request.resource.data.periodKey
                 && (request.resource.data.winnerUid == null || request.resource.data.winnerPoints >= 0);
 
-            // Only the recorded winner may claim their own championship (turn this period's win
-            // into a playerAchievements record) -- see claimChampionshipAchievements() above.
-            // Nothing else about an already-finalized period can ever change.
+            // Separately, the recorded winner may claim their own championship (turn this period's
+            // win into a playerAchievements record) -- see claimChampionshipAchievements() above.
+            // Narrower than the admin rule: only allowed to flip `claimed` false->true and nothing
+            // else about an already-finalized period.
             allow update: if isSignedIn() && request.auth.uid == resource.data.winnerUid
                 && resource.data.claimed == false
                 && request.resource.data.claimed == true

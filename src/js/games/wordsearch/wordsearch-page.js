@@ -58,22 +58,22 @@ function renderNoPuzzlesSeeded(mount) {
 function renderAlreadyPlayedDaily(mount, played) {
     mount.innerHTML = `
         <div class="empty-state">
-            ${icon('CHECK')} You already completed today's Word Search #${played.challengeId} (+${played.score} points). Come back tomorrow for a new puzzle!
+            ${icon('CHECK')} You already completed today's Word Search #${played.challengeId} (+${played.score.toLocaleString()} points). Come back tomorrow for a new puzzle!
         </div>
     `;
 }
 
 function shareTextForDaily(challengeId, timeTaken, wordsFound, totalWords, score) {
-    return `🧠 Daily Mind Challenge\n\n🔍 Daily Word Search #${challengeId}\n🎉 Found ${wordsFound}/${totalWords} words in ${timeTaken}\n⭐ Score: ${score} points\n\nCan you beat my result? 👀\n\nPlay today's challenge:\n${window.location.href}`;
+    return `🧠 Daily Mind Challenge\n\n🔍 Daily Word Search #${challengeId}\n🎉 Found ${wordsFound}/${totalWords} words in ${timeTaken}\n⭐ Score: ${score.toLocaleString()} points\n\nCan you beat my result? 👀\n\nPlay today's challenge:\n${window.location.href}`;
 }
 
 function shareTextForClassic(difficulty, timeTaken, wordsFound, totalWords, score) {
-    return `🧩 Daily Mind Challenge\n\nClassic Word Search — ${DIFFICULTY_LABELS[difficulty]}\n🎉 Found ${wordsFound}/${totalWords} words in ${timeTaken}\n⭐ Score: ${score} points\n\nCan you beat my result? 👀\n\nPlay here:\n${window.location.href}`;
+    return `🧩 Daily Mind Challenge\n\nClassic Word Search — ${DIFFICULTY_LABELS[difficulty]}\n🎉 Found ${wordsFound}/${totalWords} words in ${timeTaken}\n⭐ Score: ${score.toLocaleString()} points\n\nCan you beat my result? 👀\n\nPlay here:\n${window.location.href}`;
 }
 
 function shareTextForTournament(tournament, numPuzzles, score, puzzleResults) {
     const puzzleLines = puzzleResults.map((passed, i) => `Puzzle ${i + 1} - ${passed ? 'Passed' : 'Failed'}`).join('\n');
-    return `🏆 Word Search Tournament Complete!\n\nI completed ${tournament.name} 🎉\n\n🧩 Puzzles: ${numPuzzles}/${numPuzzles}\n⭐ Score: ${score} points\n\n${puzzleLines}\n\nThink you can beat my score? 👀\n\nJoin the tournament:\n${TOURNAMENTS_TAB_URL}`;
+    return `🏆 Word Search Tournament Complete!\n\nI completed ${tournament.name} 🎉\n\n🧩 Puzzles: ${numPuzzles}/${numPuzzles}\n⭐ Score: ${score.toLocaleString()} points\n\n${puzzleLines}\n\nThink you can beat my score? 👀\n\nJoin the tournament:\n${TOURNAMENTS_TAB_URL}`;
 }
 
 async function renderDailyMode(mount, uid, profile, setActiveRound) {
@@ -118,7 +118,8 @@ async function renderDailyMode(mount, uid, profile, setActiveRound) {
             if (profile.kind === 'registered') {
                 const playedToday = await checkPlayedTodayAll(uid);
                 const allDone = Object.values(playedToday).every(Boolean);
-                await awardDailyCompletionXp(uid, allDone);
+                const allWon = Object.values(playedToday).every((d) => d?.won === true);
+                await awardDailyCompletionXp(uid, allDone, allWon);
                 await advanceStreakForDailyCompletion(uid);
             }
 
@@ -136,7 +137,7 @@ async function renderDailyMode(mount, uid, profile, setActiveRound) {
                 onShareCommunity: () => markSharedToFacebook(uid, 'wordsearch', getTodayDateString()),
                 onShareFriends: () => markSharedWithFriends(uid, 'wordsearch', getTodayDateString()),
             });
-            showToast(`+${result.score} points!`);
+            showToast(`+${result.score.toLocaleString()} points!`);
         },
     }));
 }
@@ -149,7 +150,7 @@ function renderDifficultyPicker(mount, onPick) {
             ${Object.keys(DIFFICULTY_LABELS).map((difficulty) => `
                 <button class="wordsearch-difficulty-btn" data-difficulty="${difficulty}" type="button">
                     <span class="wordsearch-difficulty-name">${DIFFICULTY_LABELS[difficulty]}</span>
-                    <span class="wordsearch-difficulty-points">+${DIFFICULTY_POINTS[difficulty]} pts</span>
+                    <span class="wordsearch-difficulty-points">+${DIFFICULTY_POINTS[difficulty].toLocaleString()} pts</span>
                 </button>
             `).join('')}
         </div>
@@ -210,7 +211,7 @@ async function playClassicRound(mount, uid, profile, difficulty, setActiveRound)
                 onShareFriends: () => markSharedWithFriends(uid, 'wordsearch-classic', result.gameDate),
                 onClose: () => renderDifficultyPicker(mount, (nextDifficulty) => playClassicRound(mount, uid, profile, nextDifficulty, setActiveRound)),
             });
-            showToast(`+${result.score} points!`);
+            showToast(`+${result.score.toLocaleString()} points!`);
         },
     }));
 }

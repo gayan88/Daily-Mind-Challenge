@@ -1,9 +1,10 @@
 import { initShell } from '../app.js';
-import { getOverallLeaderboard, getGameLeaderboard, findUserInLeaderboard } from './leaderboard-data.js';
+import { getOverallLeaderboard, getGameLeaderboard, findUserInLeaderboard, getXpForUids } from './leaderboard-data.js';
 import { escapeHtml } from '../utils/helpers.js';
 import { icon } from '../utils/icons.js';
 import { getConfig } from '../utils/config.js';
-import { finalizeRecentPeriodsIfNeeded } from '../progression/championship-service.js';
+import { calculateRankProgress, GUEST_RANK_IMAGE } from '../progression/rank-service.js';
+import { showPlayerProfileModal } from './player-profile-modal.js';
 
 const EMPTY_MESSAGES = {
     today: 'No scores yet today. Be the first!',
@@ -37,12 +38,13 @@ function badgeHtml(row, uid) {
 
 function rowHtml(row, uid) {
     return `
-        <div class="hlb-row ${row.uid === uid ? 'hlb-you' : ''}">
+        <div class="hlb-row hlb-row-clickable ${row.uid === uid ? 'hlb-you' : ''}" data-uid="${row.uid}" tabindex="0">
             <div class="hlb-rank">${rankMarkerHtml(row.rank)}</div>
             <div class="hlb-divider"></div>
+            <img class="hlb-avatar" src="${row.avatarImage}" alt="" />
             <div class="hlb-name">${escapeHtml(row.displayName)}</div>
             ${badgeHtml(row, uid)}
-            <div class="hlb-score"><span class="hlb-score-num">${row.points}</span><span class="hlb-score-label">pts</span></div>
+            <div class="hlb-score"><span class="hlb-score-num">${row.points.toLocaleString()}</span><span class="hlb-score-label">pts</span></div>
         </div>
     `;
 }
@@ -71,25 +73,33 @@ function renderYourRank(userRow) {
 
     el.innerHTML = `
         <div class="lb-your-rank-marker">${rankMarkerHtml(userRow.rank)}</div>
-        <span class="lb-your-rank-text">You're ranked <strong>#${userRow.rank}</strong> with <strong>${userRow.points}</strong> pts</span>
+        <span class="lb-your-rank-text">You're ranked <strong>#${userRow.rank}</strong> with <strong>${userRow.points.toLocaleString()}</strong> pts</span>
     `;
 }
 
 async function init() {
-    const { uid, profile } = await initShell();
-
-    // Lazy Championship finalization (Phase 6 of docs/progression-gamification-roadmap.md,
-    // Section 22 of the progression spec) -- only registered, non-banned visitors can actually
-    // finalize a period (firestore.rules), and this is a best-effort background task: it never
-    // blocks or affects this page's own rendering, and a failure (e.g. a race with another tab
-    // also finalizing the same period) is silently ignored.
-    if (profile.kind === 'registered') {
-        finalizeRecentPeriodsIfNeeded().catch(() => {});
-    }
+    const { uid } = await initShell();
 
     const gameTabs = Array.from(document.querySelectorAll('.lb-tab'));
     const periodTabs = Array.from(document.querySelectorAll('.lb-period-tab'));
     const el = document.getElementById('leaderboard-full');
+
+    // Delegated on the container (rebuilt wholesale on every render) rather than per-row, so this
+    // survives every re-render without re-attaching listeners.
+    el.addEventListener('click', (e) => {
+        const rowEl = e.target.closest('.hlb-row');
+        if (!rowEl) return;
+        const row = allRows.find((r) => r.uid === rowEl.dataset.uid);
+        if (row) showPlayerProfileModal(row);
+    });
+    el.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        const rowEl = e.target.closest('.hlb-row');
+        if (!rowEl) return;
+        e.preventDefault();
+        const row = allRows.find((r) => r.uid === rowEl.dataset.uid);
+        if (row) showPlayerProfileModal(row);
+    });
 
     let currentGame = 'overall';
     let currentPeriod = 'today';
@@ -97,7 +107,21 @@ async function init() {
     let visibleCount = 0;
     const { size: pageSize } = await getConfig('leaderboardPageSize');
 
-    function renderVisible() {
+    // Sub-rank avatar per uid, resolved lazily and only for rows actually rendered (not every row
+    // up to FETCH_CAP) -- see leaderboard-data.js#getXpForUids()'s own doc comment. Kept across
+    // tab switches and Load More clicks since a player's XP doesn't change moment-to-moment.
+    const avatarCache = new Map();
+
+    async function ensureAvatars(rows) {
+        const missingUids = [...new Set(rows.filter((r) => !r.isGuest && !avatarCache.has(r.uid)).map((r) => r.uid))];
+        if (missingUids.length > 0) {
+            const xpByUid = await getXpForUids(missingUids);
+            missingUids.forEach((u) => avatarCache.set(u, calculateRankProgress(xpByUid.get(u) || 0).subRankImage));
+        }
+        rows.forEach((r) => { r.avatarImage = r.isGuest ? GUEST_RANK_IMAGE : avatarCache.get(r.uid); });
+    }
+
+    async function renderVisible() {
         document.getElementById('lb-load-more')?.remove();
 
         if (allRows.length === 0) {
@@ -105,7 +129,9 @@ async function init() {
             return;
         }
 
-        el.innerHTML = allRows.slice(0, visibleCount).map((row) => rowHtml(row, uid)).join('');
+        const visibleRows = allRows.slice(0, visibleCount);
+        await ensureAvatars(visibleRows);
+        el.innerHTML = visibleRows.map((row) => rowHtml(row, uid)).join('');
 
         if (visibleCount < allRows.length) {
             el.insertAdjacentHTML(

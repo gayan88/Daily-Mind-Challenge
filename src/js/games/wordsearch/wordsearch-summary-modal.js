@@ -68,7 +68,7 @@ export function showWordSearchSummaryModal({
         .map((line) => `
             <div class="wordsearch-summary-line">
                 <span class="wordsearch-summary-line-label">${line.icon ? `<span class="wordsearch-summary-line-icon">${line.icon}</span>` : ''}${escapeHtml(line.label)}</span>
-                <span>+${line.points}</span>
+                <span>+${line.points.toLocaleString()}</span>
             </div>
         `).join('');
 
@@ -120,7 +120,7 @@ export function showWordSearchSummaryModal({
                 ${breakdownHtml}
                 <div class="wordsearch-summary-line wordsearch-summary-total">
                     <span>Total Score</span>
-                    <span>+${totalPoints}</span>
+                    <span>+${totalPoints.toLocaleString()}</span>
                 </div>
             </div>
             ${shareOptionsHtml}

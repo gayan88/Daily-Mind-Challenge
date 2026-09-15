@@ -108,6 +108,19 @@ No Firestore writes, security rule changes, or data migration were needed — ev
 
 **Known limitation, stated plainly (per Section 22's "don't claim this is tamper-proof")**: nothing here re-verifies the computed winner against reality — there's no backend to re-run the aggregation server-side, so this trusts the same self-reported score data every other part of this app already trusts.
 
+### Post-Phase-6 update: Daily Champion + admin-only finalization
+
+The original "lazy finalization on any leaderboard visit" design turned out to have a real fairness gap: `getTodayDateString()` reads whichever visitor's **own device clock** happens to trigger the check, so whoever's local calendar crossed into a new period first decided the cutoff for every player globally, regardless of timezone — a player behind them could still have a legitimate score coming in for a period that had already been finalized, with no way to ever have it counted (discussed and confirmed with the user before making any change).
+
+- [x] **Finalization moved to an admin-only manual action** (decided with the user, who is comfortable clicking it regularly rather than relying on an automatic trigger) — `admin-page.js`'s new "Championships" section, not `leaderboard-page.js` (the old automatic call there was removed entirely). `firestore.rules`' `periodResults` create/update is now `isAdmin()`-gated instead of `isRegisteredNonBanned()`.
+- [x] **A calculable, timezone-agnostic safe window** — a period is safe to finalize 12 hours after it closes in UTC (`periodSafeInstant()`), guaranteeing even UTC-12 (the furthest-behind timezone on Earth) has crossed into the next period. This is a single absolute instant, not tied to the admin's own timezone — the UI just renders it in whatever local time the viewing browser happens to be in, and shows a live countdown until then.
+- [x] **Backfill instead of "only the most recent period"** — since finalizing is no longer a high-frequency automatic trigger, the admin version can afford to scan back further (30 days / 12 weeks / 12 months) for anything missed, rather than permanently losing a period if the admin skips a visit — a "Run All Eligible" button finalizes everything currently safe and missing in one click.
+- [x] **Daily Champion added** (`periodType: 'day'`), per game (not a single combined "Overall" daily champion) — decided with the user specifically because per-game produces more frequent, more evenly-distributed wins across players, matching the app's daily-return-engagement priority. New achievements: `{game}-daily-champion`, labeled "Daily Top Scorer — {Game}" (deliberately distinct from the unrelated personal `daily-mind-champion` achievement from Phase 3/5). Claiming reuses the existing `claimChampionshipAchievements()` unchanged — it was already generic across period types.
+- [x] **Re-finalize / override** — an admin action to recompute and overwrite an *already*-finalized period (e.g. after banning a cheater, to credit the rightful winner), shown in a new History & Corrections view. Deliberately preserves the existing `claimed` flag when the recomputed winner hasn't actually changed, to avoid double-incrementing a player's own achievement count.
+- [x] **Marketing Top 10 viewer** — a separate, read-only admin tool (three dropdowns: period type, scope [a specific game or combined "Overall"], and a date/week/month picker) for pulling a Top 10 for any past period, for social posts/newsletters. Not tied to Championships at all — no `periodResults` involved, just a live aggregation query (`leaderboard-data.js#getGameScoresForDateRange()`/new `getOverallScoresForDateRange()`).
+
+See `src/js/progression/CLAUDE.md` (`championship-service.js`) and `src/js/admin/CLAUDE.md` (the "Championships" admin section) for the full implementation detail.
+
 ## Phase 7 — Missions ✅ Done (Daily only — Weekly deliberately deferred, see below)
 
 **Goal:** daily/weekly objectives with XP rewards, generic across all games.
@@ -118,6 +131,15 @@ No Firestore writes, security rule changes, or data migration were needed — ev
 - [x] **Fully derived, no progress storage** — mission progress (points earned today, distinct games played today, Daily Challenges completed today) is recomputed from existing `gameScores` on every check, same "prefer deriving" principle as Game Level; only *completion* (to prevent double-awarding) is stored, in a new `playerMissions/{uid}_{missionId}_{periodKey}` collection, create-only (mirrors `gameScores`/`playerAchievements`).
 - [x] **Silent surfacing** — evaluated and awarded from `profile.js` on every visit, alongside Phases 5/6's own sync calls; a new "Today's Missions" section shows each mission's progress (`current/target`) and reward.
 - [x] Widened `firestore.rules`' `xp` delta cap from 50 to 300 — the 100-XP daily mission reward (and the reserved 300-XP weekly one) both exceed the old cap, which had only ever needed to cover Phase 3/4's smaller per-write amounts.
+
+### Post-Phase-7 update: 5-mission redesign
+
+The original 3 Daily Missions (based directly on the spec's own example thresholds) were replaced with a 5-mission set per a user-supplied mockup, with a new list-card layout (icon circle, XP-reward pill, big current/target number, per-mission progress bar) replacing the original flat list:
+
+- [x] Complete 3 Daily Challenges (75 XP), Play 3 Different Games (30 XP), Earn 1,000 Points (50 XP) — same derivation as the originals, just retargeted thresholds/rewards; ids renamed to match (`daily-complete-3-challenges`, etc. — safe, since a retired id just stops being evaluated, no migration needed).
+- [x] **Create a Wordle Challenge & Get 3 Plays** (300 XP) — genuinely new: a **strict same-day** mission (must create a new Wordle Challenge today AND have it reach 3 plays that same day), an explicit user decision over a "progress carries across days" one-time-unlock alternative discussed and rejected. Deliberately Wordle-specific (the only game with a Challenge-a-Friend feature to hang this on), needing a new `wordle-challenge-data.js#listWordleChallengesCreatedToday()`.
+- [x] **Share a Daily Mind Challenge Post to a Facebook Group** (30 XP) — free: derived entirely from the `sharedToFacebook` flag the existing "Copy Result & Share with Community" flow already sets on today's `gameScores` docs, no new write path.
+- [x] `firestore.rules`' `playerMissions` missionId allow-list updated to the 5 new ids (the `xp` delta cap already covered 300 from the prior widening, no further change needed there).
 
 ## Phase 8 — Daily Brain Workout ✅ Done
 
@@ -147,13 +169,43 @@ Unlike every earlier phase, the spec gives this one **zero concrete detail** —
 
 - [x] **Leaderboard UX: "Your rank" summary** — `leaderboard-page.js#renderYourRank()`. Previously the only way to find your own rank was scrolling/"Load More"-ing until your highlighted row happened to appear; now a small always-visible "You're ranked #N — X pts" box sits above the tabs, computed from the same already-fetched data (no extra Firestore read). Shown for guests too, not gated to registered players (guests appear on leaderboards, Section 4).
 - **Not done, explicitly deferred** (the user picked leaderboard UX only, out of the offered set):
-  - **Championship presentation** — flagged as the most concrete real gap (Phase 6 built the entire weekly/monthly champion engine, but there's still no page where anyone can see who won) — still open.
+  - **Championship presentation** — a real gap for most of this project (Phase 6 built the entire weekly/monthly champion engine with no page anywhere showing who won). Partially addressed by the post-Phase-6 admin work (see above): the admin panel now has a History view and a Marketing Top 10 viewer, but there's still no **player-facing** page where any visitor can see recent Champions — still open.
   - Personal ranking / Personal Best elsewhere in the app (beyond the leaderboard fix above).
   - Challenge-a-Friend improvements — no direction given yet; needs the user's own specifics to scope, the spec has none.
   - Social sharing improvements.
   - Further leaderboard UX items considered but not chosen: total player count per tab, collapsing the period tabs into a dropdown on mobile.
 
 ---
+
+## Post-roadmap: custom Rank/Level system & profile page redesign
+
+Built after all 10 phases above, replacing the spec's own loosely-defined "Overall Rank/Title"
+concept (Section 14) with a fully custom scheme designed directly with the user, plus several
+rounds of profile-page layout iteration driven by screenshot feedback. Full technical detail lives
+next to the code (`src/js/progression/CLAUDE.md`'s `rank-service.js` entry, `src/js/pages/CLAUDE.md`'s
+`profile.js` entry) — summarized here for the phase-tracking record:
+
+- **10 main Ranks × 10 sub-Ranks each** (Novice through Legend, 10,000 XP per main Rank, 1,000 XP
+  per sub-Rank, Roman numerals I–X) — replaces the spec's undefined tier count entirely.
+- **100 individual sub-Rank badge images** (`src/assets/images/sub-ranks/`, cropped from a
+  user-supplied reference sheet) used as the profile avatar, showing a player's *exact* Rank (e.g.
+  "Novice VII"), not just their coarser tier — the original 11 generic per-tier badges
+  (`rank-novice.png` etc.) are still used for coarser displays (the hero progress bar's flanking
+  icons, the "All Ranks" strip).
+- **Profile layout**: iterated from an initial 2-column hero+side-panel design down to a single
+  card (too much white space in the 2-column version) — Edit Profile moved from an inline
+  always-visible field to a pencil-icon-triggered modal; the vertical rank ladder + separate
+  Current/Next boxes were replaced by one wide progress bar (flanked by sub-Rank badge icons) plus
+  a horizontal "All Ranks" strip with custom CSS tooltips (native `title` tooltips didn't reliably
+  show text).
+- **"Your Games" section redesign** — large branded logos, sorted by lifetime Points descending,
+  paginated 3-at-a-time via "Load More" once there are more than 3 games.
+- **Game Level display-only +1 fix** — a brand-new player was seeing "Level 0"; fixed by adding 1
+  only at render time in `profile.js`, deliberately leaving `progression-service.js`'s underlying
+  0-indexed `level` untouched (achievement-registry.js's Game Master/All-Rounder thresholds compare
+  against that raw number) — the two Game/All-Rounder achievement descriptions were bumped by the
+  same +1 so their wording stays consistent with what the Games card actually shows at the moment
+  each is earned.
 
 ## Open decisions to revisit each phase
 

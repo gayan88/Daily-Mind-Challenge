@@ -80,6 +80,10 @@ export async function recordDailyResult(uid, profile, { challengeId, theme, time
         theme: theme || '',
         wordsFound,
         totalWords,
+        // Word Search Daily has no loss condition (untimed), so this is always true once recorded
+        // at all -- stored explicitly anyway, mirroring Wordle's real won/lost field, see
+        // sudoku-daily-data.js's identical comment for the full reasoning.
+        won: true,
         completionPoints,
         timeBonusPoints: earnedTimeBonus,
         sharedToFacebook: false,

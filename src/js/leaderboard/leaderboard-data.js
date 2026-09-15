@@ -1,7 +1,10 @@
 import {
     collection,
+    doc,
     query,
     where,
+    documentId,
+    getDoc,
     getDocs,
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 import { db } from '../api/firebase-init.js';
@@ -119,6 +122,53 @@ export async function getGameScoresForDateRange(game, startDate, endDate) {
     return aggregateScores(snap, bannedUids);
 }
 
+/** Same aggregation as getGameScoresForDateRange(), but across every game (no `gameType` filter at
+ * all) -- the "Overall" equivalent, for the admin panel's marketing Top 10 viewer (Daily/Weekly/
+ * Monthly x Game-or-Overall x a specific past period). Unranked/unlimited, same as its per-game
+ * counterpart -- callers slice/rank as needed. */
+export async function getOverallScoresForDateRange(startDate, endDate) {
+    const q = query(
+        collection(db, 'gameScores'),
+        where('scoreDate', '>=', startDate),
+        where('scoreDate', '<=', endDate)
+    );
+    const [snap, bannedUids] = await Promise.all([getDocs(q), getBannedUids()]);
+    return aggregateScores(snap, bannedUids);
+}
+
 export function findUserInLeaderboard(rows, uid) {
     return rows.find((row) => row.uid === uid) || null;
+}
+
+/** Batched `registeredUsers.xp` lookup for a set of uids -- used to show each leaderboard row's
+ * real sub-rank avatar (progression/rank-service.js#calculateRankProgress()) without reading a
+ * doc per row on every page load; callers should only pass uids for rows actually rendered (a
+ * page of `leaderboard-page.js`'s pagination, or `home.js`'s top-5 preview), not every aggregated
+ * row up to FETCH_CAP. Firestore caps `in` queries at 10 values, same chunking as
+ * championship-service.js#fetchExistingPeriodIds(). Guests have no `registeredUsers` doc and
+ * aren't queried at all -- callers filter those out first, since they always show the fixed
+ * GUEST_RANK_IMAGE instead. A uid with no doc (or found but with no `xp` field yet) is simply
+ * absent from the returned Map -- callers treat that as 0 XP. */
+/** Single player's `registeredUsers` summary (xp, currentStreak, loginPoints) -- used by
+ * player-profile-modal.js, which only ever needs one specific clicked player's data at a time, so
+ * a plain getDoc() is simpler than getXpForUids()'s batched `in` query (that one exists because
+ * leaderboard row avatars need many uids at once). A uid with no doc (a guest, or one of this
+ * project's own seeded test users with gameScores but no registeredUsers doc) resolves to all
+ * zeros rather than throwing -- same "missing doc is just 0" treatment as getXpForUids(). */
+export async function getRegisteredUserSummary(uid) {
+    const snap = await getDoc(doc(db, 'registeredUsers', uid));
+    if (!snap.exists()) return { xp: 0, currentStreak: 0, loginPoints: 0 };
+    const data = snap.data();
+    return { xp: data.xp || 0, currentStreak: data.currentStreak || 0, loginPoints: data.loginPoints || 0 };
+}
+
+export async function getXpForUids(uids) {
+    const xpByUid = new Map();
+    for (let i = 0; i < uids.length; i += 10) {
+        const chunk = uids.slice(i, i + 10);
+        if (chunk.length === 0) continue;
+        const snap = await getDocs(query(collection(db, 'registeredUsers'), where(documentId(), 'in', chunk)));
+        snap.docs.forEach((d) => xpByUid.set(d.id, d.data().xp || 0));
+    }
+    return xpByUid;
 }

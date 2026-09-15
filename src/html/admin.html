@@ -40,6 +40,62 @@
         </div>
 
         <div class="admin-section" data-collapsible>
+            <button class="admin-section-header" type="button">Manual Executions</button>
+            <div class="admin-section-body">
+                <div class="section-title">Finalize Periods</div>
+                <p class="admin-section-hint">
+                    Finalizing decides each game's Daily/Weekly/Monthly Champion. Each row unlocks once every
+                    timezone on Earth has finished that period (12 hours past UTC's own rollover), so results
+                    stay fair regardless of who happens to be online.
+                </p>
+                <div class="card">
+                    <button class="btn primary" id="championship-run-all-btn" type="button">Run All Eligible</button>
+                    <div id="championship-status-table">
+                        <div class="loading-text">Loading&hellip;</div>
+                    </div>
+                </div>
+
+                <div class="section-title">Marketing: Top Scorers</div>
+                <p class="admin-section-hint">
+                    Pull a Top 10 for any past period, for social posts or newsletters -- also shows that
+                    period's official Champion result (if a specific game is selected) with a Re-finalize
+                    action, for correcting a result after a ban.
+                </p>
+                <div class="card">
+                    <div class="tournament-form-row">
+                        <div class="form-field">
+                            <label for="top10-period-type-select">Period type</label>
+                            <select id="top10-period-type-select">
+                                <option value="day">Daily</option>
+                                <option value="week">Weekly</option>
+                                <option value="month">Monthly</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label for="top10-scope-select">Scope</label>
+                            <select id="top10-scope-select"></select>
+                        </div>
+                        <div class="form-field" id="top10-day-field">
+                            <label for="top10-day-input">Date</label>
+                            <input type="date" id="top10-day-input">
+                        </div>
+                        <div class="form-field" id="top10-week-field" hidden>
+                            <label for="top10-week-input">Week</label>
+                            <input type="week" id="top10-week-input">
+                        </div>
+                        <div class="form-field" id="top10-month-field" hidden>
+                            <label for="top10-month-input">Month</label>
+                            <input type="month" id="top10-month-input">
+                        </div>
+                    </div>
+                    <button class="btn primary" id="top10-run-btn" type="button">Get Top 10</button>
+                    <div id="top10-champion-result"></div>
+                    <div id="top10-results"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-section" data-collapsible>
             <button class="admin-section-header" type="button">General</button>
             <div class="admin-section-body">
                 <div class="section">
