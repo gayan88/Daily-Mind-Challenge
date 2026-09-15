@@ -65,8 +65,13 @@ function formatClock(totalSeconds) {
  *
  * Shared by all of wordle.html's modes (Daily Challenge, Tournaments, Challenge a Friend) --
  * callers that only destructure `{ won, attempts }` are unaffected by the extra fields.
+ *
+ * `revealAnswerOnLoss` (default true) controls whether the out-of-guesses in-board status message
+ * includes the target word -- Daily Challenge sets this false so a failed attempt doesn't spoil
+ * the word before its own 1-hour retry cooldown lets the player try again (see wordle-page.js).
+ * Tournament/Challenge a Friend don't set it, so they keep the original always-reveal behavior.
  */
-export function playWordleRound({ container, targetWord, maxGuesses = 6, timeLimitSeconds = null, roundLabel = null, validateGuess = null, onComplete }) {
+export function playWordleRound({ container, targetWord, maxGuesses = 6, timeLimitSeconds = null, roundLabel = null, validateGuess = null, revealAnswerOnLoss = true, onComplete }) {
     const target = targetWord.toUpperCase();
     const wordLength = target.length;
 
@@ -214,7 +219,7 @@ export function playWordleRound({ container, targetWord, maxGuesses = 6, timeLim
                 finish(true, rowIndex);
             } else if (rowIndex === maxGuesses) {
                 gameOver = true;
-                setMessage(`Out of guesses! The word was ${target}`);
+                setMessage(revealAnswerOnLoss ? `Out of guesses! The word was ${target}` : 'Out of guesses!');
                 finish(false, rowIndex);
             } else {
                 currentGuess = '';

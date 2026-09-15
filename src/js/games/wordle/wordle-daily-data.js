@@ -43,6 +43,54 @@ export async function getTodayChallenge(dateString = getTodayDateString()) {
     return { challengeId: wordSnap.data().challengeNumber, word: wordSnap.data().word.toUpperCase() };
 }
 
+const ATTEMPTS_COLLECTION = 'wordleDailyAttempts';
+
+function attemptDocId(uid, dateString) {
+    return `${uid}_${dateString}`;
+}
+
+/**
+ * Tracks today's Daily Challenge attempt count + outcome, separately from the `gameScores` doc
+ * (which is now only ever written once the player actually wins, not on every attempt -- see
+ * recordDailyAttempt() below). Read by wordle-page.js on every render of the Daily tab to decide
+ * whether to show a fresh board (no doc yet, or the 1-hour cooldown has elapsed), the retry
+ * countdown (lost, still cooling down), or defer entirely to the `gameScores`-driven "already
+ * solved, come back tomorrow" state (checked first, via the existing checkPlayedToday()).
+ */
+export async function getDailyAttemptState(uid, dateString = getTodayDateString()) {
+    const snap = await getDoc(doc(db, ATTEMPTS_COLLECTION, attemptDocId(uid, dateString)));
+    return snap.exists() ? snap.data() : null;
+}
+
+/**
+ * Records one Daily Challenge attempt (win or loss) -- called on every round completion, before
+ * `recordDailyResult()` (which now only actually runs on a win). `lastAttemptAt` is always a real
+ * `serverTimestamp()`, never client-supplied, so the 1-hour retry cooldown it drives can't be
+ * bypassed just by a client lying about its own clock when writing this doc (same "outcomes are
+ * self-reported, but the *timestamp* itself is server-truth" reasoning as `createdAt` elsewhere in
+ * this app) -- same "v1-pragmatic, not fully cheat-proof" philosophy as the rest of this app's
+ * points system otherwise (nothing stops a scripted client from simply not waiting out the
+ * cooldown before calling this again; firestore.rules only bounds the *shape* of each write, not
+ * elapsed real time between them).
+ */
+export async function recordDailyAttempt(uid, won, dateString = getTodayDateString()) {
+    const ref = doc(db, ATTEMPTS_COLLECTION, attemptDocId(uid, dateString));
+    const existing = await getDoc(ref);
+    const attemptsCount = (existing.exists() ? existing.data().attemptsCount : 0) + 1;
+
+    if (existing.exists()) {
+        await setDoc(ref, { attemptsCount, won, lastAttemptAt: serverTimestamp() }, { merge: true });
+    } else {
+        await setDoc(ref, {
+            uid,
+            date: dateString,
+            attemptsCount,
+            won,
+            lastAttemptAt: serverTimestamp(),
+        });
+    }
+}
+
 function attemptsBonus(attempts) {
     return [10, 9, 8, 7, 6, 5][attempts - 1] ?? 5;
 }

@@ -8,7 +8,7 @@ import { getConfig } from '../../utils/config.js';
 import { playWordleRound } from './wordle-engine.js';
 import { isRealWord } from './wordle-word-validation.js';
 import {
-    getTodayChallenge, recordDailyResult,
+    getTodayChallenge, recordDailyResult, getDailyAttemptState, recordDailyAttempt,
     markSharedToFacebook as markDailySharedToFacebook,
     markSharedWithFriends as markDailySharedWithFriends,
 } from './wordle-daily-data.js';
@@ -32,6 +32,23 @@ const MAX_GUESSES = 6;
 const SHARE_EMOJI = { correct: '🟩', present: '🟨', absent: '⬜' };
 const FACEBOOK_GROUP_URL = 'https://www.facebook.com/groups/playdailymindchallenge';
 const TOURNAMENTS_TAB_URL = `${window.location.origin}/wordle?tab=tournaments`;
+
+// Daily Challenge: how long a failed attempt locks the player out before they can retry today's
+// word again. No answer reveal on a loss (see wordle-engine.js's revealAnswerOnLoss), and retries
+// are unlimited -- fail, wait an hour, try again -- until either they solve it or the calendar
+// date rolls over to a new word.
+const DAILY_RETRY_COOLDOWN_MS = 60 * 60 * 1000;
+
+/** "1:23:45" once past an hour, else "23:45" -- used by the retry countdown below. */
+function formatCountdown(msRemaining) {
+    const totalSeconds = Math.max(0, Math.ceil(msRemaining / 1000));
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+    const mm = String(m).padStart(2, '0');
+    const ss = String(s).padStart(2, '0');
+    return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+}
 
 // Outlined line icons for the Daily Challenge points breakdown (not this app's usual emoji set,
 // see icons.js) -- Tournament/Challenge a Friend's breakdown lines don't pass an icon, so they're
@@ -66,23 +83,63 @@ function renderNoWordsSeeded(mount) {
     mount.innerHTML = `<div class="empty-state">Today's Wordle isn't ready yet &mdash; check back soon.</div>`;
 }
 
+// A `gameScores` doc for today only ever exists once the player has actually won (see
+// wordle-daily-data.js#recordDailyResult -- a loss no longer writes one at all, so a failed
+// attempt can retry instead), so this is only ever reachable in the solved case.
 function renderAlreadyPlayedDaily(mount, played) {
-    const status = played.won ? `solved in ${played.attempts}/${MAX_GUESSES}` : 'not solved';
     mount.innerHTML = `
         <div class="empty-state">
-            ${icon('CHECK')} You already played today's Wordle #${played.challengeId} (${status}, +${played.score.toLocaleString()} points). Come back tomorrow for a new word!
+            ${icon('CHECK')} You already played today's Wordle #${played.challengeId} (solved in ${played.attempts}/${MAX_GUESSES}, +${played.score.toLocaleString()} points). Come back tomorrow for a new word!
         </div>
     `;
 }
 
-function shareTextForDaily(challengeId, guessStates, won, attempts, score) {
-    const attemptsLabel = won ? `${attempts}/${MAX_GUESSES}` : `X/${MAX_GUESSES}`;
-    const resultLine = won ? `🎉 Solved in ${attemptsLabel}` : `😅 ${attemptsLabel} — so close!`;
+/** Shown after a failed attempt (or on revisiting the page mid-cooldown) instead of revealing the
+ * word -- ticks down live and calls `onReady` once the 1-hour cooldown elapses, so the board comes
+ * back automatically without needing a manual refresh. Defensively no-ops once its own countdown
+ * element is gone from the DOM (the player switched tabs away mid-countdown) rather than trying to
+ * hook into wireModeTabs()'s activeRound-destroy mechanism, which only tracks the playable round
+ * itself, not this static countdown view. */
+function renderRetryCountdown(mount, challengeId, retryAtMs, onReady) {
+    mount.innerHTML = `
+        <div class="empty-state">
+            😅 Not quite — out of guesses on today's Wordle #${challengeId}.
+            <br><br>
+            Try again in <strong id="wordle-retry-countdown"></strong>.
+        </div>
+    `;
+    const el = document.getElementById('wordle-retry-countdown');
+
+    const tick = () => {
+        const liveEl = document.getElementById('wordle-retry-countdown');
+        if (!liveEl) {
+            clearInterval(interval);
+            return;
+        }
+        const remaining = retryAtMs - Date.now();
+        if (remaining <= 0) {
+            clearInterval(interval);
+            onReady();
+            return;
+        }
+        liveEl.textContent = formatCountdown(remaining);
+    };
+
+    el.textContent = formatCountdown(retryAtMs - Date.now());
+    const interval = setInterval(tick, 1000);
+}
+
+// Only ever built on a win now (a loss no longer reaches the summary modal at all -- see
+// renderDailyMode() below), so this no longer needs a losing-case branch.
+function shareTextForDaily(challengeId, guessStates, attempts, score) {
     const grid = guessStates.map((row) => row.map((state) => SHARE_EMOJI[state]).join('')).join('\n');
-    return `🧠 Daily Mind Challenge\n\n🟩 Daily Wordle #${challengeId}\n${resultLine}\n⭐ Score: ${score.toLocaleString()} points\n\n${grid}\n\nCan you beat my result? 👀\n\nPlay today's challenge:\n${window.location.href}`;
+    return `🧠 Daily Mind Challenge\n\n🟩 Daily Wordle #${challengeId}\n🎉 Solved in ${attempts}/${MAX_GUESSES}\n⭐ Score: ${score.toLocaleString()} points\n\n${grid}\n\nCan you beat my result? 👀\n\nPlay today's challenge:\n${window.location.href}`;
 }
 
 async function renderDailyMode(mount, uid, profile, setActiveRound) {
+    // A gameScores doc for today only exists once actually won (see wordle-daily-data.js) --
+    // checked first since it's the terminal state for the day, regardless of how many failed
+    // attempts came before it.
     const played = await checkPlayedToday(uid, 'wordle');
     if (played) {
         renderAlreadyPlayedDaily(mount, played);
@@ -93,6 +150,18 @@ async function renderDailyMode(mount, uid, profile, setActiveRound) {
     if (!challenge) {
         renderNoWordsSeeded(mount);
         return;
+    }
+
+    // Not yet solved -- check whether there's a failed attempt still cooling down before showing
+    // a fresh (or retry) board. `lastAttemptAt` is always a real serverTimestamp() write (never
+    // client-supplied), so this can't be bypassed by a client lying about its own clock.
+    const attemptState = await getDailyAttemptState(uid);
+    if (attemptState) {
+        const retryAtMs = (attemptState.lastAttemptAt?.toMillis?.() ?? 0) + DAILY_RETRY_COOLDOWN_MS;
+        if (Date.now() < retryAtMs) {
+            renderRetryCountdown(mount, challenge.challengeId, retryAtMs, () => renderDailyMode(mount, uid, profile, setActiveRound));
+            return;
+        }
     }
 
     mount.innerHTML = `
@@ -107,7 +176,19 @@ async function renderDailyMode(mount, uid, profile, setActiveRound) {
         targetWord: challenge.word,
         maxGuesses: MAX_GUESSES,
         validateGuess: isRealWord,
+        revealAnswerOnLoss: false,
         onComplete: async ({ won, attempts, guessStates, timeTakenSeconds }) => {
+            await recordDailyAttempt(uid, won);
+
+            if (!won) {
+                // No points, no word reveal, no summary modal -- straight to the retry countdown.
+                // Streak/XP/Perfect-Day don't advance either (see xp-service.js/streak-service.js
+                // call sites below, only reached in the won branch) -- those now track an actual
+                // *completed* (solved) Daily Challenge, not merely an attempted one.
+                renderRetryCountdown(mount, challenge.challengeId, Date.now() + DAILY_RETRY_COOLDOWN_MS, () => renderDailyMode(mount, uid, profile, setActiveRound));
+                return;
+            }
+
             const result = await recordDailyResult(uid, profile, {
                 challengeId: challenge.challengeId,
                 won,
@@ -127,17 +208,17 @@ async function renderDailyMode(mount, uid, profile, setActiveRound) {
             }
 
             showWordleSummaryModal({
-                title: won ? 'You solved it!' : `The word was ${challenge.word}`,
+                title: 'You solved it!',
                 subtitle: `Daily Wordle #${challenge.challengeId}`,
                 guessStates,
-                celebrate: won,
+                celebrate: true,
                 breakdown: [
                     { label: 'Playing today', points: result.playPoints, icon: ICON_CALENDAR },
                     { label: `Attempts bonus (${result.attempts}/${MAX_GUESSES})`, points: result.attemptsPoints, icon: ICON_TARGET },
                     { label: `Speed bonus (${result.timeTaken})`, points: result.timePoints, icon: ICON_LIGHTNING },
                 ],
                 totalPoints: result.score,
-                shareText: shareTextForDaily(challenge.challengeId, guessStates, won, attempts, result.score),
+                shareText: shareTextForDaily(challenge.challengeId, guessStates, attempts, result.score),
                 communityUrl: FACEBOOK_GROUP_URL,
                 onShareCommunity: () => markDailySharedToFacebook(uid, getTodayDateString()),
                 onShareFriends: () => markDailySharedWithFriends(uid, getTodayDateString()),

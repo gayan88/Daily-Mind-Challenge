@@ -129,6 +129,32 @@ service cloud.firestore {
             }
         }
 
+        // Wordle Daily Challenge's per-attempt tracking, separate from gameScores -- a
+        // gameScores/wordle doc is now only ever created on the attempt that actually wins (see
+        // wordle-daily-data.js#recordDailyResult), so a failed attempt has nowhere else to record
+        // "you've tried, here's when you can retry" without this. One doc per player per day
+        // (id = {uid}_{date}), updated in place as the player retries (unlike gameScores, which is
+        // create-only) -- attemptsCount is bounded to advance by exactly 1 per write, same shape as
+        // championshipWinTallies.count below. Once `won` flips true, no further update is allowed
+        // at all (resource.data.won == false is required to update) -- there's nothing left to
+        // legitimately change once the day's Daily Challenge is actually solved.
+        match /wordleDailyAttempts/{attemptId} {
+            allow read: if true;
+            allow create: if isSignedIn()
+                && request.resource.data.uid == request.auth.uid
+                && attemptId == request.auth.uid + '_' + request.resource.data.date
+                && request.resource.data.attemptsCount == 1
+                && request.resource.data.won is bool;
+            allow update: if isSignedIn() && request.auth.uid == resource.data.uid
+                && resource.data.won == false
+                && request.resource.data.uid == resource.data.uid
+                && request.resource.data.date == resource.data.date
+                && request.resource.data.attemptsCount == resource.data.attemptsCount + 1
+                && request.resource.data.won is bool
+                && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['attemptsCount', 'won', 'lastAttemptAt']);
+            allow delete: if isAdmin();
+        }
+
         // The Wordle/Sudoku/Word Search Daily Challenge, Classic, and Tournament formulas (before
         // the +20 Facebook share applied separately via update) reach up to 70-100 on create.
         // Tournament completions (see wordle-tournament-data.js / sudoku-tournament-data.js /
