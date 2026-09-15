@@ -96,6 +96,65 @@ const CUSTOM_IMAGES = {
     'wordle-monthly-champion-6': '/assets/images/achievements/wordle-monthly-champion-6.png',
     'wordle-monthly-champion-9': '/assets/images/achievements/wordle-monthly-champion-9.png',
     'wordle-monthly-champion-12': '/assets/images/achievements/wordle-monthly-champion-12.png',
+
+    'sudoku-expert': '/assets/images/achievements/sudoku-expert.png',
+    'sudoku-master': '/assets/images/achievements/sudoku-master.png',
+    'sudoku-grandmaster': '/assets/images/achievements/sudoku-grandmaster.png',
+
+    'sudoku-daily-champion': '/assets/images/achievements/sudoku-daily-champion.png',
+    'sudoku-daily-champion-7': '/assets/images/achievements/sudoku-daily-champion-7.png',
+    'sudoku-daily-champion-30': '/assets/images/achievements/sudoku-daily-champion-30.png',
+    'sudoku-daily-champion-50': '/assets/images/achievements/sudoku-daily-champion-50.png',
+    'sudoku-daily-champion-100': '/assets/images/achievements/sudoku-daily-champion-100.png',
+
+    'sudoku-weekly-champion': '/assets/images/achievements/sudoku-weekly-champion.png',
+    'sudoku-weekly-champion-5': '/assets/images/achievements/sudoku-weekly-champion-5.png',
+    'sudoku-weekly-champion-10': '/assets/images/achievements/sudoku-weekly-champion-10.png',
+    'sudoku-weekly-champion-25': '/assets/images/achievements/sudoku-weekly-champion-25.png',
+    'sudoku-weekly-champion-50': '/assets/images/achievements/sudoku-weekly-champion-50.png',
+
+    'sudoku-monthly-champion': '/assets/images/achievements/sudoku-monthly-champion.png',
+    'sudoku-monthly-champion-3': '/assets/images/achievements/sudoku-monthly-champion-3.png',
+    'sudoku-monthly-champion-6': '/assets/images/achievements/sudoku-monthly-champion-6.png',
+    'sudoku-monthly-champion-9': '/assets/images/achievements/sudoku-monthly-champion-9.png',
+    'sudoku-monthly-champion-12': '/assets/images/achievements/sudoku-monthly-champion-12.png',
+
+    'wordsearch-expert': '/assets/images/achievements/wordsearch-expert.png',
+    'wordsearch-master': '/assets/images/achievements/wordsearch-master.png',
+    'wordsearch-grandmaster': '/assets/images/achievements/wordsearch-grandmaster.png',
+
+    'wordsearch-daily-champion': '/assets/images/achievements/wordsearch-daily-champion.png',
+    'wordsearch-daily-champion-7': '/assets/images/achievements/wordsearch-daily-champion-7.png',
+    'wordsearch-daily-champion-30': '/assets/images/achievements/wordsearch-daily-champion-30.png',
+    'wordsearch-daily-champion-50': '/assets/images/achievements/wordsearch-daily-champion-50.png',
+    'wordsearch-daily-champion-100': '/assets/images/achievements/wordsearch-daily-champion-100.png',
+
+    'wordsearch-weekly-champion': '/assets/images/achievements/wordsearch-weekly-champion.png',
+    'wordsearch-weekly-champion-5': '/assets/images/achievements/wordsearch-weekly-champion-5.png',
+    'wordsearch-weekly-champion-10': '/assets/images/achievements/wordsearch-weekly-champion-10.png',
+    'wordsearch-weekly-champion-25': '/assets/images/achievements/wordsearch-weekly-champion-25.png',
+    'wordsearch-weekly-champion-50': '/assets/images/achievements/wordsearch-weekly-champion-50.png',
+
+    'wordsearch-monthly-champion': '/assets/images/achievements/wordsearch-monthly-champion.png',
+    'wordsearch-monthly-champion-3': '/assets/images/achievements/wordsearch-monthly-champion-3.png',
+    'wordsearch-monthly-champion-6': '/assets/images/achievements/wordsearch-monthly-champion-6.png',
+    'wordsearch-monthly-champion-9': '/assets/images/achievements/wordsearch-monthly-champion-9.png',
+    'wordsearch-monthly-champion-12': '/assets/images/achievements/wordsearch-monthly-champion-12.png',
+
+    'streak-7': '/assets/images/achievements/streak-7.png',
+    'streak-30': '/assets/images/achievements/streak-30.png',
+    'streak-100': '/assets/images/achievements/streak-100.png',
+    'streak-200': '/assets/images/achievements/streak-200.png',
+    'streak-365': '/assets/images/achievements/streak-365.png',
+
+    'daily-mind-champion': '/assets/images/achievements/daily-mind-champion.png',
+    'perfect-day': '/assets/images/achievements/perfect-day.png',
+    'triple-threat': '/assets/images/achievements/triple-threat.png',
+    'all-rounder': '/assets/images/achievements/all-rounder.png',
+    'puzzle-enthusiast': '/assets/images/achievements/puzzle-enthusiast.png',
+    'mind-master': '/assets/images/achievements/mind-master.png',
+    'puzzle-addict': '/assets/images/achievements/puzzle-addict.png',
+    'mind-athlete': '/assets/images/achievements/mind-athlete.png',
 };
 
 // "All 3 games at once" level tiers -- a lower per-game bar than LEVEL_TIERS above, since it
