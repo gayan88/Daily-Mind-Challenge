@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /profile
+Disallow: /settings
+Disallow: /admin
+
+Sitemap: https://dailymindchallenge.com/sitemap.xml

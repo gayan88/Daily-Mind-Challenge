@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/assets/images/logo-header.png">
+    <title>Page Not Found - Daily Mind Challenge</title>
+    <meta name="robots" content="noindex">
+    <link rel="stylesheet" href="/css/base.css">
+    <link rel="stylesheet" href="/css/components.css">
+</head>
+<body>
+    <div id="site-header"></div>
+
+    <div class="content">
+        <div class="section">
+            <div class="card notfound-card">
+                <div class="notfound-code">404</div>
+                <h1 class="notfound-title">Page Not Found</h1>
+                <p class="notfound-desc">The page you're looking for doesn't exist or may have moved. Let's get you back to solving puzzles.</p>
+                <div class="notfound-actions">
+                    <a class="btn primary" href="/">Go to Home</a>
+                    <a class="btn" href="/wordle">Play Wordle</a>
+                    <a class="btn" href="/sudoku">Play Sudoku</a>
+                    <a class="btn" href="/wordsearch">Play Word Search</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="site-footer"></div>
+
+    <script type="module">
+        import { loadHeaderFooter } from '/js/app.js';
+        loadHeaderFooter();
+    </script>
+</body>
+</html>

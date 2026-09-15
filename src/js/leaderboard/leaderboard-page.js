@@ -1,4 +1,4 @@
-import { initShell } from '../app.js';
+import { trySession, showLoggedOutHeader } from '../app.js';
 import { getOverallLeaderboard, getGameLeaderboard, findUserInLeaderboard, getXpForUids } from './leaderboard-data.js';
 import { escapeHtml } from '../utils/helpers.js';
 import { icon } from '../utils/icons.js';
@@ -78,7 +78,15 @@ function renderYourRank(userRow) {
 }
 
 async function init() {
-    const { uid } = await initShell();
+    // trySession(), not initShell() -- the leaderboard itself is public, non-personal data (same
+    // rankings shown to everyone, guests included per Section 4 of the progression spec), so an
+    // anonymous visitor (including a crawler) should see the real page instead of being redirected
+    // away with nothing rendered. `uid` is null for that visitor; every use of it below already
+    // null-safely resolves to "no matching row" (findUserInLeaderboard, the click handlers' `row`
+    // lookup), so no extra branching is needed beyond wiring the header correctly.
+    const session = await trySession();
+    if (!session) showLoggedOutHeader();
+    const uid = session?.uid ?? null;
 
     const gameTabs = Array.from(document.querySelectorAll('.lb-tab'));
     const periodTabs = Array.from(document.querySelectorAll('.lb-period-tab'));
