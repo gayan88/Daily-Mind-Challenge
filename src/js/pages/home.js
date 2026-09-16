@@ -252,7 +252,7 @@ function renderStatusCard(profile, todayRank, todayPoints, bonusApplied, totalPo
             <div class="status-header">
                 <img class="status-avatar" src="${avatarImage}" alt="">
                 <div class="status-header-text">
-                    <div class="status-welcome">Welcome back, ${escapeHtml(profile.displayName)}!</div>
+                    <div class="status-welcome">${escapeHtml(profile.displayName)}</div>
                     <div class="status-rank-label">${rankLabel}</div>
                     ${streakLabel}
                 </div>
