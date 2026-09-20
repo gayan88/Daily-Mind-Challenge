@@ -1,6 +1,6 @@
 # src/html
 
-Eleven real, separate HTML pages — no client-side routing, no templating. Each page follows the same skeleton:
+Twelve real, separate HTML pages (plus `src/404.html`, see below) — no client-side routing, no templating. Each page follows the same skeleton:
 
 ```html
 <link rel="stylesheet" href="/css/base.css">
@@ -28,20 +28,25 @@ The home page and the three game pages each have `<div class="ad-space" data-ad-
 | `wordle.html` | `/js/games/wordle/wordle-page.js` | `/wordle` |
 | `sudoku.html` | `/js/games/sudoku/sudoku-page.js` | `/sudoku` |
 | `wordsearch.html` | `/js/games/wordsearch/wordsearch-page.js` | `/wordsearch` |
-| `leaderboard.html` | `/js/leaderboard/leaderboard-page.js` | `/leaderboard` |
+| `leaderboard.html` | `/js/leaderboard/leaderboard-page.js` (`trySession()`, public -- renders for anonymous visitors/crawlers) | `/leaderboard` |
 | `profile.html` | `/js/pages/profile.js` | `/profile` |
 | `settings.html` | `/js/pages/settings.js` (registered users only) | `/settings` |
 | `admin.html` | `/js/admin/admin-page.js` (admins only) | `/admin` |
 | `privacy-policy.html` | inline module script (just `loadHeaderFooter()`, no page-specific logic) | `/privacy-policy` |
+| `terms-of-service.html` | inline module script (just `loadHeaderFooter()`, no page-specific logic) | `/terms-of-service` |
 | `cookie-consent.html` | inline module script (just `loadHeaderFooter()`, no page-specific logic) | `/cookie-consent` |
 | `about.html` | inline module script (just `loadHeaderFooter()`, no page-specific logic) | `/about` |
 
 The clean URLs are defined once, in `firebase.json`'s `hosting.rewrites` at the repo root — that's the single source of truth for the mapping. Adding a new page means adding both the physical `.html` file here and a matching rewrite entry there.
 
-`privacy-policy.html`, `cookie-consent.html`, and `about.html` are deliberately **not** gated behind `initShell()`, unlike every other non-home page — they call `loadHeaderFooter()` directly instead, same as the home page. This matters beyond just "these are public pages": `initShell()` redirects an anonymous visitor (no session, not even a guest one) straight to `/` before any content renders, which means a crawler (Googlebot, an AdSense reviewer, etc.) hitting a gated page sees nothing there to index. These three pages exist specifically so there's real, crawlable content Google can see without needing to establish a session first — see `src/js/CLAUDE.md`'s `initShell()`/`trySession()` split for the underlying mechanism. `about.html`'s Contact section uses a dedicated `support@dailymindchallenge.com` alias rather than a personal email address, deliberately -- keeps the site owner's real inbox and identity private while still giving AdSense reviewers (and real users) a working way to reach the site; the same address is also referenced from `privacy-policy.html`'s own Contact Us section.
+`privacy-policy.html`, `terms-of-service.html`, `cookie-consent.html`, and `about.html` are deliberately **not** gated behind `initShell()`, unlike every other non-home page — they call `loadHeaderFooter()` directly instead, same as the home page. This matters beyond just "these are public pages": `initShell()` redirects an anonymous visitor (no session, not even a guest one) straight to `/` before any content renders, which means a crawler (Googlebot, an AdSense reviewer, etc.) hitting a gated page sees nothing there to index. These pages exist specifically so there's real, crawlable content Google can see without needing to establish a session first — see `src/js/CLAUDE.md`'s `initShell()`/`trySession()` split for the underlying mechanism. `about.html`'s Contact section uses a dedicated `support@dailymindchallenge.com` alias rather than a personal email address, deliberately -- keeps the site owner's real inbox and identity private while still giving AdSense reviewers (and real users) a working way to reach the site; the same address is also referenced from `privacy-policy.html`'s own Contact Us section.
 
 ## Running locally
 
 `fetch()` for the partials and the Firebase SDK's `<script type="module">` both require an actual HTTP server (not `file://`). Because paths are root-relative, the local server's root must be `src/`, not the project root -- from **`src/`**: `python3 -m http.server 8000`, then open `http://localhost:8000/html/index.html`.
 
 That gets you working CSS/JS/partials locally, but **not** the clean URLs (`/wordle` etc.) -- plain `http.server` doesn't know about `firebase.json`'s rewrites. To test the clean URLs exactly as they'll behave in production, use the Firebase CLI's own local hosting emulator instead (reads `firebase.json` directly): `firebase emulators:start --only hosting` from the **project root**.
+
+## AdSense-readiness additions
+
+Added after an AdSense "Low value content" rejection: each game page (`wordle.html`/`sudoku.html`/`wordsearch.html`) has a "Tips & Strategy" row in its How to Play card plus a 20-question FAQ (`.faq-card`, plain `<details>/<summary>`, answers always in the DOM so crawlers read them), written from the real code's behavior (scoring formulas, local-midnight reset, Wordle's 1-hour retry rule, Word Search's per-difficulty directions). `leaderboard.html` is now public (`trySession()`) with its own description/canonical tags. `about.html` gained "Why Daily Puzzles?" and "How Progress Works" sections, and `terms-of-service.html` is new (linked from the footer, sitemap and privacy policy). `404.html` (root, `noindex`, `.notfound-*` classes) is served automatically by Firebase Hosting; `robots.txt` and `sitemap.xml` also live at the `src/` root (see `docs/deployment.md`). New public pages must be added to `sitemap.xml`.

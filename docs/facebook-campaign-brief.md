@@ -34,7 +34,7 @@ how you want to play it."
 
 | Mode | What it is |
 |---|---|
-| **Daily Challenge** | One 5-letter word a day, identical for every player. Guess it in 6 tries; tiles turn green/yellow/gray after each guess, exactly like the original Wordle. |
+| **Daily Challenge** | One 5-letter word a day, identical for every player. Guess it in 6 tries; tiles turn green/yellow/gray after each guess, exactly like the original Wordle. Miss it and the word stays hidden -- try again after a 1-hour cooldown (unlimited retries until solved or the day ends). |
 | **Tournaments** | An admin-curated run of several words back to back, each under a time limit. Fail one word and the whole run resets to word 1 — no partial credit, high stakes, built for players who want a real challenge. Full completion pays out a lump-sum bonus. |
 | **Challenge a Friend** | A registered player picks their own 5-letter word, gets a shareable link, and sends it to anyone. The recipient (guest or registered, no account needed) gets one attempt. The creator earns a reward for every distinct person who tries their challenge. This is the built-in viral loop — a real player-to-player share mechanic already live in the product, not something a campaign would need to invent. |
 
@@ -57,6 +57,17 @@ how you want to play it."
 | **Daily Challenge** | One hidden-word grid a day, identical for every player. Click/tap a letter and drag in a straight line to the matching word's other end. |
 | **Classic** | Pick a difficulty (Easy/Medium/Hard, each with its own grid size and word count) and get a random puzzle, with a freshly shuffled grid layout on every replay — no memorizing a fixed layout. |
 | **Tournament** | Same forgiving shape as Sudoku's — a run of puzzles under a time limit, a failed puzzle banks a smaller reward and moves on rather than ending the run, plus a live running score shown throughout and a completion bonus at the end. |
+
+## 2b. Progress, rewards and competition
+
+Beyond the puzzles themselves, the product has a full progression layer -- a strong source of
+creative angles ("collect them all", "climb the ranks"):
+
+- **67 illustrated achievement badges** -- per-game Expert/Master/Grand Master tiers, Daily/Weekly/Monthly Champion titles (repeat-win tiers up to 100 wins), streak badges (7 to 365 days), and all-games milestones (Perfect Day, Triple Threat, Mind Master, Mind Athlete...). Each unlock also grants bonus XP.
+- **XP, Levels and Ranks** -- 1,000 XP per Level; 10 rank tiers from Novice to Legend, each with 10 sub-ranks and its own badge and color.
+- **Streaks and Daily Missions** -- play on consecutive days; short daily goals with XP rewards.
+- **Public leaderboard** -- Today/Week/Month/Year/All-time, per game or overall; click any player to see their rank card and badges. No login needed to view it.
+- **Championships** -- the top scorer of each game each day, week and month is crowned Champion.
 
 ## 3. Why this is a good paid-social fit
 
@@ -104,7 +115,7 @@ Sudoku, and Word Search puzzles, earn points, and climb the leaderboard."*
 ## 6. Voice & tone
 
 Warm, encouraging, a little playful — never smug or hardcore-gamer-coded. The product's own copy
-leans on this consistently (its help text signs off with *"Enjoy the challenge and have fun!"*).
+leans on this consistently (its help and FAQ copy stays friendly and encouraging).
 Emoji are used naturally in the app's own share messages (🧠 🟩 🔥 👀) — a reasonable cue for how
 casual ad copy can go, without tipping into gimmicky.
 
@@ -137,6 +148,15 @@ Ready-made link-preview images (1731×909), one general and one per game:
 | ![Sudoku share image](assets/campaign/fb-share-sudoku.png) | `fb-share-sudoku.png` |
 | ![Word Search share image](assets/campaign/fb-share-word-search.png) | `fb-share-word-search.png` |
 
+### Achievement badge samples
+
+Illustrated badge art (240x240, transparent PNG) -- a small sample; all 67 exist in the codebase and can be provided on request:
+
+| | | | |
+|---|---|---|---|
+| ![Wordle Grand Master](assets/campaign/badge-wordle-grandmaster.png) | ![Sudoku Monthly Champion x12](assets/campaign/badge-sudoku-monthly-champion-12.png) | ![Word Search Daily Champion x100](assets/campaign/badge-wordsearch-daily-champion-100.png) | ![365 Day Streak](assets/campaign/badge-streak-365.png) |
+| ![Mind Master](assets/campaign/badge-mind-master.png) | ![Perfect Day](assets/campaign/badge-perfect-day.png) | | |
+
 ### Brand palette
 
 | Swatch | Role | Hex |
@@ -160,6 +180,7 @@ No app-install step — every destination below is the live site itself, playabl
 - `dailymindchallenge.com/wordle`
 - `dailymindchallenge.com/sudoku`
 - `dailymindchallenge.com/wordsearch`
+- `dailymindchallenge.com/leaderboard` -- public rankings; good for "can you beat this score?" creative
 
 ## 9. To be defined together
 
@@ -176,5 +197,4 @@ are genuine open decisions, not omissions — resolve them on the kickoff call:
 
 ---
 
-*A polished, shareable web version of this brief was also published as a Claude Artifact in this
-session — ask for the link if it wasn't kept.*
+*Last refreshed 2026-09-20 to include progression/achievements, the Wordle retry rule and the public leaderboard. `docs/Daily-Mind-Challenge-Campaign-Brief.pdf` is an older export of this brief and does not include those sections -- regenerate it from this file if it is still being shared with the agency.*

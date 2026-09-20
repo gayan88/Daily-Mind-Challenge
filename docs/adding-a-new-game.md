@@ -66,9 +66,11 @@ Adding a game means updating each of these separately, not registering it once s
   there means every one of its achievements is silently rejected on create -- the player would see
   them stuck at "Not Started"/"In Progress" forever, never actually earnable. This is the single
   easiest achievement-related step to miss.
-- **Custom badge art is optional** -- `CUSTOM_IMAGES` in `achievement-registry.js` is currently
-  Wordle-only; a new game's achievements render fine with the generic per-category emoji fallback
-  (`profile.js`'s `ACHIEVEMENT_CATEGORY_ICON`) until/unless illustrated art is added for it later.
+- **Custom badge art**: all 67 current achievements have illustrated badges (`CUSTOM_IMAGES` in
+  `achievement-registry.js`, files in `src/assets/images/achievements/`). A new game's ~18
+  achievements will render with the generic per-category emoji fallback
+  (`profile.js`'s `ACHIEVEMENT_CATEGORY_ICON`) until matching art (`{gameId}-expert`, `-master`,
+  `-grandmaster`, and the Daily/Weekly/Monthly champion tiers) is added and listed in `CUSTOM_IMAGES`.
 - The "all 3 games at once" tiers (All-Rounder/Puzzle Enthusiast/Mind Master, `ALL_GAMES_TIERS`)
   and `puzzle-addict`/`mind-athlete` (total games played / total points) already read from
   `context.gameProgress`/`totalGamesPlayed`/`totalPoints`, which are assembled generically across
@@ -101,6 +103,12 @@ Adding a game means updating each of these separately, not registering it once s
 - The `GAME_LABELS` map in `src/js/pages/profile.js` needs the new game's gameTypes added too, or
   its Recent Activity rows fall into the same "raw gameType string, missing date, literal
   'undefined'" display bug that was just fixed there for the existing three games.
+
+## 7b. SEO / AdSense
+
+- Add the new game page to `src/sitemap.xml` and a rewrite to `firebase.json`.
+- Give the page a Tips & Strategy row and a ~20-question FAQ (`.faq-card`) like the existing three -- thin pages were the cause of an AdSense "Low value content" rejection.
+- Add a `Disallow` in `robots.txt` only for session-gated pages.
 
 ## 8. Documentation
 

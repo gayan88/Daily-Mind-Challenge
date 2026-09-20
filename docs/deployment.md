@@ -1,6 +1,8 @@
 # Deployment
 
-Deployed on Firebase Hosting, project `daily-mind-challenge` (see `.firebaserc`), currently reachable at `daily-mind-challenge.web.app` pending the custom domain (`dailymindchallenge.com`) being connected in the Firebase console.
+Deployed on Firebase Hosting, project **`playdailymindchallenge`** (the `default` in `.firebaserc`; `daily-mind-challenge` is the old, retired project -- do not deploy there). Live at `playdailymindchallenge.web.app`, with the custom domain `dailymindchallenge.com` used in canonical/OG tags and the sitemap.
+
+**Account gotcha:** the real `playdailymindchallenge` project lives under the **`lazyprogrammer88@gmail.com`** Google account, not `gayan.sliit2009@gmail.com` (which only sees the old project). If `firebase deploy` fails with "Failed to get Firebase project", run `firebase login:use lazyprogrammer88@gmail.com` first and always pass `--project playdailymindchallenge` explicitly -- `firebase use` may still point at the old project.
 
 ## Firebase project setup (one-time, manual)
 
@@ -21,22 +23,32 @@ Covered in full in the root `README.md` — summary: create a Firebase project, 
       { "source": "/admin", "destination": "/html/admin.html" },
       { "source": "/wordle", "destination": "/html/wordle.html" },
       { "source": "/sudoku", "destination": "/html/sudoku.html" },
-      { "source": "/wordsearch", "destination": "/html/wordsearch.html" }
+      { "source": "/wordsearch", "destination": "/html/wordsearch.html" },
+      { "source": "/privacy-policy", "destination": "/html/privacy-policy.html" },
+      { "source": "/terms-of-service", "destination": "/html/terms-of-service.html" },
+      { "source": "/cookie-consent", "destination": "/html/cookie-consent.html" },
+      { "source": "/about", "destination": "/html/about.html" }
     ]
   }
 }
 ```
 
 - **`public: "src"`** — the file structure under `src/` (`html/`, `css/`, `js/`, `partials/`, `assets/`) stays exactly as documented in `src/html/CLAUDE.md` and friends; hosting config is a presentation layer on top, not a physical reorganization.
-- **`rewrites`** — map each clean production URL to its real `.html` file. This is a deliberate choice over a single-page-app catch-all (`"source": "**" → "/index.html"`, which is `firebase init hosting`'s default suggestion) — this app is real multi-page navigation, not a client-side router, so every route needs its own explicit destination. **Adding a ninth page means adding a rewrite entry here** — see `src/html/CLAUDE.md`'s Pages table for the current full list, which must stay in sync with this file.
+- **`rewrites`** — map each clean production URL to its real `.html` file. This is a deliberate choice over a single-page-app catch-all (`"source": "**" → "/index.html"`, which is `firebase init hosting`'s default suggestion) — this app is real multi-page navigation, not a client-side router, so every route needs its own explicit destination. **Adding a page means adding a rewrite entry here** — see `src/html/CLAUDE.md`'s Pages table for the current full list, which must stay in sync with this file.
 - **`cleanUrls: true`** — auto-strips `.html` if a raw filename URL is ever hit directly.
 - Every path referenced from inside `src/` (asset `<link>`/`<script>` tags, nav `<a href>`s, `fetch()` calls for partials) is **root-relative** (`/css/...`, not `../css/...`) — this only resolves correctly because the site is served from a domain root. See `src/html/CLAUDE.md` for the one exception (JS `import` statements, which resolve against the importing script's own location and were never affected).
 
 ## Deploying
 
 ```bash
-firebase deploy --only hosting
+firebase deploy --only hosting,firestore:rules --project playdailymindchallenge
 ```
+
+Hosting-only changes (HTML/CSS/JS/images) need just `--only hosting`. Any change to `firebase/firestore.rules` must be deployed in the same release as the frontend code that depends on it (e.g. the `wordleDailyAttempts` collection).
+
+## Static root files
+
+`src/ads.txt` (AdSense publisher line), `src/robots.txt` (allows all, disallows the session-gated `/profile`, `/settings`, `/admin`, points at the sitemap), `src/sitemap.xml` (the 9 public pages -- add new public pages here), and `src/404.html` (Firebase Hosting serves it automatically for any unmatched path; no rewrite needed) are served from the site root because `public` is `src`.
 
 ## Custom domain
 

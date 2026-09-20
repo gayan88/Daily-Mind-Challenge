@@ -177,10 +177,9 @@ read-only/derived-only follow-up to Phase 3, picked back up after being deferred
   `CUSTOM_IMAGES` (id -> `/assets/images/achievements/{id}.png`) attaches real illustrated badge
   art to specific achievements via a final `.map()` pass over `ACHIEVEMENTS`, decoupled from the
   definitions themselves so adding more art later never means hand-editing an achievement's own
-  entry. Currently Wordle-only (18 ids: the 3 Level tiers plus all 15 Daily/Weekly/Monthly
-  Championship tiers) -- every achievement without an entry here, including every Sudoku/Word
-  Search achievement, falls back to its category's plain emoji icon
-  (`profile.js`'s `ACHIEVEMENT_CATEGORY_ICON`). All 18 images live in
+  entry. Now covers all 67 achievements (per-game Level and Championship tiers for all three games, all
+  5 streak milestones, and all 8 global ones) -- a future achievement without an entry here falls back to its category's plain emoji icon
+  (`profile.js`'s `ACHIEVEMENT_CATEGORY_ICON`). All 67 images live in
   `src/assets/images/achievements/` (moved there from a flat `src/assets/images/` alongside the
   site's other, unrelated image assets, once the badge count made a dedicated subfolder worth it,
   mirroring the existing `sub-ranks/` precedent) -- the originals as first uploaded (full

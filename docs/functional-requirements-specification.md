@@ -3,7 +3,7 @@
 
 | | |
 |---|---|
-| **Document status** | Reflects the system as implemented, as of 2026-08-29 |
+| **Document status** | Reflects the system as implemented, as of 2026-09-20 (progression, achievements, Wordle retry rule and AdSense-readiness pages added since the original 2026-08-29 baseline; see `docs/progression-gamification-roadmap.md` and the `CLAUDE.md` files for line-level detail) |
 | **Product** | Daily Mind Challenge — a free, browser-based daily puzzle site (Wordle, Sudoku, Word Search) |
 | **Live domain** | `dailymindchallenge.com` |
 | **Related docs** | `docs/architecture.md`, `docs/data-flow.md`, `docs/deployment.md`, `docs/changelog-2026-08.md`, and the `CLAUDE.md` file colocated with almost every source directory |
@@ -60,7 +60,7 @@ not a backend API.
 ### 2.2 User classes
 | Class | Can do | Cannot do |
 |---|---|---|
-| **Anonymous visitor** (no session) | View the home page, the three game pages' static content, Privacy Policy, Cookie Consent Notice, About & Contact | Play any game, appear on the leaderboard, view Profile/Settings/Admin |
+| **Anonymous visitor** (no session) | View the home page, the three game pages' static content and FAQs, the public Leaderboard (and open player profile popups), Privacy Policy, Terms of Service, Cookie Consent Notice, About & Contact | Play any game, appear on the leaderboard, view Profile/Settings/Admin |
 | **Guest** | Play all games/modes, appear on the leaderboard, earn points | Claim the daily login bonus, create a Wordle Challenge, change their display name, access Settings |
 | **Registered user** | Everything a Guest can, plus: daily login bonus, create/browse Wordle Challenges, change display name/password/recovery email via Settings | Access the Admin panel |
 | **Admin** | Everything a Registered user can except *play* games (blocked deliberately), plus the full Admin panel | — |
@@ -103,7 +103,7 @@ without them, by design — there is no server-rendered fallback.
 | FR-2.1 | **Daily Challenge**: the system shall present one 5-letter target word per calendar day, identical for every player, resolved by a direct date lookup (not a rotating formula), guessed in up to 6 tries. |
 | FR-2.2 | The system shall evaluate each guess letter-by-letter as correct (right letter, right position), present (right letter, wrong position), or absent, using duplicate-letter-safe scoring matching the real Wordle rules. |
 | FR-2.3 | The system shall validate each non-target guess against a real-word dictionary check before accepting it, without ever blocking the exact target word itself, and without blocking play entirely if the dictionary service is unreachable (fails open). |
-| FR-2.4 | The system shall prevent a player from playing the same day's Daily Challenge more than once. |
+| FR-2.4 | Once a player has **solved** the day's Daily Challenge, the system shall prevent replaying it until the next calendar day. A failed attempt (6 misses) shall not reveal the word, shall earn no points/XP/streak, and shall allow a retry of the same word after a 1-hour cooldown (live countdown shown), repeatable until solved or the day ends. Attempt state is tracked in `wordleDailyAttempts`; only a win writes a `gameScores` doc. |
 | FR-2.5 | **Tournaments**: the system shall let a player attempt a named, admin-created sequence of words under a per-word time limit. Failing a word shall reset progress for that run to word 1 (no partial credit banked); the player may retry indefinitely. |
 | FR-2.6 | The system shall award Tournament points only once a full run (every word) is completed without failing, as a single lump sum (starting bonus + per-word bonus × word count + an admin-set tournament completion bonus). |
 | FR-2.7 | **Challenge a Friend**: the system shall let a registered user create a shareable puzzle from a word of their choosing (validated as a real word), set as public (browsable by anyone) or private (link-only), with an expiration set by admin-configurable days-from-creation. |
@@ -157,6 +157,7 @@ without them, by design — there is no server-rendered fallback.
 | FR-6.2 | The system shall show each player's display name, guest/registered status, and rank; guest identities shall be distinguishable from registered ones. |
 | FR-6.3 | The system shall load the leaderboard incrementally (a configurable page size, "Load More" to reveal further rows) rather than one unbounded query. |
 | FR-6.4 | The home page shall show a compact preview of the current top players, linking to the full leaderboard. |
+| FR-6.5 | The leaderboard shall be viewable without a session. Each row shall show the player's sub-rank avatar (Guest badge for guests) and be clickable, opening a profile popup with name, rank (background in that rank's color), total points/XP, global rank, day streak, Overall Level progress, and earned achievement badges (registered players only; guests get a note). |
 
 ### 3.7 Profile
 
@@ -185,6 +186,14 @@ without them, by design — there is no server-rendered fallback.
 | FR-8.13 | **Advertising configuration**: the system shall let an admin enable/disable, and optionally replace with a custom image+link, each of the site's defined ad placement slots (home page and per-game top/bottom slots), without a code deploy. |
 | FR-8.14 | The system shall let an admin turn the visitor-facing cookie-consent banner on or off sitewide (see FR-10.4). |
 
+### 3.7b Progression: XP, Level, Rank, Achievements
+
+| ID | Requirement |
+|---|---|
+| FR-7.4 | Registered players shall earn global XP (login, Daily Challenge completion, perfect-day bonus, sharing, and +250 per unlocked achievement). Overall Level = 1,000 XP per level, displayed starting at Level 1. Rank has 10 tiers of 10,000 XP with 10 sub-ranks each. Guests earn Points but no XP/Rank/Achievements. |
+| FR-7.5 | The system shall define 67 achievements (per-game Level tiers, Daily/Weekly/Monthly Championship win-count tiers, streak milestones, and global milestones), each with custom badge art. Only the next unearned tier of a tiered family shall show as In Progress; later tiers show Not Started. |
+| FR-7.6 | Daily/Weekly/Monthly Championships (top scorer per game per period) shall be finalized by an admin action and claimed by the winner on their next profile visit. |
+
 ### 3.9 Legal, Informational & Consent
 
 | ID | Requirement |
@@ -192,7 +201,8 @@ without them, by design — there is no server-rendered fallback.
 | FR-9.1 | The system shall publish a Privacy Policy page describing what data is collected (per account type), how it's used, third-party services involved, and how to contact the site operator. |
 | FR-9.2 | The system shall publish a Cookie Consent Notice page describing the categories of cookies/similar technologies used (essential, analytics, advertising) and how a visitor can manage them via their browser. |
 | FR-9.3 | The system shall publish an About & Contact page identifying the product (without disclosing the operator's personal identity) and a way to reach the site operator that does not expose a personal email address. |
-| FR-9.4 | These three pages, and the three game pages' own static descriptive content, shall be viewable by a visitor with no session at all (not gated behind login), so that search engines and ad-network reviewers can index real content. |
+| FR-9.7 | The system shall publish a Terms of Service page (eligibility, accounts, acceptable use, virtual points with no cash value, no purchases, advertising, disclaimers), linked from the footer. |
+| FR-9.4 | These pages, and the three game pages' own static descriptive content, shall be viewable by a visitor with no session at all (not gated behind login), so that search engines and ad-network reviewers can index real content. |
 | FR-9.5 | The system shall present an Accept/Decline cookie-consent banner to a first-time visitor (when enabled, see FR-8.14), and shall remember that visitor's choice in their own browser without requiring an account. |
 | FR-9.6 | Declining consent shall signal restricted use of analytics/advertising data to the site's analytics provider; this signal shall be re-applied automatically on every subsequent page the visitor loads, without re-showing the banner, until/unless the stored choice is cleared (e.g. by clearing browser storage). |
 
@@ -246,6 +256,7 @@ requirements above:
 - **Per-game content collections**: Daily pools (date-keyed), Classic pools (numeric-id-keyed,
   shared across difficulties), Tournament definitions, and Tournament attempt-progress documents —
   one collection family per game, structurally parallel across all three.
+- **Progression data**: `playerAchievements`, `championshipWinTallies`, `periodResults`, `playerMissions`, and `wordleDailyAttempts`, plus `xp`/`currentStreak`/`perfectDayCount` on `registeredUsers`.
 - **`config`**: a small collection of admin-editable platform settings (see FR-8.4), each
   document independently readable by anyone, writable only by admins.
 

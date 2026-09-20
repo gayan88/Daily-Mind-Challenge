@@ -6,7 +6,7 @@ Daily Mind Challenge is a static, multi-page site (plain HTML/CSS/JS, no build t
 
 ```
 Browser
-  ├── src/html/*.html         (9 real pages, plain <a href> navigation)
+  ├── src/html/*.html         (12 real pages + 404.html, plain <a href> navigation)
   ├── src/css/*                (plain CSS, no preprocessor)
   ├── src/js/*                 (ES modules, loaded via <script type="module">)
   └── src/partials/*.html      (header/footer, injected via fetch())
@@ -14,7 +14,7 @@ Browser
         ▼  Firebase JS SDK (loaded from the gstatic.com CDN, no local install)
 Firebase
   ├── Authentication            (Anonymous for guests, Email/Password for registered accounts)
-  └── Firestore                 (guests, registeredUsers, usernames, gameScores, config, challenges)
+  └── Firestore                 (guests, registeredUsers, usernames, gameScores, playerAchievements, championshipWinTallies, periodResults, playerMissions, wordleDailyAttempts, per-game content collections, config)
 ```
 
 ## Why no build tooling

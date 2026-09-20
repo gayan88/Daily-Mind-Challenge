@@ -644,3 +644,92 @@ This project keeps a `CLAUDE.md` file in most source directories documenting tha
 updated that file's `CLAUDE.md` in the same pass — those docs are the fastest way to re-orient on
 any of the above without re-reading this changelog, and are more likely to stay accurate over time
 since they live next to the code they describe.
+
+
+---
+
+# Addendum: 2026-09-13 to 2026-09-20
+
+Work after §11. Numbering restarts here; the file name says 2026-08 for historical reasons.
+
+## A. Achievements
+
+- **Registry replaced wholesale** with a user-supplied 67-achievement list (per-game Level tiers,
+  Daily/Weekly/Monthly Championship win-count tiers, 5 streak milestones, 8 global ones). Old ids
+  just stop being evaluated (orphan docs are harmless). Three decisions confirmed with the user:
+  Daily Champion base tier = "win once"; Perfect Day = a *win* in all 3 games (Wordle/Word Search
+  have no clean "error"); Triple Threat needs a new lifetime `perfectDayCount` counter.
+- **Bug: sibling tiers all showed In Progress at once** (e.g. Wordle Daily Champion 30/50/100 all
+  "7/x"). Fix: a `family` (+ `familyOrder` for the all-games tiers, which share `target: 3`) field;
+  `profile.js` lets only the lowest not-yet-earned tier of each family show progress.
+- **Not Started icons** are the real badge, grayscaled, not a lock. Strip layout changed from
+  flex-wrap (13 tiny icons/row) to a 5-column grid with a matching icon size cap.
+- **Badge art pipeline**: user uploads land in `src/assets/images/New/` under auto-generated
+  "ChatGPT Image..." names. Each is viewed to identify it, MD5-checked (several were byte-identical
+  re-uploads and were discarded), trimmed/squared/resized to 240x240 into `images/achievements/`,
+  and the original is renamed to the same `{achievementId}.png`. One early upload had no alpha
+  channel (opaque background) and needed a corner flood-fill; later batches were real RGBA.
+  Final state: **67/67 achievements have art**.
+- **+250 XP per unlock** (`awardAchievementXp`, called once per achievement from both
+  `syncPlayerAchievements` and `claimChampionshipAchievements`; kept under the 300-XP rules cap).
+
+## B. XP and Levels
+
+- Overall Level changed from 500 to **1,000 XP per level** and now displays from Level 1 (display-only
+  `+1`, same convention as Game Level; the math stays 0-indexed). `XP_PER_LEVEL` is exported and
+  `calculateOverallProgress` returns `xpIntoLevel`, replacing two hardcoded copies of `500`.
+- Points and XP now render with thousands separators everywhere (`toLocaleString()`).
+
+## C. Leaderboard and profile popup
+
+- Rows show each player's sub-rank avatar (Guest badge for guests), resolved with a batched
+  `documentId() in [...]` XP lookup only for rendered rows.
+- **Click a row -> player profile popup** (`player-profile-modal.js`): rank-colored header, stats,
+  Overall Level card, earned badges. "Global Rank" needs the unbounded all-time scan, so it is
+  fetched once per page and cached. Bug fixed along the way: the dialog's `overflow: hidden`
+  clipped long badge lists instead of scrolling; badges are now a one-row, vertical-only scroller.
+- `/leaderboard` now uses `trySession()`, so anonymous visitors and crawlers see it.
+
+## D. Home page
+
+- Status card: sub-rank avatar, name-only heading (the "Welcome back," prefix was dropped after long
+  names crowded the Level card), rank, streak + Total XP, and a Level/XP progress card. The
+  "complete every game" hint and its plumbing were removed. Missions/Achievements became two
+  full cards with a "View" pill.
+
+## E. Wordle Daily Challenge redesign
+
+- A failed attempt no longer reveals the word or scores. The player can retry the same word after a
+  **1-hour cooldown** (live countdown), unlimited times until solved or the day ends. Confirmed
+  with the user: same word, unlimited retries, retry wins score normally.
+- New `wordleDailyAttempts/{uid}_{date}` collection (attempt count, won flag, server-timestamped
+  `lastAttemptAt`); only a win writes `gameScores`, so XP/streak/perfect-day now key off a win.
+  The engine gained `revealAnswerOnLoss` (Daily passes false; Tournament/Challenge unchanged).
+- **Admin toggle** for the dictionary word check (`config/wordValidationAPI.enabled`). Bug found:
+  a config doc saved before a new field existed rendered its checkbox *unchecked* while the feature
+  was actually on; `renderConfigForms` now falls back to `CONFIG_DEFAULTS`. Checkbox CSS fixed
+  (generic text-input styling had been applied to checkboxes).
+
+## F. AdSense "Low value content" rejection response
+
+- Each game page: Tips & Strategy row and a 20-question FAQ (`<details>`), grounded in real code
+  behavior (scoring, local-midnight reset, per-difficulty word directions, retry rule).
+- New: Terms of Service page, expanded About, `robots.txt`, `sitemap.xml`, custom `404.html`,
+  leaderboard meta tags. Not fixable in code: Google also weighs site age/traffic. Blog was assessed
+  as feasible (Firestore + a `/blog/**` rewrite) but deferred; per-post OG tags would need
+  server-side rendering.
+
+## G. Production deployment (2026-09-15/16)
+
+- First production deploy of rules + hosting in this whole line of work (rules had never been
+  deployed). **Gotcha:** `.firebaserc` default `playdailymindchallenge` belongs to the
+  `lazyprogrammer88@gmail.com` account; `gayan.sliit2009@gmail.com` only sees the old
+  `daily-mind-challenge` project, and `firebase use` pointed at the old one. Deploy with
+  `firebase login:use lazyprogrammer88@gmail.com` and `--project playdailymindchallenge`.
+- Local test data (seeded scores, achievements, users) lives only in the emulator and was never
+  pushed to production.
+
+## H. Documentation
+
+- CLAUDE.md files, FRS, deployment, architecture, marketing brief and the adding-a-game checklist
+  were refreshed 2026-09-20. The campaign brief PDF is still an older export.
