@@ -16,13 +16,13 @@ externally with no access to the rest of the codebase needed.
 
 ## 1. What it is
 
-Daily Mind Challenge is a free, browser-based puzzle site built around a daily habit: three
-well-known puzzle formats — Wordle, Sudoku, and Word Search — each refreshed with a new challenge
-once a day. No app download, no install, and no signup wall: anyone can start playing in one tap
-as a **guest**. An optional free account adds streak tracking, a daily login bonus, and the
-ability to create and share custom challenges.
+Daily Mind Challenge is a free, browser-based puzzle site built around a daily habit: four
+well-known puzzle formats — Wordle, Sudoku, Word Search, and Connections — each refreshed with a
+new challenge once a day. No app download, no install, and no signup wall: anyone can start
+playing in one tap as a **guest**. An optional free account adds streak tracking, a daily login
+bonus, and the ability to create and share custom challenges.
 
-## 2. The three games, mode by mode
+## 2. The four games, mode by mode
 
 Every game shares the same three-mode shape (**Daily Challenge**, a replay mode, and
 **Tournament**), which is itself a useful, repeatable creative hook — "pick your game, then pick
@@ -58,12 +58,26 @@ how you want to play it."
 | **Classic** | Pick a difficulty (Easy/Medium/Hard, each with its own grid size and word count) and get a random puzzle, with a freshly shuffled grid layout on every replay — no memorizing a fixed layout. |
 | **Tournament** | Same forgiving shape as Sudoku's — a run of puzzles under a time limit, a failed puzzle banks a smaller reward and moves on rather than ending the run, plus a live running score shown throughout and a completion bonus at the end. |
 
+### Connections 🟪
+
+![Connections](assets/campaign/tile-connections.png)
+
+The newest addition to the lineup — a word-grouping puzzle in the style of the NYT's own
+Connections: find four hidden groups of four related words, from a 16-word grid, before running
+out of guesses.
+
+| Mode | What it is |
+|---|---|
+| **Daily Challenge** | One 16-word grid a day, identical for every player. Find all four groups of four before 4 wrong guesses. Miss it and the answers stay hidden -- try again after a 1-hour cooldown (unlimited retries until solved or the day ends), same forgiving shape as Wordle's Daily Challenge. |
+| **Classic** | Pick a difficulty — Easy, Medium, or Hard — and get a random puzzle from that pool. Unlimited replays, any time, no daily limit. |
+| **Tournament** | A curated run of puzzles under a per-puzzle time limit. Failing a puzzle resets the whole run back to puzzle 1 — no partial credit, same high-stakes shape as Wordle Tournaments. Full completion pays out a lump-sum bonus. |
+
 ## 2b. Progress, rewards and competition
 
 Beyond the puzzles themselves, the product has a full progression layer -- a strong source of
 creative angles ("collect them all", "climb the ranks"):
 
-- **67 illustrated achievement badges** -- per-game Expert/Master/Grand Master tiers, Daily/Weekly/Monthly Champion titles (repeat-win tiers up to 100 wins), streak badges (7 to 365 days), and all-games milestones (Perfect Day, Triple Threat, Mind Master, Mind Athlete...). Each unlock also grants bonus XP.
+- **85 illustrated achievement badges** -- per-game Expert/Master/Grand Master tiers, Daily/Weekly/Monthly Champion titles (repeat-win tiers up to 100 wins), streak badges (7 to 365 days), and all-games milestones (Perfect Day, Triple Threat, Mind Master, Mind Athlete...). Each unlock also grants bonus XP.
 - **XP, Levels and Ranks** -- 1,000 XP per Level; 10 rank tiers from Novice to Legend, each with 10 sub-ranks and its own badge and color.
 - **Streaks and Daily Missions** -- play on consecutive days; short daily goals with XP rewards.
 - **Public leaderboard** -- Today/Week/Month/Year/All-time, per game or overall; click any player to see their rank card and badges. No login needed to view it.
@@ -75,7 +89,7 @@ creative angles ("collect them all", "climb the ranks"):
   detour, no account wall. A much shorter path from click to "aha" than most game/app ads get.
 - **Built to be shared already.** Wordle's Challenge a Friend is a real, live player-to-player
   share mechanic — a campaign can lean on and amplify it, not build it from scratch.
-- **A daily-habit product.** All three games reset every 24 hours with a streak mechanic — exactly
+- **A daily-habit product.** All four games reset every 24 hours with a streak mechanic — exactly
   the kind of hook that rewards a sustained, always-on campaign over a one-off burst.
 - **Proven category.** Daily word/number puzzles are an established, high-engagement habit (see
   Wordle's own rise, and the broader daily-puzzle category). The audience already understands the
@@ -92,8 +106,9 @@ Wordle, NYT Games, or a Sudoku app daily. Worth designing creative around:
   Friend features suggest messaging around besting a specific person, not climbing an anonymous
   global rank.
 - **Value variety without switching apps.** A meaningful share of this audience already plays more
-  than one puzzle type across separate apps (Wordle *and* a number puzzle *and* a word search) —
-  "three in one" is a genuine, differentiated pitch to them.
+  than one puzzle type across separate apps (Wordle *and* a number puzzle *and* a word search
+  *and*, increasingly, a NYT Connections-style word-grouping game) — "four in one" is a genuine,
+  differentiated pitch to them.
 - **Price- and friction-sensitive.** Free and no-signup-required are real decision factors for
   this audience, not just nice-to-haves — worth stating plainly in copy rather than implying.
 
@@ -105,12 +120,12 @@ Wordle, NYT Games, or a Sudoku app daily. Worth designing creative around:
 
 In rough priority order — lead with whichever tests best, but don't dilute all of these into one ad:
 
-- **"3-in-1"** — one site, three daily puzzles, stop switching between apps.
+- **"4-in-1"** — one site, four daily puzzles, stop switching between apps.
 - **"Free, always"** — completely free, no download, no account required to start.
 - **"One tap to play"** — from ad click to playing, no signup wall in the way.
 
 The site's own existing tagline, used consistently in its share copy today: *"Play daily Wordle,
-Sudoku, and Word Search puzzles, earn points, and climb the leaderboard."*
+Sudoku, Word Search, and Connections puzzles, earn points, and climb the leaderboard."*
 
 ## 6. Voice & tone
 
@@ -136,10 +151,11 @@ requires codebase access.
 | ![Wordle logo](assets/campaign/tile-wordle.png) | **Wordle logo** — full-color game tile art, square format. `tile-wordle.png` |
 | ![Sudoku logo](assets/campaign/tile-sudoku.png) | **Sudoku logo** — full-color game tile art, square format. `tile-sudoku.png` |
 | ![Word Search logo](assets/campaign/tile-wordsearch.png) | **Word Search logo** — full-color game tile art, square format. `tile-wordsearch.png` |
+| ![Connections logo](assets/campaign/tile-connections.png) | **Connections logo** — full-color game tile art, square format. `tile-connections.png` |
 
 ### Pre-built share images
 
-Ready-made link-preview images (1731×909), one general and one per game:
+Ready-made link-preview images (roughly 1730-1760 × 900-910, exact size varies slightly per game), one general and one per game:
 
 | | |
 |---|---|
@@ -147,15 +163,16 @@ Ready-made link-preview images (1731×909), one general and one per game:
 | ![Wordle share image](assets/campaign/fb-share-wordle.png) | `fb-share-wordle.png` |
 | ![Sudoku share image](assets/campaign/fb-share-sudoku.png) | `fb-share-sudoku.png` |
 | ![Word Search share image](assets/campaign/fb-share-word-search.png) | `fb-share-word-search.png` |
+| ![Connections share image](assets/campaign/fb-share-connections.png) | `fb-share-connections.png` |
 
 ### Achievement badge samples
 
-Illustrated badge art (240x240, transparent PNG) -- a small sample; all 67 exist in the codebase and can be provided on request:
+Illustrated badge art (240x240, transparent PNG) -- a small sample; all 85 exist in the codebase and can be provided on request:
 
 | | | | |
 |---|---|---|---|
-| ![Wordle Grand Master](assets/campaign/badge-wordle-grandmaster.png) | ![Sudoku Monthly Champion x12](assets/campaign/badge-sudoku-monthly-champion-12.png) | ![Word Search Daily Champion x100](assets/campaign/badge-wordsearch-daily-champion-100.png) | ![365 Day Streak](assets/campaign/badge-streak-365.png) |
-| ![Mind Master](assets/campaign/badge-mind-master.png) | ![Perfect Day](assets/campaign/badge-perfect-day.png) | | |
+| ![Wordle Grand Master](assets/campaign/badge-wordle-grandmaster.png) | ![Sudoku Monthly Champion x12](assets/campaign/badge-sudoku-monthly-champion-12.png) | ![Word Search Daily Champion x100](assets/campaign/badge-wordsearch-daily-champion-100.png) | ![Connections Grand Master](assets/campaign/badge-connections-grandmaster.png) |
+| ![Mind Master](assets/campaign/badge-mind-master.png) | ![Perfect Day](assets/campaign/badge-perfect-day.png) | ![365 Day Streak](assets/campaign/badge-streak-365.png) | |
 
 ### Brand palette
 
@@ -166,8 +183,13 @@ Illustrated badge art (240x240, transparent PNG) -- a small sample; all 67 exist
 | 🟩 | Sudoku accent green | `#1D9E75` |
 | 🟧 | Word Search accent rust | `#D85A30` |
 
+Connections doesn't have a single accent color the way the other three games do — in-game, its
+puzzle groups are color-coded by difficulty (yellow → green → blue → purple, matching the NYT
+Connections convention), so its own tile/branding uses that same four-color set rather than one
+representative hex.
+
 In-app screenshots aren't pre-captured but can be taken directly from the live site on request —
-all three games are fully playable at `dailymindchallenge.com`. No video/motion assets exist yet.
+all four games are fully playable at `dailymindchallenge.com`. No video/motion assets exist yet.
 
 The site's existing Facebook Page and Facebook Group are live community channels worth
 linking/cross-promoting rather than treating the campaign as the site's only presence.
@@ -176,10 +198,11 @@ linking/cross-promoting rather than treating the campaign as the site's only pre
 
 No app-install step — every destination below is the live site itself, playable immediately:
 
-- `dailymindchallenge.com` — home page, all three games
+- `dailymindchallenge.com` — home page, all four games
 - `dailymindchallenge.com/wordle`
 - `dailymindchallenge.com/sudoku`
 - `dailymindchallenge.com/wordsearch`
+- `dailymindchallenge.com/connections`
 - `dailymindchallenge.com/leaderboard` -- public rankings; good for "can you beat this score?" creative
 
 ## 9. To be defined together
@@ -197,4 +220,8 @@ are genuine open decisions, not omissions — resolve them on the kickoff call:
 
 ---
 
-*Last refreshed 2026-09-20 to include progression/achievements, the Wordle retry rule and the public leaderboard. `docs/Daily-Mind-Challenge-Campaign-Brief.pdf` is an older export of this brief and does not include those sections -- regenerate it from this file if it is still being shared with the agency.*
+*Last refreshed 2026-09-25 to add the fourth game, Connections (modes, assets, updated tagline,
+badge/leaderboard counts, and its own landing URL) -- see Section 2's "Connections" subsection.
+`docs/Daily-Mind-Challenge-Campaign-Brief.pdf` is an older export of this brief and predates both
+this refresh and the 2026-09-20 one (progression/achievements, the Wordle retry rule, and the
+public leaderboard) -- regenerate it from this file if it is still being shared with the agency.*
