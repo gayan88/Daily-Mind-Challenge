@@ -406,6 +406,40 @@
     white-space: nowrap;
 }
 
+/* Connections' own id column (Daily "#N . YYYY-MM-DD", Classic "#N . difficulty") -- kept
+   separate from .sudoku-daily-id above rather than widening that shared class, since Sudoku's
+   date-only ids already fit their 120px column and this only touches Connections' rows. Wraps
+   onto its own line instead of a fixed nowrap width, so a long label can never push the meta
+   column to a different starting position on the row after it (the reported misalignment). */
+/* File-upload format example (Daily/Classic "Or import a file") -- a literal, copyable preview
+   of what the uploaded .txt's content should look like, monospace like the textarea above it so
+   it reads as "this is a file", not prose. */
+.cx-admin-example {
+    background: var(--color-bg);
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    margin-top: 4px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--color-text-secondary);
+    white-space: pre-wrap;
+    overflow-x: auto;
+}
+
+.cx-admin-id {
+    flex: 0 0 160px;
+    color: var(--color-text-muted);
+    font-weight: 600;
+}
+
+@media (max-width: 480px) {
+    .cx-admin-id {
+        flex: 1 1 100%;
+    }
+}
+
 .sudoku-daily-meta {
     flex: 1;
     color: var(--color-text);

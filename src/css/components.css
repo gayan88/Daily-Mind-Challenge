@@ -764,7 +764,8 @@
         grid-template-columns: 1fr 1fr;
     }
 
-    .game-grid > :nth-child(3) {
+    /* An odd tile out on the last row spans the full width (3 tiles: the 3rd; 4 tiles: none). */
+    .game-grid > :nth-child(odd):last-child {
         grid-column: 1 / -1;
     }
 }

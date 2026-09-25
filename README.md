@@ -69,6 +69,8 @@ Full data-flow write-up: `docs/data-flow.md`.
 
 ## Adding new daily content
 
+> For AI-generated content specifically (e.g. "write 100 Wordle words"), see `docs/content-creation-guide.md` -- exact file format and validation rules per game/mode, taken straight from the admin import code.
+
 - **Wordle Daily Challenge words**: add words from `admin.html`'s Wordle section (append-only — the same "don't reorder, it shifts which day gets which word" rule applies, now enforced by the admin UI itself rather than by editing a source file). There's no source file to edit anymore — the old static `words-wordle.js` list was removed along with the generic Challenges feature that was its last consumer.
 - **Wordle Tournaments** and **Challenge a Friend** links: also created from `admin.html` (Tournaments) or in-page from `wordle.html` itself (Challenge a Friend) — no source file to edit for either.
 - **Sudoku puzzles**: add `{ puzzle, solution }` pairs (81-character strings, `0` = blank) to `src/js/games/sudoku/sudoku-puzzles.js`.

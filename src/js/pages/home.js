@@ -443,6 +443,7 @@ async function renderLoggedInDashboard(uid, profile, bonusApplied) {
     markTileCompleted('wordle', !!playedToday.wordle);
     markTileCompleted('sudoku', !!playedToday.sudoku);
     markTileCompleted('wordsearch', !!playedToday.wordsearch);
+    markTileCompleted('connections', !!playedToday.connections);
 
     renderLeaderboardPreview(leaderboardRows, uid);
     renderWorkoutExtras(profile, missionResult, achievements.length);

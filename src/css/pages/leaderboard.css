@@ -22,64 +22,41 @@
     color: var(--color-primary);
 }
 
-.lb-tabs {
+.lb-filters {
     display: flex;
-    gap: 8px;
+    gap: 12px;
     margin-bottom: 16px;
 }
 
-.lb-tab {
-    flex: 1;
-    padding: 10px 16px;
-    border: 0.5px solid var(--color-border);
-    background: white;
-    border-radius: var(--radius-sm);
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--color-text-secondary);
-    cursor: pointer;
-    transition: all 0.2s;
+.lb-filter {
+    flex: 1 1 0;
+    min-width: 0;
 }
 
-.lb-tab.active {
-    background: var(--color-primary);
-    color: white;
-    border-color: var(--color-primary);
-}
-
-.lb-tab:not(.active):hover {
-    background: var(--color-bg);
-    border-color: var(--color-border-strong);
-}
-
-.lb-period-tabs {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-bottom: 20px;
-}
-
-.lb-period-tab {
-    padding: 6px 14px;
-    border: 0.5px solid var(--color-border);
-    background: white;
-    border-radius: 999px;
+.lb-filter label {
+    display: block;
     font-size: 13px;
     font-weight: 600;
     color: var(--color-text-secondary);
+    margin-bottom: 6px;
+}
+
+.lb-filter select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: white;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-text);
     cursor: pointer;
-    transition: all 0.2s;
 }
 
-.lb-period-tab.active {
-    background: var(--color-primary-tint);
-    color: var(--color-primary);
-    border-color: var(--color-primary-light);
-}
-
-.lb-period-tab:not(.active):hover {
-    background: var(--color-bg);
-    border-color: var(--color-border-strong);
+.lb-filter select:focus {
+    outline: 2px solid var(--color-primary-light);
+    outline-offset: 1px;
 }
 
 .lb-load-more {

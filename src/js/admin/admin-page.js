@@ -16,6 +16,7 @@ import {
     listClassicWordsearchPuzzles, addClassicWordsearchPuzzle, updateClassicWordsearchPuzzle, bulkAddClassicWordsearchPuzzles,
     listWordsearchTournaments, createWordsearchTournament, setWordsearchTournamentActive, deleteWordsearchTournament,
 } from './wordsearch-admin.js';
+import { initConnectionsAdmin } from './connections-admin-page.js';
 import { getDailyActivitySummary } from './activity-summary-data.js';
 import { escapeHtml, showToast, getTodayDateString } from '../utils/helpers.js';
 import { GAMES } from '../progression/game-registry.js';
@@ -390,6 +391,7 @@ async function renderAdSlotForms() {
     renderGroup('ad-slot-forms-wordle', 'wordle');
     renderGroup('ad-slot-forms-sudoku', 'sudoku');
     renderGroup('ad-slot-forms-wordsearch', 'wordsearch');
+    renderGroup('ad-slot-forms-connections', 'connections');
 }
 
 async function renderDailyWordsTable() {
@@ -1872,6 +1874,7 @@ async function init() {
     await renderWordsearchClassicTable();
     wireWordsearchTournamentCreate();
     await renderWordsearchTournamentsTable();
+    await initConnectionsAdmin();
 }
 
 init();

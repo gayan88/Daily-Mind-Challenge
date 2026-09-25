@@ -75,6 +75,25 @@ const STREAK_MILESTONES = [7, 30, 100, 200, 365];
 // ACHIEVEMENTS array below rather than inlined into each entry, so dropping in more art later
 // never means hand-editing the achievement definitions themselves.
 const CUSTOM_IMAGES = {
+    'connections-expert': '/assets/images/achievements/connections-expert.png',
+    'connections-master': '/assets/images/achievements/connections-master.png',
+    'connections-grandmaster': '/assets/images/achievements/connections-grandmaster.png',
+    'connections-daily-champion': '/assets/images/achievements/connections-daily-champion.png',
+    'connections-daily-champion-7': '/assets/images/achievements/connections-daily-champion-7.png',
+    'connections-daily-champion-30': '/assets/images/achievements/connections-daily-champion-30.png',
+    'connections-daily-champion-50': '/assets/images/achievements/connections-daily-champion-50.png',
+    'connections-daily-champion-100': '/assets/images/achievements/connections-daily-champion-100.png',
+    'connections-weekly-champion': '/assets/images/achievements/connections-weekly-champion.png',
+    'connections-weekly-champion-5': '/assets/images/achievements/connections-weekly-champion-5.png',
+    'connections-weekly-champion-10': '/assets/images/achievements/connections-weekly-champion-10.png',
+    'connections-weekly-champion-25': '/assets/images/achievements/connections-weekly-champion-25.png',
+    'connections-weekly-champion-50': '/assets/images/achievements/connections-weekly-champion-50.png',
+    'connections-monthly-champion': '/assets/images/achievements/connections-monthly-champion.png',
+    'connections-monthly-champion-3': '/assets/images/achievements/connections-monthly-champion-3.png',
+    'connections-monthly-champion-6': '/assets/images/achievements/connections-monthly-champion-6.png',
+    'connections-monthly-champion-9': '/assets/images/achievements/connections-monthly-champion-9.png',
+    'connections-monthly-champion-12': '/assets/images/achievements/connections-monthly-champion-12.png',
+
     'wordle-expert': '/assets/images/achievements/wordle-expert.png',
     'wordle-master': '/assets/images/achievements/wordle-master.png',
     'wordle-grandmaster': '/assets/images/achievements/wordle-grandmaster.png',
@@ -232,7 +251,7 @@ export const ACHIEVEMENTS = [
         id: 'daily-mind-champion',
         category: 'global',
         label: 'Daily Mind Champion',
-        description: 'Complete all 3 Daily Challenges in a single day.',
+        description: 'Complete every Daily Challenge in a single day.',
         evaluate: (ctx) => ctx.hasPerfectDay,
         // No progress() -- "did I ever have one" isn't a cumulative fraction.
     },
@@ -240,7 +259,7 @@ export const ACHIEVEMENTS = [
         id: 'perfect-day',
         category: 'global',
         label: 'Perfect Day',
-        description: 'Complete all 3 Daily Challenges without making an error.',
+        description: 'Complete every Daily Challenge without making an error.',
         // Stricter than Daily Mind Champion above: also requires having *won* all 3, not just
         // completed them (Wordle can record a score on a loss; Sudoku/Word Search Daily have no
         // loss condition at all, so this only ever meaningfully gates on Wordle -- see
@@ -251,7 +270,7 @@ export const ACHIEVEMENTS = [
         id: 'triple-threat',
         category: 'global',
         label: 'Triple Threat',
-        description: `Complete all 3 Daily Challenges on ${TRIPLE_THREAT_DAYS} different days.`,
+        description: `Complete every Daily Challenge on ${TRIPLE_THREAT_DAYS} different days.`,
         evaluate: (ctx) => (ctx.perfectDayCount || 0) >= TRIPLE_THREAT_DAYS,
         progress: (ctx) => Math.min(ctx.perfectDayCount || 0, TRIPLE_THREAT_DAYS),
         target: TRIPLE_THREAT_DAYS,
@@ -264,7 +283,7 @@ export const ACHIEVEMENTS = [
         id,
         category: 'global',
         label,
-        description: `Reach Level ${rawLevel + 1} in all 3 games.`,
+        description: `Reach Level ${rawLevel + 1} in all ${Object.keys(GAMES).length} games.`,
         evaluate: (ctx) => Object.keys(GAMES).every((gameId) => (ctx.gameProgress[gameId]?.level || 0) >= rawLevel),
         progress: (ctx) => Object.keys(GAMES).filter((gameId) => (ctx.gameProgress[gameId]?.level || 0) >= rawLevel).length,
         target: Object.keys(GAMES).length,

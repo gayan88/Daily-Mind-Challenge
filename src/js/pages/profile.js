@@ -28,6 +28,9 @@ const GAME_LABELS = {
     'wordsearch-classic': 'Word Search Classic',
     'wordsearch-tournament': 'Word Search Tournament',
     'wordsearch-tournament-bonus': 'Word Search Tournament Bonus',
+    connections: 'Connections',
+    'connections-classic': 'Connections Classic',
+    'connections-tournament': 'Connections Tournament',
 };
 
 /** Avatar (a Rank badge image -- see progression/rank-service.js), name, current-rank tagline

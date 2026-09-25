@@ -1,0 +1,143 @@
+difficulty: easy
+Fruits: Apple, Banana, Orange, Grape
+Animals: Lion, Tiger, Zebra, Monkey
+Colors: Red, Blue, Green, Yellow
+Furniture: Chair, Table, Sofa, Bed
+
+difficulty: easy
+Pets: Dog, Cat, Hamster, Goldfish
+Vegetables: Carrot, Potato, Onion, Broccoli
+Drinks: Water, Juice, Milk, Soda
+Body parts: Hand, Foot, Nose, Ear
+
+difficulty: easy
+Days: Monday, Friday, Sunday, Tuesday
+Months: January, May, August, December
+Seasons: Spring, Summer, Autumn, Winter
+Directions: North, South, East, West
+
+difficulty: easy
+Shapes: Circle, Square, Triangle, Oval
+Numbers: One, Seven, Ten, Twelve
+Transport: Car, Bus, Train, Plane
+School supplies: Pencil, Ruler, Eraser, Notebook
+
+difficulty: easy
+Sports: Soccer, Tennis, Golf, Boxing
+Instruments: Piano, Guitar, Violin, Drums
+Clothes: Shirt, Pants, Dress, Jacket
+Weather: Rain, Snow, Wind, Fog
+
+difficulty: easy
+Birds: Eagle, Owl, Parrot, Penguin
+Fish: Salmon, Tuna, Trout, Cod
+Insects: Ant, Bee, Butterfly, Beetle
+Reptiles: Snake, Lizard, Turtle, Crocodile
+
+difficulty: easy
+Kitchen items: Spoon, Fork, Knife, Plate
+Bathroom items: Soap, Towel, Shower, Toothpaste
+Bedroom items: Pillow, Blanket, Mattress, Wardrobe
+Garden items: Grass, Flower, Hose, Shovel
+
+difficulty: easy
+Countries: France, Japan, Brazil, Egypt
+Cities: London, Tokyo, Cairo, Sydney
+Continents: Asia, Africa, Europe, Antarctica
+Oceans: Pacific, Atlantic, Indian, Arctic
+
+difficulty: medium
+Poker terms: Flush, Straight, Fold, Raise
+Water ___: Fall, Melon, Color, Proof
+Parts of a river: Bank, Mouth, Bed, Delta
+Bee ___: Hive, Sting, Keeper, Line
+
+difficulty: medium
+Card games: Bridge, Hearts, Spades, Rummy
+Dentistry: Crown, Filling, Root, Brace
+Chess pieces: King, Queen, Rook, Pawn
+Currencies: Yen, Peso, Rand, Franc
+
+difficulty: medium
+Stars: Sirius, Polaris, Vega, Rigel
+Sun ___: Flower, Glasses, Burn, Rise
+Newspaper sections: Sports, Weather, Comics, Horoscope
+Types of light: Neon, Laser, Strobe, Candle
+
+difficulty: medium
+In a wallet: Cash, Coupon, Receipt, License
+Kinds of card: Credit, Birthday, Business, Debit
+Coins: Penny, Nickel, Dime, Quarter
+Money verbs: Save, Spend, Borrow, Invest
+
+difficulty: medium
+Shades of green: Lime, Olive, Mint, Emerald
+Fruit: Lemon, Cherry, Kiwi, Papaya
+Jewelry: Ring, Necklace, Bracelet, Brooch
+Things that ring: Phone, Bell, Alarm, Doorbell
+
+difficulty: medium
+Fishing: Rod, Reel, Bait, Hook
+Peter Pan: Wendy, Nana, Tinker Bell, Smee
+Camping: Tent, Lantern, Compass, Campfire
+Theater: Stage, Curtain, Script, Cast
+
+difficulty: medium
+Spices: Cumin, Nutmeg, Ginger, Turmeric
+Kinds of pepper: Bell, Chili, Black, Cayenne
+Kinds of salt: Sea, Table, Rock, Kosher
+Condiments: Ketchup, Mustard, Mayo, Relish
+
+difficulty: medium
+Mail: Stamp, Envelope, Postcard, Parcel
+Computer parts: Mouse, Keyboard, Monitor, Printer
+Baseball: Bat, Glove, Pitcher, Diamond
+Things you can pitch: Tent, Idea, Product, Story
+
+difficulty: hard
+Silent letters: Knight, Gnome, Wrist, Psalm
+Palindromes: Level, Radar, Civic, Kayak
+Sound like numbers: Won, Too, Ate, Fore
+Hidden metals: Tinder, Irony, Leadership, Copperfield
+
+difficulty: hard
+Double O: Moon, Book, Food, Zoom
+Double E: Seek, Beer, Deep, Feet
+Double L: Bell, Pill, Hall, Roll
+Double S: Moss, Pass, Boss, Toss
+
+difficulty: hard
+___berry: Straw, Rasp, Goose, Cran
+Rivers: Nile, Thames, Amazon, Danube
+Trees: Willow, Aspen, Cedar, Birch
+Start with a body part: Handsome, Armchair, Earnest, Legend
+
+difficulty: hard
+Capitals: Rome, Lima, Oslo, Cairo
+Countries: Chad, Peru, Iran, Mali
+Names that are also cities: Paris, Florence, Austin, Sydney
+City nicknames: Big Apple, Windy City, Sin City, Steel City
+
+difficulty: hard
+___ship: Friend, Owner, Hard, Leader
+___dom: King, Free, Wis, Bore
+___hood: Child, Neighbor, Brother, Man
+___ment: Move, Agree, Enjoy, State
+
+difficulty: hard
+Dr. ___: Who, Seuss, Pepper, Jekyll
+Captain ___: Hook, America, Kirk, Planet
+Mr. ___: Bean, Darcy, Miyagi, Incredible
+Mrs. ___: Doubtfire, Claus, Robinson, Hudson
+
+difficulty: hard
+Fire___: Fly, Work, Place, Truck
+Sun___: Flower, Set, Screen, Burn
+Rain___: Coat, Drop, Bow, Forest
+Star___: Board, Ship, Gazer, Dust
+
+difficulty: hard
+Hidden currencies: Randy, Pesto, Eurovision, Wonder
+Hidden pets: Catalog, Doggerel, Fishnet, Birdie
+Hidden gems: Jaded, Opaline, Amberjack, Pearly
+Dry ___: Ice, Cleaning, Run, Spell

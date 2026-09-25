@@ -88,8 +88,8 @@ export async function checkPlayedToday(uid, gameType) {
     return snap.exists() ? snap.data() : null;
 }
 
-/** Same as checkPlayedToday but for all three games in a single round-trip (used by the home
- * page, which needs all three) instead of three separate getDoc calls. */
+/** Same as checkPlayedToday but for every game's Daily Challenge in a single round-trip (used by
+ * the home page, which needs all of them) instead of one getDoc call per game. */
 export async function checkPlayedTodayAll(uid) {
     const today = getTodayDateString();
     const q = query(
@@ -98,7 +98,7 @@ export async function checkPlayedTodayAll(uid) {
         where('gameDate', '==', today)
     );
     const snap = await getDocs(q);
-    const result = { wordle: null, sudoku: null, wordsearch: null };
+    const result = { wordle: null, sudoku: null, wordsearch: null, connections: null };
     snap.docs.forEach((d) => {
         const data = d.data();
         result[data.gameType] = data;

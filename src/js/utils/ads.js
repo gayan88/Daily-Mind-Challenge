@@ -16,6 +16,8 @@ export const AD_SLOTS = [
     { id: 'sudoku-bottom', label: 'Sudoku — Bottom', group: 'sudoku' },
     { id: 'wordsearch-top', label: 'Word Search — Top', group: 'wordsearch' },
     { id: 'wordsearch-bottom', label: 'Word Search — Bottom', group: 'wordsearch' },
+    { id: 'connections-top', label: 'Connections — Top', group: 'connections' },
+    { id: 'connections-bottom', label: 'Connections — Bottom', group: 'connections' },
 ];
 
 function defaultSlotSettings() {

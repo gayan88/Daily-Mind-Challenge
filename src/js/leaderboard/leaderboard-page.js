@@ -5,6 +5,7 @@ import { icon } from '../utils/icons.js';
 import { getConfig } from '../utils/config.js';
 import { calculateRankProgress, GUEST_RANK_IMAGE } from '../progression/rank-service.js';
 import { showPlayerProfileModal } from './player-profile-modal.js';
+import { GAMES } from '../progression/game-registry.js';
 
 const EMPTY_MESSAGES = {
     today: 'No scores yet today. Be the first!',
@@ -88,8 +89,13 @@ async function init() {
     if (!session) showLoggedOutHeader();
     const uid = session?.uid ?? null;
 
-    const gameTabs = Array.from(document.querySelectorAll('.lb-tab'));
-    const periodTabs = Array.from(document.querySelectorAll('.lb-period-tab'));
+    // The game picker is a <select> filled from the game registry (not a row of tabs), so adding a
+    // game to GAMES adds it here with no HTML change and the control doesn't outgrow the screen.
+    const gameSelect = document.getElementById('lb-game-select');
+    Object.entries(GAMES).forEach(([gameId, game]) => {
+        gameSelect.insertAdjacentHTML('beforeend', `<option value="${escapeHtml(gameId)}">${escapeHtml(game.label)}</option>`);
+    });
+    const periodSelect = document.getElementById('lb-period-select');
     const el = document.getElementById('leaderboard-full');
 
     // Delegated on the container (rebuilt wholesale on every render) rather than per-row, so this
@@ -109,7 +115,9 @@ async function init() {
         if (row) showPlayerProfileModal(row);
     });
 
-    let currentGame = 'overall';
+    // Optional deep link, e.g. /leaderboard?game=connections -- ignored if it isn't a known game.
+    const requestedGame = new URLSearchParams(window.location.search).get('game');
+    let currentGame = requestedGame && GAMES[requestedGame] ? requestedGame : 'overall';
     let currentPeriod = 'today';
     let allRows = [];
     let visibleCount = 0;
@@ -154,8 +162,8 @@ async function init() {
     }
 
     async function render() {
-        gameTabs.forEach((tab) => tab.classList.toggle('active', tab.dataset.game === currentGame));
-        periodTabs.forEach((tab) => tab.classList.toggle('active', tab.dataset.period === currentPeriod));
+        gameSelect.value = currentGame;
+        periodSelect.value = currentPeriod;
         document.getElementById('lb-load-more')?.remove();
         el.innerHTML = `<div class="loading-text">Loading&hellip;</div>`;
 
@@ -167,14 +175,14 @@ async function init() {
         renderVisible();
     }
 
-    gameTabs.forEach((tab) => tab.addEventListener('click', () => {
-        currentGame = tab.dataset.game;
+    gameSelect.addEventListener('change', () => {
+        currentGame = gameSelect.value;
         render();
-    }));
-    periodTabs.forEach((tab) => tab.addEventListener('click', () => {
-        currentPeriod = tab.dataset.period;
+    });
+    periodSelect.addEventListener('change', () => {
+        currentPeriod = periodSelect.value;
         render();
-    }));
+    });
 
     render();
 }

@@ -1,0 +1,24 @@
+Sea mammals: Dolphin, Whale, Seal, Walrus
+Flightless birds: Ostrich, Emu, Kiwi, Penguin
+Big cats: Lion, Tiger, Leopard, Cheetah
+Nocturnal animals: Owl, Bat, Firefly, Hedgehog
+
+Winter: Snowman, Sled, Mitten, Igloo
+Summer: Sunscreen, Popsicle, Sandal, Beach
+Autumn: Pumpkin, Scarecrow, Acorn, Harvest
+Spring: Blossom, Lamb, Tulip, Puddle
+
+Continents: Asia, Africa, Europe, Oceania
+Mountains: Everest, Kilimanjaro, Fuji, Denali
+Rivers: Nile, Amazon, Thames, Ganges
+Deserts: Sahara, Gobi, Kalahari, Mojave
+
+Baking ingredients: Flour, Yeast, Butter, Sugar
+Cake types: Sponge, Carrot, Cheesecake, Fruitcake
+Biscuits: Cookie, Cracker, Wafer, Shortbread
+Baking tools: Whisk, Oven, Tray, Spatula
+
+Scientists: Newton, Einstein, Darwin, Curie
+Painters: Monet, Picasso, Van Gogh, Dali
+Composers: Mozart, Bach, Beethoven, Chopin
+Authors: Austen, Dickens, Orwell, Twain

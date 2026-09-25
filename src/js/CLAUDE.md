@@ -8,7 +8,7 @@ Plain ES modules, loaded via `<script type="module">` directly in each HTML page
 |---|---|
 | `api/` | Firebase SDK initialization only |
 | `auth/` | Session/login logic + guest & registered profile documents |
-| `games/wordle/`, `games/sudoku/`, `games/wordsearch/` | Each game's engine, page glue, and daily-content data, colocated |
+| `games/wordle/`, `games/sudoku/`, `games/wordsearch/`, `games/connections/` | Each game's engine, page glue, and daily-content data, colocated |
 | `leaderboard/` | Daily leaderboard queries + the leaderboard page |
 | `progression/` | Game-agnostic Points → Level engine (game registry + derived progress calculations) |
 | `admin/` | Moderation actions + the admin page |
@@ -21,7 +21,7 @@ Plain ES modules, loaded via `<script type="module">` directly in each HTML page
 The one file every page loads first. Two entry points, both doing the same header/footer/session-loading work, differing only in what happens when there's no session:
 
 - **`initShell()`** — for pages with no useful unauthenticated state (`profile.html`, `settings.html`, `admin.html`): redirects to the home page (with a `?redirect=` param) if there's no valid session.
-- **`trySession()`** — for pages that should still render real content to an anonymous visitor: resolves a session if one exists, but returns `null` instead of redirecting if there isn't one, leaving it to the page to decide what to show. Used by the home page (`index.html`), the public Leaderboard (`leaderboard.html`, renders the real rankings for anonymous visitors), and, since it matters for AdSense/SEO crawlability, all three game pages (`wordle.html`/`sudoku.html`/`wordsearch.html`) — each one's `init()` renders a static "Sign In to Play" prompt (linking to `/?redirect=<current page>`, reusing the exact same redirect-back mechanism `initShell()` uses) in place of the game when `trySession()` comes back `null`, rather than bouncing the visitor away from the page entirely. `profile.html`/`settings.html`/`admin.html` still use `initShell()`, since there's no crawl/ad value in making personal or admin pages visible to an anonymous visitor.
+- **`trySession()`** — for pages that should still render real content to an anonymous visitor: resolves a session if one exists, but returns `null` instead of redirecting if there isn't one, leaving it to the page to decide what to show. Used by the home page (`index.html`), the public Leaderboard (`leaderboard.html`, renders the real rankings for anonymous visitors), and, since it matters for AdSense/SEO crawlability, all four game pages (`wordle.html`/`sudoku.html`/`wordsearch.html`/`connections.html`) — each one's `init()` renders a static "Sign In to Play" prompt (linking to `/?redirect=<current page>`, reusing the exact same redirect-back mechanism `initShell()` uses) in place of the game when `trySession()` comes back `null`, rather than bouncing the visitor away from the page entirely. `profile.html`/`settings.html`/`admin.html` still use `initShell()`, since there's no crawl/ad value in making personal or admin pages visible to an anonymous visitor.
 
 Responsibilities shared by both:
 

@@ -28,6 +28,7 @@ The home page and the three game pages each have `<div class="ad-space" data-ad-
 | `wordle.html` | `/js/games/wordle/wordle-page.js` | `/wordle` |
 | `sudoku.html` | `/js/games/sudoku/sudoku-page.js` | `/sudoku` |
 | `wordsearch.html` | `/js/games/wordsearch/wordsearch-page.js` | `/wordsearch` |
+| `connections.html` | `/js/games/connections/connections-page.js` | `/connections` |
 | `leaderboard.html` | `/js/leaderboard/leaderboard-page.js` (`trySession()`, public -- renders for anonymous visitors/crawlers) | `/leaderboard` |
 | `profile.html` | `/js/pages/profile.js` | `/profile` |
 | `settings.html` | `/js/pages/settings.js` (registered users only) | `/settings` |
@@ -49,4 +50,4 @@ That gets you working CSS/JS/partials locally, but **not** the clean URLs (`/wor
 
 ## AdSense-readiness additions
 
-Added after an AdSense "Low value content" rejection: each game page (`wordle.html`/`sudoku.html`/`wordsearch.html`) has a "Tips & Strategy" row in its How to Play card plus a 20-question FAQ (`.faq-card`, plain `<details>/<summary>`, answers always in the DOM so crawlers read them), written from the real code's behavior (scoring formulas, local-midnight reset, Wordle's 1-hour retry rule, Word Search's per-difficulty directions). `leaderboard.html` is now public (`trySession()`) with its own description/canonical tags. `about.html` gained "Why Daily Puzzles?" and "How Progress Works" sections, and `terms-of-service.html` is new (linked from the footer, sitemap and privacy policy). `404.html` (root, `noindex`, `.notfound-*` classes) is served automatically by Firebase Hosting; `robots.txt` and `sitemap.xml` also live at the `src/` root (see `docs/deployment.md`). New public pages must be added to `sitemap.xml`.
+Added after an AdSense "Low value content" rejection: each game page (`wordle.html`/`sudoku.html`/`wordsearch.html`/`connections.html`) has a "Tips & Strategy" row in its How to Play card plus a 20-question FAQ (`.faq-card`, plain `<details>/<summary>`, answers always in the DOM so crawlers read them), written from the real code's behavior (scoring formulas, local-midnight reset, Wordle's 1-hour retry rule, Word Search's per-difficulty directions). `leaderboard.html` is now public (`trySession()`) with its own description/canonical tags. `about.html` gained "Why Daily Puzzles?" and "How Progress Works" sections, and `terms-of-service.html` is new (linked from the footer, sitemap and privacy policy). `404.html` (root, `noindex`, `.notfound-*` classes) is served automatically by Firebase Hosting; `robots.txt` and `sitemap.xml` also live at the `src/` root (see `docs/deployment.md`). New public pages must be added to `sitemap.xml`.

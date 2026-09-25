@@ -26,6 +26,9 @@ const ACTIVITY_ROWS = [
     { game: 'Word Search', label: 'Daily Challenge Completed', gameType: 'wordsearch' },
     { game: 'Word Search', label: 'Classic Word Search Completed', gameType: 'wordsearch-classic' },
     { game: 'Word Search', label: 'Tournament Completed', gameType: 'wordsearch-tournament-bonus' },
+    { game: 'Connections', label: 'Daily Challenge Completed', gameType: 'connections' },
+    { game: 'Connections', label: 'Classic Connections Completed', gameType: 'connections-classic' },
+    { game: 'Connections', label: 'Tournament Completed', gameType: 'connections-tournament' },
 ];
 
 /**

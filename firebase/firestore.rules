@@ -110,7 +110,7 @@ service cloud.firestore {
 
             function isCommunityShareUpdate() {
                 return isSignedIn() && request.auth.uid == resource.data.userId
-                    && resource.data.gameType in ['wordle', 'wordle-tournament', 'wordle-challenge', 'sudoku', 'sudoku-classic', 'sudoku-tournament-bonus', 'wordsearch', 'wordsearch-classic', 'wordsearch-tournament-bonus']
+                    && resource.data.gameType in ['wordle', 'wordle-tournament', 'wordle-challenge', 'sudoku', 'sudoku-classic', 'sudoku-tournament-bonus', 'wordsearch', 'wordsearch-classic', 'wordsearch-tournament-bonus', 'connections', 'connections-classic', 'connections-tournament']
                     && resource.data.sharedToFacebook != true
                     && request.resource.data.sharedToFacebook == true
                     && request.resource.data.score == resource.data.score + 20
@@ -124,7 +124,7 @@ service cloud.firestore {
             // doc to attach it to.
             function isFriendsShareUpdate() {
                 return isSignedIn() && request.auth.uid == resource.data.userId
-                    && resource.data.gameType in ['wordle', 'wordle-tournament', 'wordle-challenge', 'sudoku', 'sudoku-classic', 'sudoku-tournament-bonus', 'wordsearch', 'wordsearch-classic', 'wordsearch-tournament-bonus']
+                    && resource.data.gameType in ['wordle', 'wordle-tournament', 'wordle-challenge', 'sudoku', 'sudoku-classic', 'sudoku-tournament-bonus', 'wordsearch', 'wordsearch-classic', 'wordsearch-tournament-bonus', 'connections', 'connections-classic', 'connections-tournament']
                     && resource.data.sharedWithFriends != true
                     && request.resource.data.sharedWithFriends == true
                     && request.resource.data.score == resource.data.score + 10
@@ -180,6 +180,9 @@ service cloud.firestore {
                 : gameType == 'wordsearch-classic' ? 100
                 : gameType == 'wordsearch-tournament' ? 500
                 : gameType == 'wordsearch-tournament-bonus' ? 2000
+                : gameType == 'connections' ? 30
+                : gameType == 'connections-classic' ? 45
+                : gameType == 'connections-tournament' ? 1000
                 : 10;
         }
 
@@ -218,6 +221,65 @@ service cloud.firestore {
                 && (request.resource.data.currentWordIndex == 0
                     || request.resource.data.currentWordIndex == resource.data.currentWordIndex + 1
                     || request.resource.data.currentWordIndex == resource.data.currentWordIndex);
+            allow delete: if isAdmin();
+        }
+
+        // ---------- Connections (see src/js/games/connections/) ----------
+        // Admin-managed Daily puzzles, keyed by the "YYYY-MM-DD" date they play on, with a
+        // `_meta` doc ({ totalCount, firstDate, lastDate }) -- same scheme as wordleDailyWords.
+        match /connectionsDailyPuzzles/{id} {
+            allow read: if true;
+            allow write: if isAdmin();
+        }
+
+        // Admin-managed Classic pool ({ difficulty, groups }).
+        match /connectionsClassicPuzzles/{id} {
+            allow read: if true;
+            allow write: if isAdmin();
+        }
+
+        // Admin-managed tournaments ({ name, puzzles, timePerPuzzleSeconds, bonusPoints, active }).
+        match /connectionsTournaments/{id} {
+            allow read: if true;
+            allow write: if isAdmin();
+        }
+
+        // Daily hourly-retry tracking -- identical shape and bounds to wordleDailyAttempts above.
+        match /connectionsDailyAttempts/{attemptId} {
+            allow read: if true;
+            allow create: if isSignedIn()
+                && request.resource.data.uid == request.auth.uid
+                && attemptId == request.auth.uid + '_' + request.resource.data.date
+                && request.resource.data.attemptsCount == 1
+                && request.resource.data.won is bool;
+            allow update: if isSignedIn() && request.auth.uid == resource.data.uid
+                && resource.data.won == false
+                && request.resource.data.uid == resource.data.uid
+                && request.resource.data.date == resource.data.date
+                && request.resource.data.attemptsCount == resource.data.attemptsCount + 1
+                && request.resource.data.won is bool
+                && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['attemptsCount', 'won', 'lastAttemptAt']);
+            allow delete: if isAdmin();
+        }
+
+        // Tournament progress, id = {tournamentId}_{uid}. Progress only -- points are granted
+        // separately via the guarded gameScores create, same as wordleTournamentAttempts.
+        match /connectionsTournamentAttempts/{attemptId} {
+            allow read: if true;
+            allow create: if isSignedIn()
+                && request.resource.data.uid == request.auth.uid
+                && attemptId == request.resource.data.tournamentId + '_' + request.auth.uid
+                && request.resource.data.currentPuzzleIndex == 0
+                && request.resource.data.puzzlesWon == 0
+                && request.resource.data.completed == false
+                && request.resource.data.pointsAwarded == false;
+            allow update: if isSignedIn() && request.auth.uid == resource.data.uid
+                && request.resource.data.uid == resource.data.uid
+                && request.resource.data.tournamentId == resource.data.tournamentId
+                && (resource.data.completed == false || request.resource.data.completed == true)
+                && (request.resource.data.currentPuzzleIndex == 0
+                    || request.resource.data.currentPuzzleIndex == resource.data.currentPuzzleIndex + 1
+                    || request.resource.data.currentPuzzleIndex == resource.data.currentPuzzleIndex);
             allow delete: if isAdmin();
         }
 
@@ -408,6 +470,14 @@ service cloud.firestore {
                     'wordsearch-monthly-champion', 'wordsearch-monthly-champion-3', 'wordsearch-monthly-champion-6',
                     'wordsearch-monthly-champion-9', 'wordsearch-monthly-champion-12',
 
+                    'connections-expert', 'connections-master', 'connections-grandmaster',
+                    'connections-daily-champion', 'connections-daily-champion-7', 'connections-daily-champion-30',
+                    'connections-daily-champion-50', 'connections-daily-champion-100',
+                    'connections-weekly-champion', 'connections-weekly-champion-5', 'connections-weekly-champion-10',
+                    'connections-weekly-champion-25', 'connections-weekly-champion-50',
+                    'connections-monthly-champion', 'connections-monthly-champion-3', 'connections-monthly-champion-6',
+                    'connections-monthly-champion-9', 'connections-monthly-champion-12',
+
                     'streak-7', 'streak-30', 'streak-100', 'streak-200', 'streak-365',
                     'daily-mind-champion', 'perfect-day', 'triple-threat',
                     'all-rounder', 'puzzle-enthusiast', 'mind-master',
@@ -433,7 +503,7 @@ service cloud.firestore {
             allow create: if isSignedIn()
                 && request.resource.data.uid == request.auth.uid
                 && tallyId == request.auth.uid + '_' + request.resource.data.gameId + '_' + request.resource.data.periodType
-                && request.resource.data.gameId in ['wordle', 'sudoku', 'wordsearch']
+                && request.resource.data.gameId in ['wordle', 'sudoku', 'wordsearch', 'connections']
                 && request.resource.data.periodType in ['day', 'week', 'month']
                 && request.resource.data.count == 1;
             allow update: if isSignedIn() && request.auth.uid == resource.data.uid
@@ -462,7 +532,7 @@ service cloud.firestore {
         match /periodResults/{periodResultId} {
             allow read: if true;
             allow create, update: if isAdmin()
-                && request.resource.data.gameId in ['wordle', 'sudoku', 'wordsearch']
+                && request.resource.data.gameId in ['wordle', 'sudoku', 'wordsearch', 'connections']
                 && request.resource.data.periodType in ['day', 'week', 'month']
                 && periodResultId == request.resource.data.gameId + '_' + request.resource.data.periodType + '_' + request.resource.data.periodKey
                 && (request.resource.data.winnerUid == null || request.resource.data.winnerPoints >= 0);

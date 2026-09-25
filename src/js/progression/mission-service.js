@@ -35,7 +35,7 @@ export const DAILY_MISSIONS = [
     {
         id: 'daily-complete-3-challenges',
         label: 'Complete 3 Daily Challenges',
-        description: "Finish all 3 games' Daily Challenges today.",
+        description: 'Finish any 3 of the Daily Challenges today.',
         xp: 75,
         target: 3,
         progress: (ctx) => Math.min(ctx.dailyChallengesCompletedToday, 3),
@@ -110,7 +110,7 @@ async function getTodaysWordleChallengeMaxAttempts(uid) {
  * for `scoreDate == today` (any mode -- Daily/Classic/Tournament/Challenge all count toward
  * "played a game" and "earned points"), plus `utils/points.js#checkPlayedTodayAll()` specifically
  * for "completed a Daily Challenge" (that function's `gameDate` filter is only reliable for the
- * three base Daily Challenge gameTypes, which is exactly what this one mission needs -- see its
+ * base Daily Challenge gameTypes (one per game), which is exactly what this one mission needs -- see its
  * own doc comment), plus `getTodaysWordleChallengeMaxAttempts()` for the Wordle-specific mission.
  * `sharedToFacebookToday` costs no extra read -- it's just checked off the same `gameScores` docs
  * already fetched for `pointsEarnedToday`/`distinctGamesPlayedToday`. No mission progress is

@@ -1,0 +1,720 @@
+/* Connections page. Self-contained (each page's CSS loads alone); class prefix `cx-`.
+   Tab/stats/tournament/summary-modal/share-option blocks mirror wordle.css's own, renamed. */
+:root {
+    --cx-group-0: #F9DF6D;
+    --cx-group-1: #A0C35A;
+    --cx-group-2: #B0C4EF;
+    --cx-group-3: #BA81C5;
+}
+
+.cx-mode-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    max-width: 480px;
+    margin: 0 auto 20px;
+}
+
+.cx-mode-tab {
+    flex: 1;
+    min-width: 140px;
+    padding: 10px 14px;
+    border: 0.5px solid var(--color-border);
+    background: white;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.cx-mode-tab.active {
+    background: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+}
+
+.cx-mode-tab:not(.active):hover {
+    background: var(--color-bg);
+    border-color: var(--color-border-strong);
+}
+
+.game-container {
+    max-width: 480px;
+    margin: 0 auto;
+}
+
+.cx-title {
+    text-align: center;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: 4px;
+}
+
+.cx-subtitle {
+    text-align: center;
+    color: var(--color-text-secondary);
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+
+.cx-message {
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-primary);
+    min-height: 20px;
+    margin-bottom: 16px;
+}
+
+
+.cx-tournament-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.cx-tournament-card {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 16px;
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+}
+
+.cx-tournament-name {
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--color-text);
+}
+
+.cx-tournament-divider {
+    border-top: 0.5px solid var(--color-border);
+}
+
+.cx-tournament-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.cx-tournament-meta-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--color-text-secondary);
+}
+
+.cx-tournament-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.cx-tournament-sep {
+    color: var(--color-border-strong);
+}
+
+.cx-tournament-card .btn {
+    flex: 0 0 auto;
+    padding: 8px 16px;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.cx-tournament-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 16px;
+}
+
+/* ---------- Challenge a Friend ---------- */
+
+.cx-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 20px;
+    background: var(--color-surface);
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    margin-bottom: 16px;
+}
+
+.cx-stat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cx-stat-icon {
+    font-size: 18px;
+    line-height: 1;
+}
+
+.cx-stat-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-primary);
+}
+
+.cx-stat-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.cx-stat-value.urgent {
+    color: var(--color-danger);
+}
+
+/* ---------- Post-round summary modal ----------
+   Same overlay/dialog/close pattern as index.html's sign-in modal (defined in pages/home.css),
+   duplicated here rather than shared since only one page's CSS loads at a time and this page
+   must not depend on home.css. */
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(44, 44, 42, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 300;
+}
+
+.modal-dialog {
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    padding: 52px 24px 24px;
+    width: 100%;
+    max-width: 400px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+}
+
+.modal-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    color: var(--color-text-muted);
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    z-index: 1;
+}
+
+.modal-close:hover {
+    background: var(--color-bg);
+    color: var(--color-text);
+}
+
+.cx-summary-celebrate {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    height: 64px;
+    margin-bottom: 8px;
+}
+
+.cx-summary-trophy-wrap {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--color-primary-tint);
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cx-summary-trophy-wrap svg {
+    width: 30px;
+    height: 30px;
+}
+
+.cx-summary-confetti {
+    position: absolute;
+    top: 8px;
+    width: 7px;
+    height: 7px;
+    border-radius: 2px;
+}
+
+.cx-summary-confetti-1 {
+    left: calc(50% - 92px);
+    background: #F2B705;
+    transform: rotate(20deg);
+}
+
+.cx-summary-confetti-2 {
+    left: calc(50% - 68px);
+    top: 34px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--color-danger);
+}
+
+.cx-summary-confetti-3 {
+    right: calc(50% - 92px);
+    background: var(--color-primary);
+    transform: rotate(-20deg);
+}
+
+.cx-summary-confetti-4 {
+    right: calc(50% - 68px);
+    top: 34px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--color-success);
+}
+
+.cx-summary-title {
+    text-align: center;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--color-text);
+    margin-bottom: 4px;
+}
+
+.cx-summary-subtitle {
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-primary);
+    margin-bottom: 20px;
+}
+
+.cx-summary-breakdown {
+    border-top: 0.5px solid var(--color-border);
+    padding-top: 12px;
+    margin-bottom: 16px;
+}
+
+.cx-summary-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    padding: 4px 0;
+}
+
+.cx-summary-line-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cx-summary-line-icon {
+    display: flex;
+    flex: 0 0 auto;
+    color: var(--color-primary);
+}
+
+.cx-summary-line-icon svg {
+    width: 16px;
+    height: 16px;
+}
+
+.cx-summary-total {
+    border-top: 0.5px solid var(--color-border);
+    margin-top: 6px;
+    padding-top: 10px;
+    font-weight: 700;
+    color: var(--color-text);
+    font-size: 16px;
+}
+
+/* ---------- Daily Challenge share options ---------- */
+.cx-share-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.cx-share-option {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    padding: 14px 16px;
+    border: 1.5px solid var(--color-primary);
+    border-radius: var(--radius-lg);
+    background: var(--color-primary-tint);
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    transition: filter 0.15s;
+}
+
+.cx-share-option:hover {
+    filter: brightness(0.97);
+}
+
+.cx-share-friends {
+    border-color: var(--color-success);
+    background: #E3F5EE;
+}
+
+.cx-share-option-icon {
+    flex: 0 0 auto;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: white;
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cx-share-friends .cx-share-option-icon {
+    color: var(--color-success);
+}
+
+.cx-share-option-icon svg {
+    width: 22px;
+    height: 22px;
+}
+
+.cx-share-option-body {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.cx-share-option-title {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--color-primary);
+}
+
+.cx-share-friends .cx-share-option-title {
+    color: var(--color-success);
+}
+
+.cx-share-option-desc {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    line-height: 1.4;
+}
+
+/* Badge + chevron live in their own column on the right, out of the title's text flow, so a long
+   title never pushes the badge onto its own visual row underneath. */
+.cx-share-option-side {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    color: var(--color-primary);
+}
+
+.cx-share-friends .cx-share-option-side {
+    color: var(--color-success);
+}
+
+.cx-share-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: var(--color-primary);
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.cx-share-badge-green {
+    background: var(--color-success);
+}
+
+.cx-share-option-side svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* Set by markClaimed() once this specific option's bonus has been awarded -- the other option
+   stays fully interactive regardless. */
+.cx-share-option-claimed {
+    cursor: default;
+    opacity: 0.7;
+}
+
+.cx-share-option-claimed:hover {
+    filter: none;
+}
+
+.cx-share-or {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--color-primary);
+    font-weight: 700;
+    font-size: 12px;
+}
+
+.cx-share-or::before,
+.cx-share-or::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--color-border);
+}
+
+
+/* ---------- Board ---------- */
+.cx-board {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.cx-solved {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.cx-solved-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 68px;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    color: #2C2C2A;
+    text-align: center;
+    animation: cx-pop 0.35s ease-out;
+}
+
+.cx-solved-group[data-group="0"] { background: var(--cx-group-0); }
+.cx-solved-group[data-group="1"] { background: var(--cx-group-1); }
+.cx-solved-group[data-group="2"] { background: var(--cx-group-2); }
+.cx-solved-group[data-group="3"] { background: var(--cx-group-3); }
+
+.cx-solved-name {
+    font-size: 14px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.cx-solved-words {
+    font-size: 13px;
+    font-weight: 500;
+    overflow-wrap: anywhere;
+}
+
+@keyframes cx-pop {
+    from { transform: scale(0.94); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.cx-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+
+.cx-tile {
+    min-height: 68px;
+    padding: 6px 4px;
+    border: 2px solid transparent;
+    border-radius: var(--radius-sm);
+    background: var(--color-primary-tint);
+    color: var(--color-text);
+    font-size: 15px;
+    font-weight: 700;
+    text-transform: uppercase;
+    cursor: pointer;
+    overflow-wrap: anywhere;
+    transition: background 0.15s, color 0.15s, transform 0.1s;
+}
+
+.cx-tile.medium { font-size: 12px; }
+.cx-tile.long { font-size: 10px; }
+
+.cx-tile:hover:not(:disabled) {
+    background: var(--color-border);
+}
+
+.cx-tile:active {
+    transform: scale(0.97);
+}
+
+.cx-tile.selected {
+    background: var(--color-primary);
+    border-color: var(--color-primary-dark);
+    color: white;
+}
+
+.cx-tile.shake {
+    animation: cx-shake 0.4s;
+}
+
+@keyframes cx-shake {
+    10%, 90% { transform: translateX(-2px); }
+    20%, 80% { transform: translateX(4px); }
+    30%, 50%, 70% { transform: translateX(-8px); }
+    40%, 60% { transform: translateX(8px); }
+}
+
+.cx-lives {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.cx-life {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    transition: transform 0.2s, background 0.2s;
+}
+
+.cx-life.lost {
+    background: var(--color-border-strong);
+    transform: scale(0.7);
+}
+
+.cx-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.cx-actions .btn {
+    flex: 1;
+    min-width: 96px;
+}
+
+/* ---------- Classic difficulty picker ---------- */
+.cx-difficulty-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.cx-difficulty-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.cx-difficulty-card:hover {
+    border-color: var(--color-primary);
+    background: var(--color-primary-tint);
+}
+
+.cx-difficulty-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.cx-difficulty-points {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+}
+
+/* ---------- Summary modal grid ---------- */
+.cx-summary-grid {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 20px;
+}
+
+.cx-summary-row {
+    display: flex;
+    gap: 4px;
+}
+
+.cx-summary-cell {
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
+}
+
+.cx-summary-cell[data-group="0"] { background: var(--cx-group-0); }
+.cx-summary-cell[data-group="1"] { background: var(--cx-group-1); }
+.cx-summary-cell[data-group="2"] { background: var(--cx-group-2); }
+.cx-summary-cell[data-group="3"] { background: var(--cx-group-3); }
+
+@media (max-width: 420px) {
+    .cx-tile {
+        min-height: 60px;
+        font-size: 12px;
+    }
+
+    .cx-tile.medium { font-size: 10px; }
+    .cx-tile.long { font-size: 9px; }
+
+    .cx-grid,
+    .cx-solved {
+        gap: 6px;
+    }
+}
+
+/* ---------- How to Play: mini board visual (shared .htp-* layout is in components.css) ---------- */
+.htp-mini-cx-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    width: 100%;
+}
+
+.htp-mini-cx-grid span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 26px;
+    border-radius: 4px;
+    font-size: 8px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #2C2C2A;
+}
+
+.htp-mini-cx-grid span[data-group="0"] { background: var(--cx-group-0); }
+.htp-mini-cx-grid span[data-group="1"] { background: var(--cx-group-1); }
+.htp-mini-cx-grid span[data-group="2"] { background: var(--cx-group-2); }
+.htp-mini-cx-grid span[data-group="3"] { background: var(--cx-group-3); }

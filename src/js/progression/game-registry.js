@@ -51,4 +51,14 @@ export const GAMES = {
             tournament: ['wordsearch-tournament', 'wordsearch-tournament-bonus'],
         },
     },
+    connections: {
+        label: 'Connections',
+        logo: '/assets/images/tile-connections.png',
+        scoreTypes: ['connections', 'connections-classic', 'connections-tournament'],
+        modes: {
+            daily: ['connections'],
+            classic: ['connections-classic'],
+            tournament: ['connections-tournament'],
+        },
+    },
 };
