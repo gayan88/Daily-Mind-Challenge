@@ -24,64 +24,19 @@ import {
     getAllPeriodStatuses, finalizeAllPending, finalizePendingFor, getPeriodResult, refinalizePeriod,
 } from '../progression/championship-service.js';
 import { getGameScoresForDateRange, getOverallScoresForDateRange } from '../leaderboard/leaderboard-data.js';
+// Grouping/labeling for Daily (year > month) and Classic (difficulty) tables below -- shared with
+// connections-admin-page.js, see that module's own doc comment for why this lives in its own file.
+import {
+    monthLabel, groupWordsByMonth, groupMonthsByYear, groupByDifficulty, DIFFICULTY_LABELS,
+} from './admin-table-grouping.js';
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-
-function monthLabel(yearMonth) {
-    const [year, month] = yearMonth.split('-').map(Number);
-    return `${MONTH_NAMES[month - 1]} ${year}`;
-}
 
 /** Drops a leading "no,date,..." header line, if present -- lets a CSV downloaded from one of the
  * "Download CSV" buttons below be re-uploaded through "Import" unchanged, rather than the header
  * row itself getting misread as a malformed data row. */
 function stripCsvHeaderRow(lines) {
     return lines[0]?.trim().toLowerCase().startsWith('no,date,') ? lines.slice(1) : lines;
-}
-
-/** Groups an already date-sorted word list by "YYYY-MM" -- a Map preserves insertion order, so
- * the resulting groups come out in chronological order for free. */
-function groupWordsByMonth(words) {
-    const groups = new Map();
-    words.forEach((w) => {
-        const key = w.date.slice(0, 7);
-        if (!groups.has(key)) groups.set(key, []);
-        groups.get(key).push(w);
-    });
-    return groups;
-}
-
-/** Further groups a chronologically-ordered month-groups Map (see groupWordsByMonth()) by "YYYY"
- * -- a Map preserves insertion order here too, so years (and the months within each year) both
- * come out in chronological order for free, same reasoning as groupWordsByMonth() itself. Exists
- * because a pool seeded years ahead turns into dozens of flat month rows otherwise -- nesting
- * under a year first means expanding any point in a multi-year pool is at most two clicks away,
- * rather than depending on how far down a flat (or paginated) list that month happens to be. */
-const DIFFICULTY_ORDER = ['easy', 'medium', 'hard'];
-const DIFFICULTY_LABELS = { easy: 'Easy', medium: 'Medium', hard: 'Hard' };
-
-/** Groups a Classic-puzzle list (Sudoku or Word Search) by difficulty, always in Easy/Medium/Hard
- * order regardless of insertion order (ids interleave difficulties, since all three share one
- * numeric counter) -- a difficulty with nothing seeded yet is omitted rather than shown as an
- * empty group. */
-function groupByDifficulty(items) {
-    const groups = new Map();
-    DIFFICULTY_ORDER.forEach((d) => {
-        const matching = items.filter((item) => item.difficulty === d);
-        if (matching.length > 0) groups.set(d, matching);
-    });
-    return groups;
-}
-
-function groupMonthsByYear(monthGroups) {
-    const years = new Map();
-    monthGroups.forEach((items, monthKey) => {
-        const year = monthKey.slice(0, 4);
-        if (!years.has(year)) years.set(year, new Map());
-        years.get(year).set(monthKey, items);
-    });
-    return years;
 }
 
 const CONFIG_FORMS = [

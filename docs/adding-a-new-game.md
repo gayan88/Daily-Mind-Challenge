@@ -91,6 +91,13 @@ Adding a game means updating each of these separately, not registering it once s
 - A whole new collapsible section: Daily content (add/edit/import/export, grouped by year then
   month), Classic content if applicable (same, grouped by difficulty), Tournament management
   (create/list/activate/delete).
+  - **This grouping is easy to build as a flat, ungrouped list and only notice the gap once a
+    real content-sized pool makes it unusable** — that's exactly what happened building
+    Connections' admin section, and it had to be retrofitted afterward. Import the *existing*
+    `monthLabel()` / `groupWordsByMonth()` / `groupMonthsByYear()` / `groupByDifficulty()` /
+    `wireCollapsibleToggles()` helpers from `src/js/admin/admin-table-grouping.js` from the very
+    first draft of the new game's Daily/Classic tables, rather than shipping a flat list and
+    circling back — see that file's own doc comment, and `src/js/admin/CLAUDE.md`'s entry for it.
 - A new `src/js/admin/<game>-admin.js` Firestore layer, mirroring the existing three.
 - New ad slot IDs registered in `AD_SLOTS` (`src/js/utils/ads.js`).
 - New rows in the Daily Activity Summary's `ACTIVITY_ROWS` map

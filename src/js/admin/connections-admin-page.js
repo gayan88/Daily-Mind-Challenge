@@ -5,6 +5,12 @@ import {
     listClassicConnectionsPuzzles, addClassicConnectionsPuzzles, updateClassicConnectionsPuzzle,
     listConnectionsTournaments, createConnectionsTournament, setConnectionsTournamentActive, deleteConnectionsTournament,
 } from './connections-admin.js';
+// Same year > month (Daily) and difficulty (Classic) grouping every other game's admin table
+// uses -- shared from admin-page.js's own extraction, see admin-table-grouping.js's doc comment.
+import {
+    monthLabel, groupWordsByMonth, groupMonthsByYear, groupByDifficulty, DIFFICULTY_LABELS,
+    wireCollapsibleToggles,
+} from './admin-table-grouping.js';
 
 const FORMAT_HELP = `Format: 4 lines per puzzle, easiest group first (yellow, green, blue, purple), each as <code>Group name: word, word, word, word</code>. Separate puzzles with a blank line. All 16 words in a puzzle must be unique.`;
 const PLACEHOLDER = `Fish: Bass, Pike, Perch, Carp
@@ -205,11 +211,36 @@ async function renderDailyTable() {
         container.innerHTML = `<div class="empty-state">No puzzles seeded yet. Pick a start date above and add one to activate the Daily Challenge.</div>`;
         return;
     }
-    container.innerHTML = puzzles.map((p) => rowHtml(
-        `#${p.challengeNumber ?? '?'} &middot; ${p.date}`,
-        p.groups.map((g) => g.name).join(' / '),
-        'data-edit-daily', p.date, p,
-    )).join('');
+
+    // Grouped by year, then month, both collapsed by default -- same treatment as Wordle/Sudoku/
+    // Word Search's own Daily tables, so a multi-year pool doesn't become one long flat scroll.
+    const monthGroups = groupWordsByMonth(puzzles);
+    const yearGroups = groupMonthsByYear(monthGroups);
+
+    container.innerHTML = Array.from(yearGroups.entries()).map(([year, yearMonths]) => {
+        const yearCount = Array.from(yearMonths.values()).reduce((sum, arr) => sum + arr.length, 0);
+        return `
+            <div class="admin-subsection" data-collapsible>
+                <button class="admin-subsection-header" type="button">${year} (${yearCount})</button>
+                <div class="card">
+                    ${Array.from(yearMonths.entries()).map(([monthKey, monthPuzzles]) => `
+                        <div class="admin-subsection admin-subsection-nested" data-collapsible>
+                            <button class="admin-subsection-header" type="button">${monthLabel(monthKey)} (${monthPuzzles.length})</button>
+                            <div class="card">
+                                ${monthPuzzles.map((p) => rowHtml(
+                                    `#${p.challengeNumber ?? '?'} &middot; ${p.date}`,
+                                    p.groups.map((g) => g.name).join(' / '),
+                                    'data-edit-daily', p.date, p,
+                                )).join('')}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    wireCollapsibleToggles(container);
     wireEditRows(container, 'data-edit-daily', (date) => puzzles.find((p) => p.date === date),
         async (date, puzzle) => { await updateDailyConnectionsPuzzle(date, puzzle); renderDailyTable(); });
     container._puzzles = puzzles;
@@ -228,11 +259,25 @@ async function renderClassicTable() {
         container.innerHTML = `<div class="empty-state">No Classic puzzles yet.</div>`;
         return;
     }
-    container.innerHTML = puzzles.map((p) => rowHtml(
-        `#${p.id} &middot; ${p.difficulty}`,
-        p.groups.map((g) => g.name).join(' / '),
-        'data-edit-classic', p.id, p,
-    )).join('');
+
+    // Grouped by difficulty (Easy/Medium/Hard) rather than one flat id-ordered list -- same
+    // treatment as Sudoku/Word Search's own Classic tables. Each group defaults open since
+    // there are only ever three.
+    const groups = groupByDifficulty(puzzles);
+    container.innerHTML = Array.from(groups.entries()).map(([difficulty, group]) => `
+        <div class="admin-subsection open" data-collapsible>
+            <button class="admin-subsection-header" type="button">${DIFFICULTY_LABELS[difficulty]} (${group.length})</button>
+            <div class="card">
+                ${group.map((p) => rowHtml(
+                    `#${p.id}`,
+                    p.groups.map((g) => g.name).join(' / '),
+                    'data-edit-classic', p.id, p,
+                )).join('')}
+            </div>
+        </div>
+    `).join('');
+
+    wireCollapsibleToggles(container);
     wireEditRows(container, 'data-edit-classic', (id) => puzzles.find((p) => String(p.id) === String(id)),
         async (id, puzzle) => { await updateClassicConnectionsPuzzle(id, puzzle); renderClassicTable(); });
     container._puzzles = puzzles;
