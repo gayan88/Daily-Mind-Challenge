@@ -66,16 +66,30 @@ read-only/derived-only follow-up to Phase 3, picked back up after being deferred
   check before calling them -- though the Daily Challenge call sites still check it anyway, to skip
   an unnecessary `checkPlayedTodayAll()` read for guests.
 - **`rank-service.js`** — Overall Rank (Section 14), picked back up after being deferred out of
-  Phase 3. Pure and read-only, no Firestore code at all. `MAIN_RANKS`: 10 tiers (10,000 XP per
-  tier -- Novice through Legend, the user's exact thresholds/names), each `{ tier, name, image,
-  color }` -- `image` points at one of the cropped *generic per-tier* badge assets in
-  `src/assets/images/` (`rank-novice.png` .. `rank-legend.png`), used for the "All Ranks" strip and
-  the hero progress bar's flanking main-rank icons; `color` is that tier's accent hex, sampled
-  directly off the user-supplied `sub-ranks.png` reference sheet's own row background -- tracked
-  for later use when this was first built, since read by `leaderboard/player-profile-modal.js` as
-  the clicked player's popup header background (a per-rank "trading card" look; guests get a fixed
-  neutral color instead, since no `MAIN_RANKS` tier applies to them). `calculateMainRank(xp)`
-  returns just the tier object.
+  Phase 3. Pure and read-only, no Firestore code at all. `MAIN_RANKS`: 10 tiers -- Novice through
+  Legend, the user's exact names -- each `{ tier, name, image, color, totalXpToComplete }` --
+  `image` points at one of the cropped *generic per-tier* badge assets in `src/assets/images/`
+  (`rank-novice.png` .. `rank-legend.png`), used for the "All Ranks" strip and the hero progress
+  bar's flanking main-rank icons; `color` is that tier's accent hex, sampled directly off the
+  user-supplied `sub-ranks.png` reference sheet's own row background -- tracked for later use when
+  this was first built, since read by `leaderboard/player-profile-modal.js` as the clicked player's
+  popup header background (a per-rank "trading card" look; guests get a fixed neutral color
+  instead, since no `MAIN_RANKS` tier applies to them). `totalXpToComplete` is the cumulative XP to
+  fully finish that tier (attached at module load from `RANK_END_XP` below, not hand-typed) -- read
+  by `profile.js`'s "All Ranks" strip tooltip. `calculateMainRank(xp)` returns just the tier object.
+
+  **Per-tier XP curve, retuned from the original flat design**: rather than a uniform 10,000 XP per
+  main rank / 1,000 XP per sub-rank throughout, each main rank now has its own flat per-sub-rank
+  width that grows every tier -- `TIER_STEP_XP = [500, 1000, 1500, 2000, 2500, 3000, 3500, 4000,
+  4500, 5000]` (Novice=500 ... Legend=5000), so early ranks come quickly and the climb lengthens
+  per tier. The full 100-rank threshold table (`RANK_END_XP`, one cumulative value per rank 1-100)
+  is generated from just those 10 numbers at module load, not hand-listed -- retuning the pace
+  means editing `TIER_STEP_XP`, not 100 individual thresholds. Total XP for the full climb (Legend
+  X) is 275,000 -- tuned with the user against a ~3-year climb at an enthusiastic 250 XP/day, or
+  ~7.5 years at a more casual 100 XP/day. `rankIndexForXp(xp)` (internal) finds the 0-99 rank index
+  currently held by scanning `RANK_END_XP` -- a player is always somewhere (Novice I is free at 0
+  XP, same "never a gap" convention the original flat version used), and each threshold is both
+  "that rank's own width" and "the XP floor at which the *next* rank begins."
 
   `subRankImagePath(mainRank, subRankNumber)` (internal) resolves one of the **100** per-sub-rank
   badge images at `src/assets/images/sub-ranks/{rankName}-{1..10}.png` (e.g. `novice-7.png`) --
@@ -86,17 +100,16 @@ read-only/derived-only follow-up to Phase 3, picked back up after being deferred
   tier" icon everywhere a granularity coarser than the player's exact sub-rank makes sense.
 
   `calculateRankProgress(xp)` returns the full breakdown used by the profile page: sub-rank fields
-  (`label` e.g. "Novice VII", `subRankImage` -- the exact-sub-rank badge path above,
-  `progressPercent`/`xpToNextSubRank`/`nextLabel`/`nextSubRankImage` for the 1,000-XP-wide sub-rank
-  band -- 10 sub-ranks per main rank, Roman numerals I-X, matching the spec's own "Grandmaster III"
-  mockup -- confirmed with the user after an earlier "9 sub-ranks" reading based on ambiguous
-  example numbers turned out wrong) *and* main-rank fields
-  (`mainRankProgressPercent`/`xpToNextMainRank`/`nextMainRank` for the coarser 10,000-XP band) --
-  both granularities are shown at once on the profile page (sub-rank as the big "X / 1,000 XP"
+  (`label` e.g. "Novice VII", `subRankImage` -- the exact-sub-rank badge path above, `subRankWidth`
+  -- the current main rank's own per-sub-rank XP width (500-5,000 depending on tier, see above;
+  `profile.js` builds its "X / {subRankWidth} XP" label off this instead of a hardcoded number),
+  `progressPercent`/`xpToNextSubRank`/`nextLabel`/`nextSubRankImage`) *and* main-rank fields
+  (`mainRankProgressPercent`/`xpToNextMainRank`/`nextMainRank` for the coarser whole-tier band) --
+  both granularities are shown at once on the profile page (sub-rank as the big "X / {width} XP"
   number, main-rank as the flanking-icon progress bar it sits inside), deliberately not the same
-  metric twice. Caps at Legend (and sub-rank X) for any XP >= 90,000 (an assumption made when this
-  was built, not an explicit decision -- there's no 11th tier to grow into); at max rank,
-  `nextSubRankImage` just repeats the current badge, same fallback the label/mainRank fields
+  metric twice. Caps at Legend X for any XP >= 275,000 (the sum of `TIER_STEP_XP`, not an
+  independent constant); at max rank, `nextSubRankImage` just repeats the current badge, same
+  fallback the label/mainRank fields
   already use. `GUEST_RANK_IMAGE` is a separate, fixed badge (`rank-guest.png`) for guests, who
   don't earn XP/Rank (Section 4) -- shown instead of defaulting them into "Novice," which would
   misrepresent it as a real rank.

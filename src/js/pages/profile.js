@@ -102,7 +102,7 @@ function renderRankCard(profile, isRegistered) {
     document.getElementById('profile-rank-next-icon').alt = nextLabel;
     document.getElementById('profile-rank-next-label').textContent = nextLabel;
     document.getElementById('profile-rank-bar-fill').style.width = `${progress.progressPercent}%`;
-    document.getElementById('profile-rank-xp-big').innerHTML = `${progress.xpIntoSubRank.toLocaleString()} <span class="rank-progress-xp-big-muted">/ 1,000 XP</span>`;
+    document.getElementById('profile-rank-xp-big').innerHTML = `${progress.xpIntoSubRank.toLocaleString()} <span class="rank-progress-xp-big-muted">/ ${progress.subRankWidth.toLocaleString()} XP</span>`;
     document.getElementById('profile-rank-next').textContent = progress.isMaxRank
         ? 'Max rank reached!'
         : `${progress.xpToNextSubRank.toLocaleString()} XP to reach ${progress.nextLabel}`;
@@ -132,7 +132,7 @@ function renderRankPanel(profile, isRegistered) {
         // (and render poorly/not at all in some browsers), so hovering just changed the cursor
         // to "?" without ever actually showing the text.
         return `
-            <div class="rank-strip-item ${isCurrent ? 'rank-strip-item-current' : ''}" data-tooltip="${r.name} — ${(r.tier * 10000).toLocaleString()} XP total, sub-ranks I–X" tabindex="0">
+            <div class="rank-strip-item ${isCurrent ? 'rank-strip-item-current' : ''}" data-tooltip="${r.name} — ${r.totalXpToComplete.toLocaleString()} XP total, sub-ranks I–X" tabindex="0">
                 <img class="rank-strip-icon" src="${r.image}" alt="${r.name}">
                 <div class="rank-strip-name">${r.name}</div>
                 <div class="rank-strip-current-marker">${isCurrent ? '▲<br>Current' : ''}</div>
