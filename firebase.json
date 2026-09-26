@@ -15,9 +15,8 @@
       "**/.*",
       "**/node_modules/**"
     ],
-    "cleanUrls": true,
+    "cleanUrls": false,
     "rewrites": [
-      { "source": "/google9a4fa05185ef4666.html", "destination": "/google9a4fa05185ef4666.html" },
       { "source": "/", "destination": "/html/index.html" },
       { "source": "/leaderboard", "destination": "/html/leaderboard.html" },
       { "source": "/profile", "destination": "/html/profile.html" },
