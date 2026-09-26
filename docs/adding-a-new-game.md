@@ -121,6 +121,17 @@ Adding a game means updating each of these separately, not registering it once s
 - **A dedicated Facebook/social-share image (`fb-share-<game>.png`, `og:image`/`twitter:image` in `<game>.html`) -- not a crop of the tile/logo art.** Connections shipped without this: its `fb-share-connections.png` is just a wide crop of the exact same artwork already used for its home-tile and How to Play banner, never designed for a social-link preview (small feed thumbnail, needs to read at a glance, not carry a dense UI mockup). This is split work, not something either side can finish alone:
   - **You (project owner) provide:** a *separate* source image, purpose-made for a link preview, not the tile/logo/banner art reused. Roughly 1200×630 (or matching the other games' ~1.91:1 ratio, e.g. `fb-share-wordle.png` at 1731×909) -- wide, not square. Simple enough to read as a thumbnail: game name/logo plus one clear visual, not a busy screenshot-style composition. If generating it with an AI image tool, ask for that exact wide ratio up front rather than generating a square logo and needing an awkward crop afterward.
   - **I (implementation) do, once the source image is supplied:** resize/crop it to match the other games' `fb-share-*.png` convention, save it to `src/assets/images/`, and wire `og:image` + `og:image:width` + `og:image:height` + `twitter:image` in `<game>.html`, matching the existing three games' exact tag shape. I'll also flag in the game's own `CLAUDE.md` if it's temporarily reusing another asset as a stand-in, so that's a visible known gap rather than something that ships silently.
+- **Submit the new page for indexing in Google Search Console and Bing Webmaster Tools once it's
+  live** -- adding a URL to `sitemap.xml` gets it *discovered* eventually, but doesn't push either
+  search engine to crawl it right away. This is entirely on **you (project owner)** -- it needs
+  your Search Console/Webmaster Tools account, which I have no access to:
+  - **Google**: Search Console → **URL inspection** (top of the left sidebar) → paste
+    `https://dailymindchallenge.com/<game>` → **Request Indexing**.
+  - **Bing**: Bing Webmaster Tools has the equivalent under its own URL Inspection tool.
+  - Both properties are already verified for this domain (see `docs/deployment.md`'s "Search engine
+    verification files" section) and the sitemap is already submitted in both -- this step is just
+    the one-time "please crawl this specific new URL now" nudge for the new game's page, same as
+    was done for `/connections` when it launched.
 
 ## 8. Documentation
 
