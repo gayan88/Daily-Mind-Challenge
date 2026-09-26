@@ -1,6 +1,6 @@
 # Deployment
 
-Deployed on Firebase Hosting, project **`playdailymindchallenge`** (the `default` in `.firebaserc`; `daily-mind-challenge` is the old, retired project -- do not deploy there). Live at `playdailymindchallenge.web.app`, with the custom domain `dailymindchallenge.com` used in canonical/OG tags and the sitemap.
+Deployed on Firebase Hosting, project **`playdailymindchallenge`** (the `default` in `.firebaserc`; `daily-mind-challenge` is the old, retired project -- do not deploy there). Live at the custom domain `dailymindchallenge.com` (the canonical/OG tags, the sitemap, and Google Search Console are all set up against this domain, not the Firebase one) -- the auto-provisioned `playdailymindchallenge.web.app` also stays live serving identical content, see "Custom domain" below.
 
 **Account gotcha:** the real `playdailymindchallenge` project lives under the **`lazyprogrammer88@gmail.com`** Google account, not `gayan.sliit2009@gmail.com` (which only sees the old project). If `firebase deploy` fails with "Failed to get Firebase project", run `firebase login:use lazyprogrammer88@gmail.com` first and always pass `--project playdailymindchallenge` explicitly -- `firebase use` may still point at the old project.
 
@@ -14,7 +14,7 @@ Covered in full in the root `README.md` — summary: create a Firebase project, 
 {
   "hosting": {
     "public": "src",
-    "cleanUrls": true,
+    "cleanUrls": false,
     "rewrites": [
       { "source": "/", "destination": "/html/index.html" },
       { "source": "/leaderboard", "destination": "/html/leaderboard.html" },
@@ -24,6 +24,7 @@ Covered in full in the root `README.md` — summary: create a Firebase project, 
       { "source": "/wordle", "destination": "/html/wordle.html" },
       { "source": "/sudoku", "destination": "/html/sudoku.html" },
       { "source": "/wordsearch", "destination": "/html/wordsearch.html" },
+      { "source": "/connections", "destination": "/html/connections.html" },
       { "source": "/privacy-policy", "destination": "/html/privacy-policy.html" },
       { "source": "/terms-of-service", "destination": "/html/terms-of-service.html" },
       { "source": "/cookie-consent", "destination": "/html/cookie-consent.html" },
@@ -35,7 +36,7 @@ Covered in full in the root `README.md` — summary: create a Firebase project, 
 
 - **`public: "src"`** — the file structure under `src/` (`html/`, `css/`, `js/`, `partials/`, `assets/`) stays exactly as documented in `src/html/CLAUDE.md` and friends; hosting config is a presentation layer on top, not a physical reorganization.
 - **`rewrites`** — map each clean production URL to its real `.html` file. This is a deliberate choice over a single-page-app catch-all (`"source": "**" → "/index.html"`, which is `firebase init hosting`'s default suggestion) — this app is real multi-page navigation, not a client-side router, so every route needs its own explicit destination. **Adding a page means adding a rewrite entry here** — see `src/html/CLAUDE.md`'s Pages table for the current full list, which must stay in sync with this file.
-- **`cleanUrls: true`** — auto-strips `.html` if a raw filename URL is ever hit directly.
+- **`cleanUrls: false`** — deliberately off, not just left at its default. It was briefly `true` (auto-stripping `.html` from any raw filename URL) but that redirect triggers off the *requested* URL's own suffix regardless of `rewrites` — which broke Google Search Console's site-verification file (`src/google9a4fa05185ef4666.html`, see "Google Search Console verification file" below), since Google needs that exact `.html` URL to return 200 directly, not a 301. Turning it off cost nothing: every real clean URL on this site (`/wordle`, `/connections`, etc.) already works purely through the explicit `rewrites` above, independent of this flag — nothing on the site ever links to a raw `/html/*.html` path for `cleanUrls` to have been helping with in the first place.
 - Every path referenced from inside `src/` (asset `<link>`/`<script>` tags, nav `<a href>`s, `fetch()` calls for partials) is **root-relative** (`/css/...`, not `../css/...`) — this only resolves correctly because the site is served from a domain root. See `src/html/CLAUDE.md` for the one exception (JS `import` statements, which resolve against the importing script's own location and were never affected).
 
 ## Deploying
@@ -48,11 +49,30 @@ Hosting-only changes (HTML/CSS/JS/images) need just `--only hosting`. Any change
 
 ## Static root files
 
-`src/ads.txt` (AdSense publisher line), `src/robots.txt` (allows all, disallows the session-gated `/profile`, `/settings`, `/admin`, points at the sitemap), `src/sitemap.xml` (the 9 public pages -- add new public pages here), and `src/404.html` (Firebase Hosting serves it automatically for any unmatched path; no rewrite needed) are served from the site root because `public` is `src`.
+`src/ads.txt` (AdSense publisher line), `src/robots.txt` (allows all, disallows the session-gated `/profile`, `/settings`, `/admin`, points at the sitemap), `src/sitemap.xml` (the 10 public pages -- add new public pages here), and `src/404.html` (Firebase Hosting serves it automatically for any unmatched path; no rewrite needed) are served from the site root because `public` is `src`.
+
+## Google Search Console verification file
+
+**`src/google9a4fa05185ef4666.html` must never be deleted, renamed, or moved.** It's Google's
+HTML-file domain-ownership verification for `dailymindchallenge.com` (verified 2026-09-26) --
+removing it, or anything that stops it serving a plain 200 at that exact URL, can revoke the
+site's verified status in Search Console. This is also the reason `cleanUrls` is off (see above):
+Google's checker needs `https://dailymindchallenge.com/google9a4fa05185ef4666.html` to return the
+literal string `google-site-verification: google9a4fa05185ef4666.html` directly, not via a
+redirect. If `firebase.json`'s hosting config is ever revisited, re-check this URL still returns
+200 with that exact content afterward.
 
 ## Custom domain
 
-Firebase console → your project → **Build → Hosting → Add custom domain** → follow the DNS verification flow (a TXT record to prove ownership, then A/AAAA or CNAME records pointing at Firebase). Not yet connected as of this writing — the live site is still the default `.web.app` subdomain.
+The custom domain `dailymindchallenge.com` is connected and live (set up via Firebase console →
+your project → **Build → Hosting → Add custom domain**, following its DNS verification flow -- a
+TXT record to prove ownership, then A/AAAA or CNAME records pointing at Firebase). The
+auto-provisioned `playdailymindchallenge.web.app` domain remains fully live too, serving identical
+content with no redirect between the two -- Firebase Hosting has no built-in way to redirect its
+own default domain to a custom one without Cloud Functions (which this project doesn't have; it's
+on a plan that doesn't support them). Every indexable page's `<link rel="canonical">` points at the
+`dailymindchallenge.com` URL regardless of which domain served the request, which is Google's own
+recommended mitigation for this exact same-content-two-domains situation.
 
 ## Important: Hosting does not fix Firestore latency
 
