@@ -51,16 +51,23 @@ Hosting-only changes (HTML/CSS/JS/images) need just `--only hosting`. Any change
 
 `src/ads.txt` (AdSense publisher line), `src/robots.txt` (allows all, disallows the session-gated `/profile`, `/settings`, `/admin`, points at the sitemap), `src/sitemap.xml` (the 10 public pages -- add new public pages here), and `src/404.html` (Firebase Hosting serves it automatically for any unmatched path; no rewrite needed) are served from the site root because `public` is `src`.
 
-## Google Search Console verification file
+## Search engine verification files
 
-**`src/google9a4fa05185ef4666.html` must never be deleted, renamed, or moved.** It's Google's
-HTML-file domain-ownership verification for `dailymindchallenge.com` (verified 2026-09-26) --
-removing it, or anything that stops it serving a plain 200 at that exact URL, can revoke the
-site's verified status in Search Console. This is also the reason `cleanUrls` is off (see above):
-Google's checker needs `https://dailymindchallenge.com/google9a4fa05185ef4666.html` to return the
-literal string `google-site-verification: google9a4fa05185ef4666.html` directly, not via a
-redirect. If `firebase.json`'s hosting config is ever revisited, re-check this URL still returns
-200 with that exact content afterward.
+Two static verification files live at the site root and **must never be deleted, renamed, or
+moved** -- removing either can revoke that search engine's verified-ownership status:
+
+- **`src/google9a4fa05185ef4666.html`** -- Google Search Console's HTML-file domain-ownership
+  verification for `dailymindchallenge.com` (verified 2026-09-26). This is also the reason
+  `cleanUrls` is off (see above): Google's checker needs
+  `https://dailymindchallenge.com/google9a4fa05185ef4666.html` to return the literal string
+  `google-site-verification: google9a4fa05185ef4666.html` directly, not via a redirect.
+- **`src/BingSiteAuth.xml`** -- Bing Webmaster Tools' equivalent (added the same day, after Bing's
+  "Import from Google Search Console" flow failed due to a Google-account mismatch, so it was
+  verified manually instead). Must return 200 with its original exact XML content at
+  `https://dailymindchallenge.com/BingSiteAuth.xml`.
+
+If `firebase.json`'s hosting config is ever revisited, re-check both URLs still return 200 with
+their original exact content afterward.
 
 ## Custom domain
 
