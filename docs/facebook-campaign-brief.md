@@ -205,6 +205,12 @@ No app-install step — every destination below is the live site itself, playabl
 - `dailymindchallenge.com/connections`
 - `dailymindchallenge.com/leaderboard` -- public rankings; good for "can you beat this score?" creative
 
+## 8b. Tracking and measurement
+
+- **Meta Pixel is live** on `dailymindchallenge.com` (ID `1627198078795313`). It records page views and enables retargeting and conversion measurement for Meta ads.
+- It loads **only for visitors who accept cookies**. Visitors who decline are not tracked by the pixel, so retargeting audiences and reported conversions will be smaller than total site traffic. Plan budgets and expectations accordingly.
+- Disclosed in the site's privacy policy and cookie notice (both updated 2026-10-03).
+
 ## 9. To be defined together
 
 Everything above is enough for an agency to start scoping creative and targeting direction. These
@@ -220,7 +226,7 @@ are genuine open decisions, not omissions — resolve them on the kickoff call:
 
 ---
 
-*Last refreshed 2026-09-25 to add the fourth game, Connections (modes, assets, updated tagline,
+*Last refreshed 2026-10-03 to add the Meta Pixel tracking note (Section 8b). Earlier: 2026-09-25 added the fourth game, Connections (modes, assets, updated tagline,
 badge/leaderboard counts, and its own landing URL) -- see Section 2's "Connections" subsection.
 `docs/Daily-Mind-Challenge-Campaign-Brief.pdf` is an older export of this brief and predates both
 this refresh and the 2026-09-20 one (progression/achievements, the Wordle retry rule, and the
