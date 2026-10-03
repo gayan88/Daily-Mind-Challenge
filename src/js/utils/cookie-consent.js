@@ -1,6 +1,7 @@
 import { setConsent } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js';
 import { analytics } from '../api/firebase-init.js';
 import { getConfig } from './config.js';
+import { loadMetaPixel } from './meta-pixel.js';
 
 const STORAGE_KEY = 'dmc_cookie_consent'; // 'accepted' | 'rejected', per-browser, see below
 
@@ -54,6 +55,7 @@ function renderBanner() {
     function choose(choice) {
         storeChoice(choice);
         applyConsent(choice);
+        if (choice === 'accepted') loadMetaPixel();
         el.remove();
     }
     el.querySelector('#cookie-banner-accept').addEventListener('click', () => choose('accepted'));
@@ -72,6 +74,7 @@ export async function initCookieConsentBanner() {
     const stored = getStoredChoice();
     if (stored) {
         applyConsent(stored);
+        if (stored === 'accepted') loadMetaPixel();
         return;
     }
 
