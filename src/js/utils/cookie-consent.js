@@ -70,7 +70,15 @@ function renderBanner() {
  * again -- this has to happen on every page load because each page mounts its own fresh Analytics
  * instance, so a prior page's setConsent() call doesn't carry over on its own.
  */
+let initStarted = false;
+
 export async function initCookieConsentBanner() {
+    // Guarded synchronously, before any await, because some pages call loadHeaderFooter() twice
+    // (the home page does: its own init() and trySession() both run it). Without this, each call
+    // rendered its own banner, so the visitor had to click Accept/Decline once per copy.
+    if (initStarted) return;
+    initStarted = true;
+
     const stored = getStoredChoice();
     if (stored) {
         applyConsent(stored);
