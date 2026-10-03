@@ -71,6 +71,7 @@ function renderBanner() {
  * instance, so a prior page's setConsent() call doesn't carry over on its own.
  */
 let initStarted = false;
+const CONFIG_TIMEOUT_MS = 1500;
 
 export async function initCookieConsentBanner() {
     // Guarded synchronously, before any await, because some pages call loadHeaderFooter() twice
@@ -86,7 +87,13 @@ export async function initCookieConsentBanner() {
         return;
     }
 
-    const { enabled } = await getConfig('cookieConsent');
+    // Don't let a slow or blocked database hold up the banner (and with it, consent for the Meta
+    // Pixel). If config/cookieConsent hasn't answered within CONFIG_TIMEOUT_MS, show the banner
+    // using the default (enabled), so the visitor can still choose.
+    const { enabled } = await Promise.race([
+        getConfig('cookieConsent'),
+        new Promise((resolve) => setTimeout(() => resolve({ enabled: true }), CONFIG_TIMEOUT_MS)),
+    ]);
     if (!enabled) return;
 
     renderBanner();
