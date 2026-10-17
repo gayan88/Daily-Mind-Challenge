@@ -1,4 +1,9 @@
-# Deployment
+# Deployment and Release Document
+
+| | |
+|---|---|
+| **Document status** | Reflects the system as implemented, as of 2026-10-17. Formerly `docs/deployment.md`; renamed and expanded to the Deployment and Release Document template (build instructions, environment configuration, deployment steps, release notes, database migrations, rollback procedures, release approvals). |
+| **Related docs** | `docs/solution-architecture-document.md`, `docs/operations-support-runbook.md`, `docs/database-design-document.md` |
 
 Deployed on Firebase Hosting, project **`playdailymindchallenge`** (the `default` in `.firebaserc`; `daily-mind-challenge` is the old, retired project -- do not deploy there). Live at the custom domain `dailymindchallenge.com` (the canonical/OG tags, the sitemap, and Google Search Console are all set up against this domain, not the Firebase one) -- the auto-provisioned `playdailymindchallenge.web.app` also stays live serving identical content, see "Custom domain" below.
 
@@ -83,7 +88,7 @@ recommended mitigation for this exact same-content-two-domains situation.
 
 ## Important: Hosting does not fix Firestore latency
 
-Firebase Hosting serves your **static files** (HTML/CSS/JS) from a global CDN — that part gets fast for users anywhere once deployed. It has **no effect** on Firestore read/write latency, which is determined entirely by your Firestore database's region (set once at creation, e.g. `us-central`) and how far a given user is from it, regardless of where the HTML came from. If most users are in the US/Europe and the database is in `us-central`, that's a reasonable pairing already — see `docs/architecture.md` for the rest of the reasoning. Don't expect a Hosting deploy to change the per-request Firestore timing you see in DevTools during local development.
+Firebase Hosting serves your **static files** (HTML/CSS/JS) from a global CDN — that part gets fast for users anywhere once deployed. It has **no effect** on Firestore read/write latency, which is determined entirely by your Firestore database's region (set once at creation, e.g. `us-central`) and how far a given user is from it, regardless of where the HTML came from. If most users are in the US/Europe and the database is in `us-central`, that's a reasonable pairing already — see `docs/solution-architecture-document.md` for the rest of the reasoning. Don't expect a Hosting deploy to change the per-request Firestore timing you see in DevTools during local development.
 
 ## Deploying rules/indexes changes
 
@@ -98,3 +103,99 @@ Indexes take a minute or two to finish "Building" after deploy before queries ag
 ## Local dev vs. production parity
 
 `python3 -m http.server`/`npx serve`, run from `src/`, correctly serves the root-relative asset paths but knows nothing about `firebase.json`'s `rewrites` — clean URLs like `/wordle` will 404 under a plain static server, only the raw `/html/wordle.html` works. To test the clean URLs exactly as they behave in production, use the Firebase CLI's own local hosting emulator instead, from the **project root**: `firebase emulators:start --only hosting`.
+
+## Build Instructions
+
+There is no build step. "Building" this project means nothing beyond having the files on disk —
+`firebase deploy` uploads `src/` (and `firebase/firestore.rules`/`firestore.indexes.json`)
+exactly as they are. There is no `npm install`, no compile, no bundling, no minification. A
+developer needs only: Node.js (for the `firebase-tools` CLI), the Firebase CLI itself
+(`npm install -g firebase-tools`), and — for local emulator testing — a JDK (the Firestore
+emulator runs on the JVM; e.g. `brew install openjdk` on macOS).
+
+## Environment Configuration
+
+There is exactly one environment: **production** (`playdailymindchallenge`). There is no separate
+staging/QA Firebase project. "Local" development isn't a separate environment with its own data —
+it's the same codebase pointed at the **Firebase Local Emulator Suite** instead of live Firestore,
+switched automatically by hostname:
+
+- `src/js/api/firebase-init.js` checks `location.hostname` — `localhost`/`127.0.0.1` connects to
+  `localhost:8080` (Firestore emulator) and `localhost:9099` (Auth emulator) instead of the real
+  project. Any other hostname (including `*.web.app` previews) talks to live production Firestore.
+- Firebase client config (`src/js/api/firebase-config.js`) is a single, public, committed file —
+  there's no `.env`/secrets-injection step, since the Firebase web SDK's config values are not
+  secret (the actual access boundary is `firestore.rules`, enforced server-side).
+- The only environment-specific *operational* knowledge that lives outside the repo is which
+  Google account (`lazyprogrammer88@gmail.com`) and which Firebase CLI project alias
+  (`playdailymindchallenge`, not the retired `daily-mind-challenge`) to deploy with — see the
+  "Account gotcha" note above.
+
+## Release Notes
+
+There is no formal, versioned release-notes document or changelog maintained per deploy. The
+closest equivalents that exist today:
+- `docs/changelog-2026-08.md` — a prose log of one specific development session's decisions (not
+  updated per-release going forward).
+- Git commit messages — each deploy-worthy change is committed individually with a descriptive
+  message and, where relevant, a short rationale (this repo's actual working convention
+  throughout 2026-09 and 2026-10 development).
+- Firebase Hosting's own **Release history** (Firebase Console → Hosting), which lists every
+  deploy with its timestamp and lets you inspect which files changed between any two releases.
+
+**Recommendation, not yet adopted:** if release notes become necessary (e.g. once there are
+multiple contributors or external stakeholders who need a plain-English "what changed" per
+release), the lowest-friction option is a `CHANGELOG.md` at the repo root, updated as part of each
+deploy, rather than reconstructing history from commit messages after the fact.
+
+## Database Migrations
+
+Firestore is schemaless at the database level — there is no migration framework (no Firestore
+equivalent of Rails/Django migrations), and none has been needed to date. Schema evolution in this
+project has instead happened through:
+- **Additive fields**, read with a default via `.get(field, 0)`-style fallbacks in both
+  `firestore.rules` and client code, so a document written before a field existed doesn't need a
+  backfill (e.g. `registeredUsers.xp`, added well after the collection itself).
+- **New collections** for genuinely new data shapes (e.g. `connectionsDailyAttempts` when
+  Connections was added), rather than overloading an existing collection's shape.
+- **One-shot admin scripts**, run manually when a true backfill was needed (none currently
+  required in production).
+
+There is no automated migration/rollback tooling for data changes — a data-shape change that
+needs a backfill across existing documents is a manual, one-off operation, not a repeatable,
+version-controlled migration step. This is an accepted limitation at the project's current scale,
+not an oversight.
+
+## Rollback Procedures
+
+**Hosting (static files):** Firebase Hosting keeps a full history of every release. To roll back:
+Firebase Console → Hosting → **Release history** → find the previous good release → **Rollback**.
+This is immediate and requires no redeploy from source — Firebase serves the previously-uploaded
+file set again. Equivalently, from the CLI: `firebase hosting:rollback`.
+
+**Firestore rules:** the Firestore Console's **Rules** tab keeps a version history with a visual
+diff; a previous ruleset can be restored from there. There is no CLI-driven rules rollback
+equivalent to `hosting:rollback` in routine use on this project — restoring via the console is the
+documented path.
+
+**Firestore data:** there is no automated backup/restore configured for this project (see
+`docs/operations-support-runbook.md` for the honest gap this represents). A bad data write from a
+code defect would need to be corrected manually (direct document edits via the Firestore Console
+or a one-off script), not via a database-level rollback.
+
+**Git:** every deploy corresponds to a specific commit on `main`; reverting to a known-good commit
+and redeploying from it is the fallback if a rollback needs to also revert source, not just the
+currently-live Hosting release.
+
+## Release Approvals
+
+There is no formal release-approval process (no required PR review, no release-manager sign-off
+gate, no staging-environment smoke-test checklist enforced before production deploys). In
+practice, deploys have been made directly by the project owner, or by an AI assistant acting under
+the owner's explicit instruction for that specific change — every deploy in this project's history
+has been a single-person decision, consistent with its current scale and team size of one.
+
+**Recommendation, not yet adopted:** if the team grows beyond a single owner/operator, the lowest-
+friction next step is GitHub branch protection on `main` (require at least one review before
+merge) plus treating "merged to `main`" as the approval gate for the next deploy, rather than
+introducing a heavier formal sign-off process the team's size doesn't yet warrant.

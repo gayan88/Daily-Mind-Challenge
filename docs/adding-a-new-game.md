@@ -128,7 +128,7 @@ Adding a game means updating each of these separately, not registering it once s
   - **Google**: Search Console → **URL inspection** (top of the left sidebar) → paste
     `https://dailymindchallenge.com/<game>` → **Request Indexing**.
   - **Bing**: Bing Webmaster Tools has the equivalent under its own URL Inspection tool.
-  - Both properties are already verified for this domain (see `docs/deployment.md`'s "Search engine
+  - Both properties are already verified for this domain (see `docs/deployment-and-release-document.md`'s "Search engine
     verification files" section) and the sitemap is already submitted in both -- this step is just
     the one-time "please crawl this specific new URL now" nudge for the new game's page, same as
     was done for `/connections` when it launched.

@@ -4,7 +4,7 @@ A daily puzzle games site — Wordle, Sudoku, and Word Search — with guest/reg
 
 Plain HTML/CSS/JS, no build tooling. Firebase (Auth + Firestore) for the backend.
 
-Source lives under `src/` — see `src/README.md` for the folder layout, and `docs/architecture.md` / `docs/data-flow.md` / `docs/deployment.md` for deeper write-ups. Nearly every folder under `src/` also has its own `CLAUDE.md` documenting what's actually implemented there.
+Source lives under `src/` — see `src/README.md` for the folder layout, and `docs/solution-architecture-document.md` / `docs/data-flow.md` / `docs/deployment-and-release-document.md` for deeper write-ups. Nearly every folder under `src/` also has its own `CLAUDE.md` documenting what's actually implemented there.
 
 ## Running locally
 
@@ -85,4 +85,4 @@ Full data-flow write-up: `docs/data-flow.md`.
 - No Analytics collection, no pre-computed/cached leaderboards — leaderboards aggregate `gameScores` client-side on each load.
 - Password reset only works for accounts that supplied a real email at signup (relies on Firebase Auth's built-in reset email, which needs a real address to send to).
 - Changing your password requires a recent login (a Firebase Auth security requirement) — if it fails, log out and back in first.
-- Deployed on Firebase Hosting — see `docs/deployment.md` for the URL scheme and how `firebase.json`'s rewrites map clean URLs to the physical pages.
+- Deployed on Firebase Hosting — see `docs/deployment-and-release-document.md` for the URL scheme and how `firebase.json`'s rewrites map clean URLs to the physical pages.

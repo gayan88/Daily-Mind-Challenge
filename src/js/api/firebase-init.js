@@ -30,7 +30,7 @@ export const db = initializeFirestore(app, {
 });
 
 // Local-only: when this app is served from localhost/127.0.0.1 (python3 -m http.server, per
-// docs/architecture.md's "Running locally"), point at the Firebase Emulator Suite instead of the
+// README.md's "Running locally"), point at the Firebase Emulator Suite instead of the
 // real project -- lets firestore.rules changes be tested against a throwaway local Firestore/Auth
 // instance before ever being deployed to production. Never triggers for the real deployed site
 // (a real hostname), so this can't affect production. Start the emulators first with
