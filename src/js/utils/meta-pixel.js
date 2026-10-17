@@ -8,7 +8,7 @@
  * Deliberately no <noscript> fallback image: that would fire a tracking request even without
  * consent, which is exactly what this gating exists to prevent.
  */
-const PIXEL_ID = '1627198078795313';
+const PIXEL_ID = '1883519629480679';
 
 let loaded = false;
 
