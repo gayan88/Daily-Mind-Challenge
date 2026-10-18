@@ -160,7 +160,7 @@ copy already counts `GAMES` dynamically ("all 5 games"); note for players: addin
 - [x] **O4** Home tile image `tile-quilt.png` — done: cut from the owner's Quilt logo (`tile-quilt.png` 400×400, `tile-quilt-wide.png` 500×384).
 - [ ] **O5** How to Play banner image.
 - [ ] **O6** **Purpose-made** Facebook/link-preview image, wide ~1.91:1 (e.g. 1200×630), simple enough to read as a thumbnail — not a crop of the logo/tile (see `adding-a-new-game.md` §7b).
-- [ ] **O7** 18 achievement badges: `quilt-expert`, `-master`, `-grandmaster`, and the Daily / Weekly / Monthly champion tiers (same set as the other games). The game ships with emoji fallbacks if these come later.
+- [x] **O7** 18 achievement badges (done 2026-10-19, wired in `CUSTOM_IMAGES`): `quilt-expert`, `-master`, `-grandmaster`, and the Daily / Weekly / Monthly champion tiers (same set as the other games). The game ships with emoji fallbacks if these come later.
 
 ### Content (needed by Phase 8)
 - [ ] **O8** 30 Daily pictures (Medium, 10×10).
