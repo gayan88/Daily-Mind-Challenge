@@ -4,7 +4,7 @@ Quilt — a Shikaku-style picture-reveal puzzle (the planned fifth game). Drag r
 holds exactly one number equal to its area; every solved rectangle fills with colour and the
 finished board is a pixel-art picture. Plan, decisions and backlogs: `docs/quilt-development-plan.md`.
 
-**Status: Phase 1 only (puzzle core).** No page, engine, Firestore collections, rules, registry
+**Status: Phases 1–2 (puzzle core + engine).** No page, Firestore collections, rules, registry
 entry or admin section yet — nothing here is loaded by any page.
 
 ## Files
@@ -23,9 +23,20 @@ entry or admin section yet — nothing here is loaded by any page.
   1 pixel = 1 cell, max 8 colours), `pictureProblems()`, `nearestEmoji()` (hue-based, 9 squares) and
   `pictureToEmojiRows()` (share-text mosaic, downscaled to ≤ 7×7 by majority colour).
 
-All three are pure ES modules (no DOM, no Firebase) and import only `utils/helpers.js`
+The solver, generator and picture modules are pure ES modules (no DOM, no Firebase) and import only `utils/helpers.js`
 (`mulberry32`, `stringToSeed`), so they also run under plain Node for testing
 (`node some-test.mjs` importing them by path — there's no test runner in this repo).
+
+- **`quilt-engine.js`** — `playQuiltRound({ container, puzzle, timeLimitSeconds, roundLabel, onComplete })`
+  → `{ destroy }`. Pointer-event drag (mouse/touch/pen; board has `touch-action: none`), drawing over
+  rects replaces them, tap empty cell = 1×1, tap rect = remove, Undo / Ctrl+Z, Clear. Rule-breaking
+  rects outlined red at once; placed rects use neutral fabric tints and only take picture colours
+  when solved (so colour never gives away a wrong rect). `onComplete({ won, timedOut,
+  timeTakenSeconds, undos, removals, perfect, pieces })` fires once, 1.8 s after the reveal starts.
+  Perfect Stitch = win with no undo and no removal. Stopwatch starts on first touch; Tournament
+  countdown starts at mount and on expiry shows the answer greyed. Styles: `src/css/pages/quilt.css`
+  (`qt-` prefix; shape clues drawn as a frame round the number — box = square, pill = strip;
+  blockers drawn as sewn buttons/"knots").
 
 ## Data shape
 

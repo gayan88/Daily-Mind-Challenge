@@ -1,0 +1,311 @@
+/* Quilt -- board/engine styles (quilt-engine.js). Page-level styles (mode tabs, pickers, How to
+   Play) are added with quilt.html in Phase 3. */
+
+.qt-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    padding: 14px 20px;
+    background: var(--color-surface);
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    margin-bottom: 16px;
+}
+
+.qt-stat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.qt-stat-icon {
+    font-size: 18px;
+    line-height: 1;
+}
+
+.qt-stat-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-primary);
+}
+
+.qt-stat-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--color-text);
+    font-variant-numeric: tabular-nums;
+}
+
+.qt-stat-value.urgent {
+    color: var(--color-danger);
+}
+
+.qt-round-label {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-text-secondary);
+}
+
+/* ---- Board ---- */
+
+.qt-board {
+    --qt-cell: 40px;
+    --qt-line: #E4E1EE;
+    position: relative;
+    width: 100%;
+    aspect-ratio: var(--qt-cols) / var(--qt-rows);
+    background-color: var(--color-surface);
+    background-image:
+        linear-gradient(to right, var(--qt-line) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--qt-line) 1px, transparent 1px);
+    background-size: calc(100% / var(--qt-cols)) calc(100% / var(--qt-rows));
+    border: 2px solid var(--color-primary-dark);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    cursor: crosshair;
+}
+
+/* Focused only so Ctrl+Z reaches the round's keydown listener -- there's no keyboard drawing, so
+   no focus ring. */
+.qt-board:focus {
+    outline: none;
+}
+
+.qt-rects,
+.qt-knots,
+.qt-clues {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.qt-rect,
+.qt-knot,
+.qt-clue,
+.qt-preview {
+    position: absolute;
+}
+
+/* A placed piece: fabric tint with a dashed "stitch" line inside the edge. */
+.qt-rect {
+    background: var(--qt-colour, var(--qt-tint));
+    border: 2px solid var(--color-primary-dark);
+    border-radius: 3px;
+    box-shadow: inset 0 0 0 max(2px, calc(var(--qt-cell) * 0.08)) rgba(255, 255, 255, 0.55);
+    transition: background-color 0.6s ease, border-color 0.6s ease, box-shadow 0.6s ease;
+}
+
+.qt-rect::after {
+    content: '';
+    position: absolute;
+    inset: max(3px, calc(var(--qt-cell) * 0.12));
+    border: 1.5px dashed rgba(60, 52, 137, 0.35);
+    border-radius: 2px;
+    transition: opacity 0.6s ease;
+}
+
+.qt-rect-error {
+    border-color: var(--color-danger);
+    background-image: repeating-linear-gradient(45deg, rgba(192, 57, 43, 0.12) 0 6px, transparent 6px 12px);
+}
+
+.qt-rect-error::after {
+    border-color: rgba(192, 57, 43, 0.5);
+}
+
+.qt-clue {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: max(11px, calc(var(--qt-cell) * 0.5));
+    font-weight: 800;
+    color: var(--color-text);
+    font-variant-numeric: tabular-nums;
+    transition: color 0.6s ease, opacity 0.6s ease;
+}
+
+/* Hard-mode shape clues: a frame around the number -- square box = must be a square, long pill =
+   must be a single row or column. A frame rather than a corner badge so it never collides with
+   two-digit numbers on small cells. */
+.qt-clue-square::before,
+.qt-clue-strip::before {
+    content: '';
+    position: absolute;
+    border: max(1.5px, calc(var(--qt-cell) * 0.05)) solid var(--color-primary);
+}
+
+.qt-clue-square::before {
+    inset: 10%;
+    border-radius: 2px;
+}
+
+.qt-clue-strip::before {
+    inset: 24% 3%;
+    border-radius: 999px;
+}
+
+/* Blocker: a sewn button/knot no rectangle may cover. */
+.qt-knot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.qt-knot::before {
+    content: '';
+    width: 58%;
+    height: 58%;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.85) 0 9%, transparent 10%),
+        radial-gradient(circle at 65% 35%, rgba(255, 255, 255, 0.85) 0 9%, transparent 10%),
+        radial-gradient(circle at 35% 65%, rgba(255, 255, 255, 0.85) 0 9%, transparent 10%),
+        radial-gradient(circle at 65% 65%, rgba(255, 255, 255, 0.85) 0 9%, transparent 10%),
+        var(--color-text-muted);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    transition: background-color 0.6s ease;
+}
+
+/* Drag preview + its size label. */
+.qt-preview {
+    border: 2px dashed var(--color-primary);
+    background: rgba(127, 119, 221, 0.18);
+    border-radius: 3px;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.qt-preview-label {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 6px);
+    transform: translateX(-50%);
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--color-primary-dark);
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* Near the top edge there's no room above the preview -- show the label below it instead. */
+.qt-preview:not(.qt-preview-top) .qt-preview-label {
+    bottom: auto;
+    top: calc(100% + 6px);
+}
+
+/* ---- Reveal ---- */
+
+.qt-board.qt-solved,
+.qt-board.qt-failed {
+    cursor: default;
+    background-image: none;
+}
+
+.qt-solved .qt-rect,
+.qt-failed .qt-rect {
+    border-color: transparent;
+    border-radius: 0;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.qt-solved .qt-rect::after,
+.qt-failed .qt-rect::after {
+    border-color: rgba(255, 255, 255, 0.35);
+}
+
+.qt-solved .qt-clue,
+.qt-failed .qt-clue {
+    color: rgba(255, 255, 255, 0.75);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+    opacity: 0.55;
+}
+
+.qt-solved .qt-clue::before,
+.qt-failed .qt-clue::before {
+    display: none;
+}
+
+/* Knot cells belong to the picture too: fill the cell with its colour, button drawn on top. */
+.qt-solved .qt-knot,
+.qt-failed .qt-knot {
+    background: var(--qt-colour);
+    transition: background-color 0.6s ease;
+}
+
+.qt-solved .qt-knot::before,
+.qt-failed .qt-knot::before {
+    background-color: rgba(0, 0, 0, 0.22);
+}
+
+.qt-failed .qt-rects,
+.qt-failed .qt-knots {
+    filter: grayscale(0.85) opacity(0.75);
+}
+
+.qt-solved {
+    animation: qt-pop 0.5s ease 0.6s both;
+}
+
+@keyframes qt-pop {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.025); }
+    100% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .qt-rect,
+    .qt-clue,
+    .qt-knot::before {
+        transition: none;
+    }
+
+    .qt-solved {
+        animation: none;
+    }
+}
+
+/* ---- Message + controls ---- */
+
+.qt-message {
+    min-height: 1.6em;
+    margin: 12px 0 8px;
+    text-align: center;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+}
+
+.qt-controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.qt-control-btn {
+    padding: 10px 20px;
+    border: 0.5px solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.qt-control-btn:not(:disabled):hover {
+    border-color: var(--color-primary);
+    background: var(--color-primary-tint);
+}
+
+.qt-control-btn:disabled {
+    opacity: 0.45;
+    cursor: default;
+}

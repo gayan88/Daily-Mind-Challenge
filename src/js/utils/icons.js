@@ -23,6 +23,8 @@ export const ICONS = {
     BRONZE_MEDAL: '\u{1F949}',     // 🥉
     SUN: '\u{2600}\u{FE0F}',       // ☀️ Daily mode
     PLAY: '\u{25B6}\u{FE0F}',      // ▶️ Classic mode
+    THREAD: '\u{1F9F5}',           // 🧵 Quilt
+    UNDO: '\u{21A9}\u{FE0F}',      // ↩️
 };
 
 export function icon(name) {

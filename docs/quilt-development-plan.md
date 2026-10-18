@@ -1,6 +1,6 @@
 # Quilt — Development Plan & Backlogs
 
-> Status: **in development** — Phase 1 (puzzle core) done 2026-10-18; all §2 decisions accepted
+> Status: **in development** — Phases 1 (puzzle core) and 2 (engine) done 2026-10-18; all §2 decisions accepted
 > with the recommended defaults; content deferred until the build is done. Logo: `docs/Images/QUILT Logo.png`.
 > Follows `docs/adding-a-new-game.md` — that checklist is the source of truth for *every*
 > touchpoint; this doc orders the work and splits it between **Claude (implementation)** and
@@ -74,9 +74,9 @@ Sizes: **S** ≈ under half a day · **M** ≈ 1 day · **L** ≈ 2–3 days.
 - [x] **C1.4 (S)** Picture-quality warnings: too many 1×1 rects, too many colours, solver too slow.
 
 ### Phase 2 — Engine
-- [ ] **C2.1 (L)** `quilt-engine.js`: grid render, drag-to-draw rectangles (mouse + touch, pointer events), tap to remove, live area label while dragging, colour fill on valid rect, error highlight (wrong area / 0 or 2+ clues), undo.
-- [ ] **C2.2 (M)** Picture reveal on completion (rect borders fade, picture "settles"), stats bar (stopwatch starting on first drag, rect count, undo count), single `onComplete()` + `destroy()`.
-- [ ] **C2.3 (S)** `src/css/pages/quilt.css`, responsive to 360px wide; 14×14 must stay playable on phones.
+- [x] **C2.1 (L)** `quilt-engine.js`: grid render, drag-to-draw rectangles (mouse + touch, pointer events), tap to remove, live area label while dragging, neutral fabric tint on placed rects (picture colours only on solve, so colour can't give away wrong rects), error highlight (wrong area / 0 or 2+ clues), undo.
+- [x] **C2.2 (M)** Picture reveal on completion (rect borders fade, picture "settles"), stats bar (stopwatch starting on first touch, valid pieces / needed), Perfect Stitch tracking (no undo / no removal), single `onComplete()` + `destroy()`.
+- [x] **C2.3 (S)** `src/css/pages/quilt.css`, responsive to 360px wide; 14×14 must stay playable on phones.
 
 ### Phase 3 — Daily end-to-end (catches the `scoreDate` / `GAME_TYPES` gotchas early)
 - [ ] **C3.1 (M)** `src/html/quilt.html` (mode tabs, ad slots, How to Play, meta/og tags) + `quilt-page.js` (`trySession()`, `wireModeTabs()`, `activeRound` destroy) + `firebase.json` rewrite.
