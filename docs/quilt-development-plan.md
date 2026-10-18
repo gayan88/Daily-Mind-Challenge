@@ -1,6 +1,6 @@
 # Quilt — Development Plan & Backlogs
 
-> Status: **in development** — Phases 1–3 (puzzle core, engine, Daily end-to-end) done 2026-10-18; all §2 decisions accepted
+> Status: **in development** — Phases 1–4 (puzzle core, engine, Daily, Classic) done 2026-10-18; all §2 decisions accepted
 > with the recommended defaults; content deferred until the build is done. Logo: `docs/Images/QUILT Logo.png`.
 > Follows `docs/adding-a-new-game.md` — that checklist is the source of truth for *every*
 > touchpoint; this doc orders the work and splits it between **Claude (implementation)** and
@@ -94,8 +94,15 @@ the logo (`tile-quilt.png`, `tile-quilt-wide.png`) until O4–O6 arrive. Tips & 
 FAQ are in `quilt.html` already (C7.2 content done; sitemap added too).
 
 ### Phase 4 — Classic
-- [ ] **C4.1 (M)** `quilt-classic-data.js`: difficulty picker, pool from `quiltClassic`, unplayed-first selection, D5 scoring.
-- [ ] **C4.2 (M)** Hard-mode extras (D7): blocker cells + shape-clue icons in the engine.
+- [x] **C4.1 (M)** `quilt-classic-data.js`: difficulty picker, pool from `quiltClassic`, unplayed-first selection, D5 scoring.
+- [x] **C4.2 (M)** Hard-mode extras (D7): blocker cells + shape-clue icons in the engine.
+
+Phase 4 notes: Classic serves pictures the player hasn't solved first (a repeated picture is
+already spoiled), falling back to "any but the last one". Hard extras were already in the engine
+(Phase 2) and generator (Phase 1). The engine now auto-scrolls the whole round into view on mount:
+the board blocks touch scrolling and fills a phone's width, so otherwise the bottom rows could only
+be reached by scrolling via the 16px margins. Found while testing: the site-wide cookie banner
+covers ~45% of a phone screen (and any game board under it) until answered — not Quilt-specific.
 
 ### Phase 5 — Tournament "Patchwork Run"
 - [ ] **C5.1 (L)** `quilt-tournament-data.js`: list/start/continue, per-tile countdown, fail-banks-and-advances, completion bonus, attempt-progress docs, finalize + retry-on-write-failure.

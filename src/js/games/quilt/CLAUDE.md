@@ -6,8 +6,9 @@ finished board is a pixel-art picture. Plan, decisions and backlogs: `docs/quilt
 
 **Status: Phases 1–3 — Daily mode is live in code** (`/quilt`, registered in `GAMES`, home tile,
 leaderboard option, profile labels, `checkPlayedTodayAll()` — so Perfect Day now needs all five
-Dailies — ad slots, rules, sitemap). Classic and Patchwork Run tabs show "coming soon" until Phases
-4–5; no admin section yet (Phase 6), so Daily puzzles can only be seeded directly in Firestore.
+Dailies — ad slots, rules, sitemap). Classic is live too (Phase 4); the Patchwork Run tab shows "coming
+soon" until Phase 5. No admin section yet (Phase 6), so puzzles can only be seeded directly in
+Firestore.
 
 ## Files
 
@@ -36,7 +37,8 @@ The solver, generator and picture modules are pure ES modules (no DOM, no Fireba
   when solved (so colour never gives away a wrong rect). `onComplete({ won, timedOut,
   timeTakenSeconds, undos, removals, perfect, pieces })` fires once, 1.8 s after the reveal starts.
   Perfect Stitch = win with no undo and no removal. Stopwatch starts on first touch; Tournament
-  countdown starts at mount and on expiry shows the answer greyed. Styles: `src/css/pages/quilt.css`
+  countdown starts at mount and on expiry shows the answer greyed. On mount it scrolls the whole
+  round (stats → controls) into view, since the board blocks touch scrolling. Styles: `src/css/pages/quilt.css`
   (`qt-` prefix; shape clues drawn as a frame round the number — box = square, pill = strip;
   blockers drawn as sewn buttons/"knots").
 
@@ -48,11 +50,18 @@ The solver, generator and picture modules are pure ES modules (no DOM, no Fireba
   lastDate }`, same scheme as Sudoku) holding `{ challengeNumber, ...puzzle }`; `gameScores` type
   `quilt`, doc `{uid}_quilt_{date}`, one solve per day, always `won: true`, both share flags created
   `false`.
+- **`quilt-classic-data.js`** — `quiltClassicPuzzles/{id}` (`{ difficulty, ...puzzle }`).
+  `getClassicPuzzle(uid, difficulty, excludeId)` prefers pictures the player has never solved (from
+  their own `quilt-classic` gameScores `puzzleId`s), else any but the one just played.
+  `recordClassicResult()` — unique `gameDate` token per round + real `scoreDate`, type
+  `quilt-classic`, both share flags created `false`.
 - **`quilt-summary-modal.js`** — own copy of the summary modal (convention) plus the solved picture
   and a Perfect Stitch badge.
 - **`quilt-page.js`** — page glue (`trySession()`, sign-in prompt for anonymous visitors, admins
   blocked, single `activeRound` destroyed on tab switch, `?tab=classic|tournament`). Already-played
-  Daily shows the revealed picture. Daily share text is stats-only (never the picture).
+  Daily shows the revealed picture. Daily share text is stats-only (never the picture); Classic share
+  text includes the picture as an emoji mosaic (`pictureToEmojiRows`). Classic flow: picker (size +
+  "up to N pts") → round → summary → "Next {size} Quilt" / "Choose another size".
 
 ## Testing locally
 

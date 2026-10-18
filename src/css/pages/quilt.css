@@ -792,6 +792,26 @@
     background: var(--color-border);
 }
 
+/* Classic picker: name + size on one line, a short blurb under it. */
+.quilt-difficulty-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    text-align: left;
+}
+
+.quilt-difficulty-points {
+    flex-shrink: 0;
+    margin-left: 12px;
+    white-space: nowrap;
+}
+
+.quilt-difficulty-blurb {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+}
+
 /* Solved picture shown at the top of the summary modal (quilt-summary-modal.js). */
 .quilt-summary-picture {
     display: grid;

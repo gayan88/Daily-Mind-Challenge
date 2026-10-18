@@ -242,6 +242,13 @@ service cloud.firestore {
             allow write: if isAdmin();
         }
 
+        // Admin-managed Classic pool ({ difficulty, title, width, height, palette, pixels, rects,
+        // clues, blockers }).
+        match /quiltClassicPuzzles/{id} {
+            allow read: if true;
+            allow write: if isAdmin();
+        }
+
         // ---------- Connections (see src/js/games/connections/) ----------
         // Admin-managed Daily puzzles, keyed by the "YYYY-MM-DD" date they play on, with a
         // `_meta` doc ({ totalCount, firstDate, lastDate }) -- same scheme as wordleDailyWords.

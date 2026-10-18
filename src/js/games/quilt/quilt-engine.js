@@ -352,6 +352,19 @@ export function playQuiltRound({ container, puzzle, timeLimitSeconds = null, rou
     if (timeLimitSeconds != null) startTimer();
     render();
 
+    // Bring the whole round (stats bar → Undo/Clear) into view on mount. The board blocks touch
+    // scrolling (it has to, or drags would scroll the page), and on a phone it fills nearly the
+    // full width -- so without this the player would have to scroll via the thin side margins to
+    // reach the bottom rows. Aligns the controls to the viewport bottom when everything fits
+    // (keeping the title visible above), otherwise puts the stats bar at the top.
+    requestAnimationFrame(() => {
+        const top = container.querySelector('.qt-stats').getBoundingClientRect().top;
+        const bottom = container.querySelector('.qt-controls').getBoundingClientRect().bottom;
+        if (top >= 0 && bottom <= window.innerHeight) return;
+        const fits = bottom - top + 16 <= window.innerHeight;
+        window.scrollBy({ top: fits ? bottom - window.innerHeight + 8 : top - 8, behavior: 'smooth' });
+    });
+
     return {
         destroy: cleanup,
     };

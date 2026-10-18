@@ -7,9 +7,19 @@ import { advanceStreakForDailyCompletion } from '../../progression/streak-servic
 import { trackGameCompleted } from '../../utils/meta-pixel.js';
 import { playQuiltRound } from './quilt-engine.js';
 import { getTodayChallenge, recordDailyResult } from './quilt-daily-data.js';
+import { getClassicPuzzle, recordClassicResult } from './quilt-classic-data.js';
+import { classicPoints } from './quilt-scoring.js';
+import { DIFFICULTIES } from './quilt-generator.js';
+import { pictureToEmojiRows } from './quilt-picture.js';
 import { showQuiltSummaryModal } from './quilt-summary-modal.js';
 
 const FACEBOOK_GROUP_URL = 'https://www.facebook.com/groups/playdailymindchallenge';
+const CLASSIC_TAB_URL = `${window.location.origin}/quilt?tab=classic`;
+const DIFFICULTY_BLURB = {
+    easy: 'A quick, relaxed stitch.',
+    medium: 'The Daily size.',
+    hard: 'Bigger board, with knots and shape clues.',
+};
 
 // Outlined line icons for the points breakdown (same set as sudoku-page.js).
 const ICON_GRID = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>`;
@@ -65,6 +75,13 @@ async function renderAlreadyPlayedDaily(mount, played) {
 /** Daily share text: stats only, never the picture -- it would spoil the puzzle for friends. */
 function shareTextForDaily(challengeId, timeTaken, perfect, score) {
     return `🧵 Daily Mind Challenge\n\n🧩 Daily Quilt #${challengeId}\n🎉 Solved in ${timeTaken}${perfect ? ' · Perfect Stitch ✨' : ''}\n⭐ Score: ${score.toLocaleString()} points\n\nCan you reveal today's picture? 👀\n\nPlay today's challenge:\n${window.location.origin}/quilt`;
+}
+
+/** Classic share text: the picture as an emoji mosaic is fine here -- there's no shared daily
+ * picture to spoil, and it's the most eye-catching part of the post. */
+function shareTextForClassic(difficulty, puzzle, timeTaken, perfect, score) {
+    const mosaic = pictureToEmojiRows(puzzle).join('\n');
+    return `🧵 Daily Mind Challenge\n\nClassic Quilt — ${DIFFICULTIES[difficulty].label}${puzzle.title ? `\n“${puzzle.title}”` : ''}\n${mosaic}\n🎉 Solved in ${timeTaken}${perfect ? ' · Perfect Stitch ✨' : ''}\n⭐ Score: ${score.toLocaleString()} points\n\nCan you stitch it faster? 👀\n\nPlay here:\n${CLASSIC_TAB_URL}`;
 }
 
 async function renderDailyMode(mount, uid, profile, setActiveRound) {
@@ -135,6 +152,98 @@ async function renderDailyMode(mount, uid, profile, setActiveRound) {
     }));
 }
 
+function renderDifficultyPicker(mount, onPick) {
+    mount.innerHTML = `
+        <h2 class="quilt-title">Classic Quilt</h2>
+        <p class="quilt-subtitle">Pick a size for a new picture. Play as many as you like &mdash; pictures you haven't solved come first.</p>
+        <div class="quilt-difficulty-picker">
+            ${Object.entries(DIFFICULTIES).map(([difficulty, d]) => `
+                <button class="quilt-difficulty-btn" data-difficulty="${difficulty}" type="button">
+                    <span class="quilt-difficulty-text">
+                        <span class="quilt-difficulty-name">${d.label} &middot; ${d.size}&times;${d.size}</span>
+                        <span class="quilt-difficulty-blurb">${DIFFICULTY_BLURB[difficulty]}</span>
+                    </span>
+                    <span class="quilt-difficulty-points">up to ${classicPoints({ timeTakenSeconds: 0, perfect: true, difficulty }).score} pts</span>
+                </button>
+            `).join('')}
+        </div>
+    `;
+    mount.querySelectorAll('[data-difficulty]').forEach((btn) => {
+        btn.addEventListener('click', () => onPick(btn.dataset.difficulty));
+    });
+}
+
+async function playClassicRound(mount, uid, profile, difficulty, setActiveRound, lastPuzzleId = null) {
+    mount.innerHTML = `<div class="loading-text">Loading&hellip;</div>`;
+    const data = await getClassicPuzzle(uid, difficulty, lastPuzzleId);
+    if (!data) {
+        mount.innerHTML = `
+            <div class="empty-state">No ${DIFFICULTIES[difficulty].label.toLowerCase()} quilts are ready yet &mdash; check back soon.</div>
+            <div class="quilt-tournament-actions"><button class="btn" id="quilt-classic-back-btn" type="button">Choose another size</button></div>
+        `;
+        document.getElementById('quilt-classic-back-btn').addEventListener('click', () => renderClassicMode(mount, uid, profile, setActiveRound));
+        return;
+    }
+    const { puzzle, puzzleId } = data;
+    const label = DIFFICULTIES[difficulty].label;
+
+    mount.innerHTML = `
+        <h2 class="quilt-title">Classic Quilt &mdash; ${label}</h2>
+        <p class="quilt-subtitle">${HOW_TO}${puzzle.blockers.length || puzzle.clues.some((c) => c.shape) ? ' Knots can\'t be covered; a framed number must be a square (box) or a single row/column (pill).' : ''}</p>
+        <div id="quilt-round-mount"></div>
+    `;
+    const roundMount = document.getElementById('quilt-round-mount');
+    const playAgain = () => playClassicRound(mount, uid, profile, difficulty, setActiveRound, puzzleId);
+
+    setActiveRound(playQuiltRound({
+        container: roundMount,
+        puzzle,
+        onComplete: async ({ timeTakenSeconds, perfect, undos, removals }) => {
+            setActiveRound(null);
+            const result = await recordClassicResult(uid, profile, { puzzleId, difficulty, title: puzzle.title, timeTakenSeconds, perfect, undos, removals });
+            if (!result) {
+                showToast("Couldn't save this result -- check the browser console");
+                return;
+            }
+            trackGameCompleted('quilt-classic');
+
+            showQuiltSummaryModal({
+                title: puzzle.title ? `“${puzzle.title}”` : 'Solved!',
+                subtitle: `Classic Quilt — ${label} · ${result.timeTaken}`,
+                picture: puzzle,
+                perfect,
+                breakdown: [
+                    { label: 'Completing the quilt', points: result.completionPoints, icon: ICON_GRID },
+                    { label: 'Speed bonus', points: result.timeBonusPoints, icon: ICON_STOPWATCH },
+                    { label: 'Perfect Stitch', points: result.perfectBonusPoints, icon: ICON_SPARKLE },
+                ],
+                totalPoints: result.score,
+                shareText: shareTextForClassic(difficulty, puzzle, result.timeTaken, perfect, result.score),
+                communityUrl: FACEBOOK_GROUP_URL,
+                shareLink: CLASSIC_TAB_URL,
+                onShareCommunity: () => markSharedToFacebook(uid, 'quilt-classic', result.gameDate),
+                onShareFriends: () => markSharedWithFriends(uid, 'quilt-classic', result.gameDate),
+                onClose: () => {
+                    mount.innerHTML = `
+                        <div class="empty-state">${icon('CHECK')} ${escapeHtml(puzzle.title || 'Quilt')} complete (+${result.score.toLocaleString()} points).</div>
+                        <div class="quilt-tournament-actions">
+                            <button class="btn primary" id="quilt-classic-again-btn" type="button">Next ${label} Quilt</button>
+                            <button class="btn" id="quilt-classic-back-btn" type="button">Choose another size</button>
+                        </div>
+                    `;
+                    document.getElementById('quilt-classic-again-btn').addEventListener('click', playAgain);
+                    document.getElementById('quilt-classic-back-btn').addEventListener('click', () => renderClassicMode(mount, uid, profile, setActiveRound));
+                },
+            });
+            showToast(`+${result.score.toLocaleString()} points!`);
+        },
+    }));
+}
+
+function renderClassicMode(mount, uid, profile, setActiveRound) {
+    renderDifficultyPicker(mount, (difficulty) => playClassicRound(mount, uid, profile, difficulty, setActiveRound));
+}
+
 function wireModeTabs(uid, profile, initialMode) {
     const tabs = Array.from(document.querySelectorAll('.quilt-mode-tab'));
     const mount = document.getElementById('game-mount');
@@ -152,7 +261,7 @@ function wireModeTabs(uid, profile, initialMode) {
         if (mode === 'daily') {
             await renderDailyMode(mount, uid, profile, setActiveRound);
         } else if (mode === 'classic') {
-            renderComingSoon(mount, 'Classic Quilt');
+            renderClassicMode(mount, uid, profile, setActiveRound);
         } else {
             renderComingSoon(mount, 'Patchwork Run');
         }
