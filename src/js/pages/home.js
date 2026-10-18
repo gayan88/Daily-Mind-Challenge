@@ -447,6 +447,7 @@ async function renderLoggedInDashboard(uid, profile, bonusApplied) {
     markTileCompleted('sudoku', !!playedToday.sudoku);
     markTileCompleted('wordsearch', !!playedToday.wordsearch);
     markTileCompleted('connections', !!playedToday.connections);
+    markTileCompleted('quilt', !!playedToday.quilt);
 
     renderLeaderboardPreview(leaderboardRows, uid);
     renderWorkoutExtras(profile, missionResult, achievements.length);

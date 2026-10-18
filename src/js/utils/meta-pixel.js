@@ -63,7 +63,7 @@ export function trackGuestStarted() {
 
 /**
  * Custom event (not one of Meta's standard event names, hence `trackCustom` rather than `track`)
- * -- fired after every successful `gameScores` write across all four games' Daily/Classic/
+ * -- fired after every successful `gameScores` write across every game's Daily/Classic/
  * Tournament modes, so Meta has an actual engagement signal beyond PageView to optimize ads
  * against. Same no-op-if-not-loaded guard as trackCompleteRegistration().
  */

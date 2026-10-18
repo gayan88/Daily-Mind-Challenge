@@ -4,8 +4,10 @@ Quilt — a Shikaku-style picture-reveal puzzle (the planned fifth game). Drag r
 holds exactly one number equal to its area; every solved rectangle fills with colour and the
 finished board is a pixel-art picture. Plan, decisions and backlogs: `docs/quilt-development-plan.md`.
 
-**Status: Phases 1–2 (puzzle core + engine).** No page, Firestore collections, rules, registry
-entry or admin section yet — nothing here is loaded by any page.
+**Status: Phases 1–3 — Daily mode is live in code** (`/quilt`, registered in `GAMES`, home tile,
+leaderboard option, profile labels, `checkPlayedTodayAll()` — so Perfect Day now needs all five
+Dailies — ad slots, rules, sitemap). Classic and Patchwork Run tabs show "coming soon" until Phases
+4–5; no admin section yet (Phase 6), so Daily puzzles can only be seeded directly in Firestore.
 
 ## Files
 
@@ -37,6 +39,27 @@ The solver, generator and picture modules are pure ES modules (no DOM, no Fireba
   countdown starts at mount and on expiry shows the answer greyed. Styles: `src/css/pages/quilt.css`
   (`qt-` prefix; shape clues drawn as a frame round the number — box = square, pill = strip;
   blockers drawn as sewn buttons/"knots").
+
+- **`quilt-scoring.js`** — every mode's points rules: Daily `10 + timeBonus(≤180s 10 / ≤300 8 /
+  ≤600 6 / else 5) + 5 Perfect Stitch` (max 25), Classic = Daily parts × {easy .8, medium 1, hard 1.3}
+  rounded (max 33), Patchwork Run tile 30 pass / 10 fail, +25 Perfect Patchwork. Rules caps:
+  quilt 30, quilt-classic 40, quilt-tournament 30, quilt-tournament-bonus 2000.
+- **`quilt-daily-data.js`** — `quiltDailyPuzzles/{YYYY-MM-DD}` (+ `_meta { totalCount, firstDate,
+  lastDate }`, same scheme as Sudoku) holding `{ challengeNumber, ...puzzle }`; `gameScores` type
+  `quilt`, doc `{uid}_quilt_{date}`, one solve per day, always `won: true`, both share flags created
+  `false`.
+- **`quilt-summary-modal.js`** — own copy of the summary modal (convention) plus the solved picture
+  and a Perfect Stitch badge.
+- **`quilt-page.js`** — page glue (`trySession()`, sign-in prompt for anonymous visitors, admins
+  blocked, single `activeRound` destroyed on tab switch, `?tab=classic|tournament`). Already-played
+  Daily shows the revealed picture. Daily share text is stats-only (never the picture).
+
+## Testing locally
+
+Same as Connections: `PATH="/opt/homebrew/opt/openjdk/bin:$PATH" firebase emulators:start --only
+firestore,auth,hosting --project playdailymindchallenge`, site at http://127.0.0.1:5002/quilt. Until
+the admin section exists, seed `quiltDailyPuzzles/_meta` + today's doc through the emulator's REST
+API (Bearer `owner`) with a puzzle from `generatePuzzle()`.
 
 ## Data shape
 

@@ -31,6 +31,10 @@ const GAME_LABELS = {
     connections: 'Connections',
     'connections-classic': 'Connections Classic',
     'connections-tournament': 'Connections Tournament',
+    quilt: 'Quilt',
+    'quilt-classic': 'Quilt Classic',
+    'quilt-tournament': 'Patchwork Run Tile',
+    'quilt-tournament-bonus': 'Patchwork Run Bonus',
 };
 
 /** Avatar (a Rank badge image -- see progression/rank-service.js), name, current-rank tagline

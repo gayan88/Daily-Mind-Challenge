@@ -61,4 +61,14 @@ export const GAMES = {
             tournament: ['connections-tournament'],
         },
     },
+    quilt: {
+        label: 'Quilt',
+        logo: '/assets/images/tile-quilt.png',
+        scoreTypes: ['quilt', 'quilt-classic', 'quilt-tournament', 'quilt-tournament-bonus'],
+        modes: {
+            daily: ['quilt'],
+            classic: ['quilt-classic'],
+            tournament: ['quilt-tournament', 'quilt-tournament-bonus'],
+        },
+    },
 };

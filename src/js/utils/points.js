@@ -98,7 +98,7 @@ export async function checkPlayedTodayAll(uid) {
         where('gameDate', '==', today)
     );
     const snap = await getDocs(q);
-    const result = { wordle: null, sudoku: null, wordsearch: null, connections: null };
+    const result = { wordle: null, sudoku: null, wordsearch: null, connections: null, quilt: null };
     snap.docs.forEach((d) => {
         const data = d.data();
         result[data.gameType] = data;

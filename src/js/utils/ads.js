@@ -18,6 +18,8 @@ export const AD_SLOTS = [
     { id: 'wordsearch-bottom', label: 'Word Search — Bottom', group: 'wordsearch' },
     { id: 'connections-top', label: 'Connections — Top', group: 'connections' },
     { id: 'connections-bottom', label: 'Connections — Bottom', group: 'connections' },
+    { id: 'quilt-top', label: 'Quilt — Top', group: 'quilt' },
+    { id: 'quilt-bottom', label: 'Quilt — Bottom', group: 'quilt' },
 ];
 
 function defaultSlotSettings() {

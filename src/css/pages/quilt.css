@@ -1,5 +1,6 @@
-/* Quilt -- board/engine styles (quilt-engine.js). Page-level styles (mode tabs, pickers, How to
-   Play) are added with quilt.html in Phase 3. */
+/* Quilt -- quilt.html. Two halves: the board/engine (`qt-` prefix, quilt-engine.js) and the page
+   around it (`quilt-` prefix: mode tabs, pickers, tournament cards, summary modal -- adapted from
+   sudoku.css, duplicated rather than shared per this repo's one-stylesheet-per-page convention). */
 
 .qt-stats {
     display: flex;
@@ -308,4 +309,534 @@
 .qt-control-btn:disabled {
     opacity: 0.45;
     cursor: default;
+}
+
+/* ==================== Page ==================== */
+
+.quilt-mode-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    max-width: 460px;
+    margin: 0 auto 20px;
+}
+
+.quilt-mode-tab {
+    flex: 1;
+    min-width: 140px;
+    padding: 10px 14px;
+    border: 0.5px solid var(--color-border);
+    background: white;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.quilt-mode-tab.active {
+    background: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+}
+
+.quilt-mode-tab:not(.active):hover {
+    background: var(--color-bg);
+    border-color: var(--color-border-strong);
+}
+
+.game-container {
+    max-width: 460px;
+    margin: 0 auto;
+}
+
+.quilt-title {
+    text-align: center;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: 4px;
+}
+
+.quilt-subtitle {
+    text-align: center;
+    color: var(--color-text-secondary);
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+
+.quilt-difficulty-picker {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.quilt-difficulty-btn {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 16px 20px;
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: white;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.quilt-difficulty-btn:hover {
+    border-color: var(--color-primary);
+    background: var(--color-primary-tint);
+}
+
+.quilt-difficulty-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.quilt-difficulty-points {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-primary);
+}
+
+.quilt-tournament-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.quilt-tournament-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 20px 24px;
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+}
+
+.quilt-tournament-info {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.quilt-tournament-name {
+    font-weight: 800;
+    font-size: 22px;
+    color: var(--color-text);
+}
+
+.quilt-tournament-meta-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 15px;
+    color: var(--color-text-secondary);
+}
+
+.quilt-tournament-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.quilt-tournament-meta-icon {
+    width: 20px;
+    height: 20px;
+    color: var(--color-primary);
+    flex-shrink: 0;
+}
+
+.quilt-tournament-sep {
+    color: var(--color-border-strong);
+}
+
+.quilt-tournament-card .btn {
+    flex: 0 0 auto;
+    padding: 14px 32px;
+    font-size: 15px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+    .quilt-tournament-card {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .quilt-tournament-card .btn {
+        width: 100%;
+    }
+}
+
+.quilt-tournament-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 16px;
+}
+
+
+/* ---------- Post-round summary modal ----------
+   Same overlay/dialog/close pattern as index.html's sign-in modal / wordle.html's summary modal,
+   duplicated here rather than shared since only one page's CSS loads at a time. */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(44, 44, 42, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 300;
+}
+
+.modal-dialog {
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    padding: 52px 24px 24px;
+    width: 100%;
+    max-width: 400px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+}
+
+.modal-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    color: var(--color-text-muted);
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    z-index: 1;
+}
+
+.modal-close:hover {
+    background: var(--color-bg);
+    color: var(--color-text);
+}
+
+.quilt-summary-celebrate {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    height: 64px;
+    margin-bottom: 8px;
+}
+
+.quilt-summary-trophy-wrap {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--color-primary-tint);
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.quilt-summary-trophy-wrap svg {
+    width: 30px;
+    height: 30px;
+}
+
+.quilt-summary-confetti {
+    position: absolute;
+    top: 8px;
+    width: 7px;
+    height: 7px;
+    border-radius: 2px;
+}
+
+.quilt-summary-confetti-1 {
+    left: calc(50% - 92px);
+    background: #F2B705;
+    transform: rotate(20deg);
+}
+
+.quilt-summary-confetti-2 {
+    left: calc(50% - 68px);
+    top: 34px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--color-danger);
+}
+
+.quilt-summary-confetti-3 {
+    right: calc(50% - 92px);
+    background: var(--color-primary);
+    transform: rotate(-20deg);
+}
+
+.quilt-summary-confetti-4 {
+    right: calc(50% - 68px);
+    top: 34px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--color-success);
+}
+
+.quilt-summary-title {
+    text-align: center;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--color-text);
+    margin-bottom: 4px;
+}
+
+.quilt-summary-subtitle {
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-primary);
+    margin-bottom: 20px;
+}
+
+.quilt-summary-breakdown {
+    border-top: 0.5px solid var(--color-border);
+    padding-top: 12px;
+    margin-bottom: 16px;
+}
+
+.quilt-summary-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    padding: 4px 0;
+}
+
+.quilt-summary-line-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.quilt-summary-line-icon {
+    display: flex;
+    flex: 0 0 auto;
+    color: var(--color-primary);
+}
+
+.quilt-summary-line-icon svg {
+    width: 16px;
+    height: 16px;
+}
+
+.quilt-summary-total {
+    border-top: 0.5px solid var(--color-border);
+    margin-top: 6px;
+    padding-top: 10px;
+    font-weight: 700;
+    color: var(--color-text);
+    font-size: 16px;
+}
+
+/* ---------- Share options (Daily/Classic/Tournament completion) ---------- */
+.quilt-share-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.quilt-share-option {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    padding: 14px 16px;
+    border: 1.5px solid var(--color-primary);
+    border-radius: var(--radius-lg);
+    background: var(--color-primary-tint);
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    transition: filter 0.15s;
+}
+
+.quilt-share-option:hover {
+    filter: brightness(0.97);
+}
+
+.quilt-share-friends {
+    border-color: var(--color-success);
+    background: #E3F5EE;
+}
+
+.quilt-share-option-icon {
+    flex: 0 0 auto;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: white;
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.quilt-share-friends .quilt-share-option-icon {
+    color: var(--color-success);
+}
+
+.quilt-share-option-icon svg {
+    width: 22px;
+    height: 22px;
+}
+
+.quilt-share-option-body {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.quilt-share-option-title {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--color-primary);
+}
+
+.quilt-share-friends .quilt-share-option-title {
+    color: var(--color-success);
+}
+
+.quilt-share-option-desc {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    line-height: 1.4;
+}
+
+/* Badge + chevron live in their own column on the right, out of the title's text flow, so a long
+   title never pushes the badge onto its own visual row underneath. */
+.quilt-share-option-side {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    color: var(--color-primary);
+}
+
+.quilt-share-friends .quilt-share-option-side {
+    color: var(--color-success);
+}
+
+.quilt-share-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: var(--color-primary);
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.quilt-share-badge-green {
+    background: var(--color-success);
+}
+
+.quilt-share-option-side svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* Set by markClaimed() once this specific option's bonus has been awarded -- the other option
+   stays fully interactive regardless. */
+.quilt-share-option-claimed {
+    cursor: default;
+    opacity: 0.7;
+}
+
+.quilt-share-option-claimed:hover {
+    filter: none;
+}
+
+.quilt-share-or {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--color-primary);
+    font-weight: 700;
+    font-size: 12px;
+}
+
+.quilt-share-or::before,
+.quilt-share-or::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--color-border);
+}
+
+/* Solved picture shown at the top of the summary modal (quilt-summary-modal.js). */
+.quilt-summary-picture {
+    display: grid;
+    width: min(180px, 60%);
+    margin: 0 auto 16px;
+    aspect-ratio: var(--qt-cols) / var(--qt-rows);
+    grid-template-columns: repeat(var(--qt-cols), 1fr);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+}
+
+.quilt-summary-perfect {
+    display: block;
+    width: fit-content;
+    margin: -8px auto 14px;
+    padding: 3px 12px;
+    border-radius: 999px;
+    background: var(--color-primary-tint);
+    color: var(--color-primary-dark);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+/* ---------- How to Play: Quilt-specific mini visuals (shared .htp-* layout is in components.css) */
+.htp-mini-quilt {
+    position: relative;
+    width: 100%;
+    max-width: 150px;
+    margin: 0 auto;
+    cursor: default;
+    pointer-events: none;
+    border-width: 1.5px;
+}
+
+.htp-mini-quilt .qt-clue {
+    font-size: 13px;
+}
+
+@media (max-width: 420px) {
+    .qt-stats {
+        padding: 12px 14px;
+    }
+
+    .qt-stat-label {
+        display: none;
+    }
 }

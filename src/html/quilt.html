@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/assets/images/logo-header.png">
+    <title>Quilt - Daily Mind Challenge</title>
+    <meta name="description" content="Play Quilt free online — a Shikaku-style logic puzzle where every solved board reveals a pixel-art picture. A new picture every day, plus Classic and Tournament modes.">
+    <link rel="canonical" href="https://dailymindchallenge.com/quilt">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://dailymindchallenge.com/quilt">
+    <meta property="og:title" content="Quilt - Daily Mind Challenge">
+    <meta property="og:description" content="Play Quilt free online — a Shikaku-style logic puzzle where every solved board reveals a pixel-art picture. A new picture every day, plus Classic and Tournament modes.">
+    <!-- Stand-in until the purpose-made 1.91:1 share image arrives (plan item O6). -->
+    <meta property="og:image" content="https://dailymindchallenge.com/assets/images/tile-quilt-wide.png">
+    <meta property="og:image:width" content="500">
+    <meta property="og:image:height" content="384">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Quilt - Daily Mind Challenge">
+    <meta name="twitter:description" content="Play Quilt free online — a Shikaku-style logic puzzle where every solved board reveals a pixel-art picture. A new picture every day, plus Classic and Tournament modes.">
+    <meta name="twitter:image" content="https://dailymindchallenge.com/assets/images/tile-quilt-wide.png">
+    <link rel="stylesheet" href="/css/base.css">
+    <link rel="stylesheet" href="/css/components.css">
+    <link rel="stylesheet" href="/css/pages/quilt.css">
+</head>
+<body>
+    <div id="site-header"></div>
+
+    <div class="content">
+        <div class="ad-space" data-ad-slot="quilt-top">Google AdSense - Ad Space (300x250)</div>
+
+        <div class="section">
+            <div class="section-title">Quilt</div>
+            <div class="quilt-mode-tabs">
+                <button class="quilt-mode-tab active" data-mode="daily" type="button">Daily Challenge</button>
+                <button class="quilt-mode-tab" data-mode="classic" type="button">Classic Quilt</button>
+                <button class="quilt-mode-tab" data-mode="tournament" type="button">Patchwork Run</button>
+            </div>
+            <div class="game-container">
+                <div id="game-mount">
+                    <div class="loading-text">Loading&hellip;</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="ad-space" data-ad-slot="quilt-bottom">Google AdSense - Ad Space (300x250)</div>
+
+        <div class="section">
+            <div class="card htp-card">
+                <div class="htp-banner">
+                    <img src="/assets/images/tile-quilt.png" alt="Quilt" class="htp-logo">
+                    <h2>How to Play</h2>
+                </div>
+
+                <div class="htp-row">
+                    <span class="htp-icon-badge">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3"/><path d="m9 14 2 2 4-4"/></svg>
+                    </span>
+                    <div class="htp-row-body">
+                        <div class="htp-row-title">Rules</div>
+                        <p>Divide the whole grid into rectangles. Every rectangle must contain <strong>exactly one number</strong>, and that number is the rectangle's <strong>area</strong> &mdash; a 6 can be 1&times;6, 2&times;3, 3&times;2 or 6&times;1. Rectangles can't overlap, and every cell must be covered.</p>
+                    </div>
+                    <div class="htp-visual" aria-hidden="true">
+                        <div class="qt-board htp-mini-quilt" style="--qt-cols: 4; --qt-rows: 4; --qt-cell: 36px;">
+                            <div class="qt-rects">
+                                <div class="qt-rect" style="--qt-tint: #E8E4F8; left: 0; top: 0; width: 50%; height: 50%;"></div>
+                                <div class="qt-rect" style="--qt-tint: #FDE7D9; left: 50%; top: 0; width: 50%; height: 25%;"></div>
+                                <div class="qt-rect" style="--qt-tint: #DFF3EA; left: 50%; top: 25%; width: 50%; height: 25%;"></div>
+                                <div class="qt-rect" style="--qt-tint: #FDF3C8; left: 0; top: 50%; width: 25%; height: 50%;"></div>
+                                <div class="qt-rect" style="--qt-tint: #E3EEFC; left: 25%; top: 50%; width: 75%; height: 50%;"></div>
+                            </div>
+                            <div class="qt-clues">
+                                <span class="qt-clue" style="left: 25%; top: 25%; width: 25%; height: 25%;">4</span>
+                                <span class="qt-clue" style="left: 75%; top: 0; width: 25%; height: 25%;">2</span>
+                                <span class="qt-clue" style="left: 50%; top: 25%; width: 25%; height: 25%;">2</span>
+                                <span class="qt-clue" style="left: 0; top: 75%; width: 25%; height: 25%;">2</span>
+                                <span class="qt-clue" style="left: 50%; top: 50%; width: 25%; height: 25%;">6</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="htp-divider"></div>
+
+                <div class="htp-row">
+                    <span class="htp-icon-badge">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51z"/></svg>
+                    </span>
+                    <div class="htp-row-body">
+                        <div class="htp-row-title">Controls</div>
+                        <p><strong>Drag</strong> from one corner of a rectangle to the opposite corner to draw it &mdash; a label shows its size as you drag. <strong>Tap</strong> a rectangle to remove it, or tap an empty cell to place a 1&times;1. Drawing over rectangles replaces them. <strong>Undo</strong> (or Ctrl+Z / &#8984;Z) steps back. A rectangle that breaks a rule is outlined in red straight away.</p>
+                    </div>
+                </div>
+
+                <div class="htp-divider"></div>
+
+                <div class="htp-row">
+                    <span class="htp-icon-badge">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+                    </span>
+                    <div class="htp-row-body">
+                        <div class="htp-row-title">The Picture</div>
+                        <p>Every Quilt hides a pixel-art picture. While you play, your rectangles are plain fabric &mdash; finish the board and each piece is dyed its real colour, revealing the picture. Solve without a single undo or removed piece for a <strong>Perfect Stitch</strong> bonus.</p>
+                    </div>
+                </div>
+
+                <div class="htp-divider"></div>
+
+                <div class="htp-row">
+                    <span class="htp-icon-badge">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M17 4h3a2 2 0 0 1 2 2v1a4 4 0 0 1-4 4"/><path d="M7 4H4a2 2 0 0 0-2 2v1a4 4 0 0 0 4 4"/></svg>
+                    </span>
+                    <div class="htp-row-body">
+                        <div class="htp-row-title">Game Modes</div>
+                        <div class="htp-modes">
+                            <div class="htp-mode-item">
+                                <span class="htp-mode-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                </span>
+                                <div>
+                                    <div class="htp-mode-name">Daily Challenge</div>
+                                    <p>One new picture every day, the same for everyone.</p>
+                                </div>
+                            </div>
+                            <div class="htp-mode-item">
+                                <span class="htp-mode-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                                </span>
+                                <div>
+                                    <div class="htp-mode-name">Classic Quilt</div>
+                                    <p>Play any time: Easy 7&times;7, Medium 10&times;10 or Hard 14&times;14.</p>
+                                </div>
+                            </div>
+                            <div class="htp-mode-item">
+                                <span class="htp-mode-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M9 2h6"/></svg>
+                                </span>
+                                <div>
+                                    <div class="htp-mode-name">Patchwork Run</div>
+                                    <p>Timed tiles that join into one big picture.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="htp-divider"></div>
+
+                <div class="htp-row">
+                    <span class="htp-icon-badge">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5.73.73 1.28 1.5 1.5 2.5"/></svg>
+                    </span>
+                    <div class="htp-row-body">
+                        <div class="htp-row-title">Tips &amp; Strategy</div>
+                        <ul class="htp-tips-list">
+                            <li>Start with the 1s and with numbers in corners or along edges &mdash; they have the fewest possible rectangles.</li>
+                            <li>Prime numbers (2, 3, 5, 7, 11, 13) can only be a single row or column, so they're quick to narrow down.</li>
+                            <li>Look for cells only one number can reach. If a cell is too far from every other number, it must belong to the one nearby.</li>
+                            <li>Big numbers next to each other limit each other: try each shape for one and see which leaves room for its neighbour.</li>
+                            <li>Think before you draw if you want the Perfect Stitch &mdash; any undo or removed piece costs the bonus (but never the puzzle).</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="card faq-card">
+                <div class="faq-title">Quilt FAQ</div>
+
+                <details class="faq-item">
+                    <summary class="faq-question">What is Quilt?</summary>
+                    <p class="faq-answer">Quilt is a logic puzzle in the Shikaku style: you divide a grid of numbers into rectangles. When the board is finished, the pieces take on their real colours and reveal a hidden pixel-art picture.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary class="faq-question">Is there a new Quilt every day?</summary>
+                    <p class="faq-answer">Yes &mdash; one Daily Challenge picture unlocks for everyone each calendar day.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary class="faq-question">What are the rules, exactly?</summary>
+                    <p class="faq-answer">Split the whole grid into rectangles (squares count). Each rectangle must contain exactly one number, equal to its area in cells. Rectangles can't overlap and must cover every cell.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary class="faq-question">How do I draw a rectangle?</summary>
+                    <p class="faq-answer">Press on one corner cell and drag to the opposite corner, then let go. Tap a rectangle to remove it, or tap an empty cell to place a single-cell rectangle.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary class="faq-question">Does every puzzle have only one solution?</summary>
+                    <p class="faq-answer">Yes. Every Quilt is checked by a solver before it's published, so it can always be solved by logic alone &mdash; no guessing needed.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary class="faq-question">Why are my rectangles plain colours while I play?</summary>
+                    <p class="faq-answer">So the picture can't give the answer away. Each piece is dyed its real colour only when the whole board is solved.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary class="faq-question">What does a red rectangle mean?</summary>
+                    <p class="faq-answer">It breaks a rule: it has no number, more than one number, or its area doesn't match its number. Remove it or draw over it.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary class="faq-question">What is a Perfect Stitch?</summary>
+                    <p class="faq-answer">Solving a puzzle without using Undo and without removing or replacing any rectangle. It earns a bonus on top of your score.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary class="faq-question">How is Daily Challenge scoring calculated?</summary>
+                    <p class="faq-answer">10 points for completing the quilt, a speed bonus (10 points within 3 minutes, 8 within 5, 6 within 10, otherwise 5) and 5 more for a Perfect Stitch.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary class="faq-question">Does the timer start as soon as the puzzle loads?</summary>
+                    <p class="faq-answer">No &mdash; in Daily Challenge and Classic the timer starts with your first touch of the board, so you can study the numbers first.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary class="faq-question">Can I fail the Daily Challenge?</summary>
+                    <p class="faq-answer">No. There's no time limit and you can undo as often as you like &mdash; you just lose the Perfect Stitch bonus.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary class="faq-question">What's the difference between Daily, Classic and Patchwork Run?</summary>
+                    <p class="faq-answer">Daily is one shared picture per day. Classic lets you play as often as you like at Easy, Medium or Hard. Patchwork Run is a timed set of tiles that join into one bigger picture.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary class="faq-question">What are the knots and framed numbers in Hard mode?</summary>
+                    <p class="faq-answer">Knots (sewn buttons) are cells no rectangle may cover. A number in a square frame must be a square; a number in a long pill frame must be a single row or column.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary class="faq-question">Do I need an account to play?</summary>
+                    <p class="faq-answer">No &mdash; guests can play and earn points too. A free account also unlocks streaks, XP, Rank and Achievements.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary class="faq-question">Does a new Daily Quilt unlock at the same time for everyone?</summary>
+                    <p class="faq-answer">It unlocks at your own device's local midnight. Everyone still gets the same picture on the same calendar date.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary class="faq-question">Can I share my result without spoiling the picture?</summary>
+                    <p class="faq-answer">Yes &mdash; the Daily share text only shows your time, score and Perfect Stitch, never the picture. "Copy Result &amp; Share with Community" and "Share with Friends" are two separate one-time bonuses.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary class="faq-question">Does playing Quilt count toward my streak?</summary>
+                    <p class="faq-answer">Yes &mdash; completing the Daily Challenge (in any game) advances your daily streak, as long as you play on consecutive calendar days.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary class="faq-question">What's the Quilt leaderboard based on?</summary>
+                    <p class="faq-answer">Total points from every Quilt mode for the period you select (Today, Week, Month, Year or All-time).</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary class="faq-question">Does Quilt work on mobile?</summary>
+                    <p class="faq-answer">Yes &mdash; drag with your finger to draw. The page won't scroll while you're dragging on the board.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary class="faq-question">What's the difference between Points and XP?</summary>
+                    <p class="faq-answer">Points are per game and drive that game's Level and the leaderboard. XP is a separate currency shared across every game that drives your Overall Level and Rank.</p>
+                </details>
+            </div>
+        </div>
+    </div>
+
+    <div id="site-footer"></div>
+
+    <script type="module" src="/js/games/quilt/quilt-page.js"></script>
+</body>
+</html>

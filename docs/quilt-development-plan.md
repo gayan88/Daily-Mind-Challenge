@@ -1,6 +1,6 @@
 # Quilt — Development Plan & Backlogs
 
-> Status: **in development** — Phases 1 (puzzle core) and 2 (engine) done 2026-10-18; all §2 decisions accepted
+> Status: **in development** — Phases 1–3 (puzzle core, engine, Daily end-to-end) done 2026-10-18; all §2 decisions accepted
 > with the recommended defaults; content deferred until the build is done. Logo: `docs/Images/QUILT Logo.png`.
 > Follows `docs/adding-a-new-game.md` — that checklist is the source of truth for *every*
 > touchpoint; this doc orders the work and splits it between **Claude (implementation)** and
@@ -79,11 +79,19 @@ Sizes: **S** ≈ under half a day · **M** ≈ 1 day · **L** ≈ 2–3 days.
 - [x] **C2.3 (S)** `src/css/pages/quilt.css`, responsive to 360px wide; 14×14 must stay playable on phones.
 
 ### Phase 3 — Daily end-to-end (catches the `scoreDate` / `GAME_TYPES` gotchas early)
-- [ ] **C3.1 (M)** `src/html/quilt.html` (mode tabs, ad slots, How to Play, meta/og tags) + `quilt-page.js` (`trySession()`, `wireModeTabs()`, `activeRound` destroy) + `firebase.json` rewrite.
-- [ ] **C3.2 (M)** `quilt-daily-data.js` + `quilt-scoring.js` (D4), writes `gameDate` **and** `scoreDate`.
-- [ ] **C3.3 (M)** `quilt-summary-modal.js`: picture, stats, share text (Daily = stats only; Classic/Tournament = emoji mosaic), +20 / +10 share bonuses.
-- [ ] **C3.4 (M)** `firestore.rules`: collections `quiltDaily`, `quiltClassic`, `quiltTournaments`, attempt docs; `maxCreateScore()` caps; share allow-lists; `firestore.indexes.json` if needed.
-- [ ] **C3.5 (S)** Registry & cross-site touchpoints: `game-registry.js`, leaderboard tab, `checkPlayedTodayAll()` in `points.js`, home tile in `index.html`, `GAME_LABELS` in `profile.js`, `AD_SLOTS`.
+- [x] **C3.1 (M)** `src/html/quilt.html` (mode tabs, ad slots, How to Play, meta/og tags) + `quilt-page.js` (`trySession()`, `wireModeTabs()`, `activeRound` destroy) + `firebase.json` rewrite.
+- [x] **C3.2 (M)** `quilt-daily-data.js` + `quilt-scoring.js` (D4), writes `gameDate` **and** `scoreDate`.
+- [x] **C3.3 (M)** `quilt-summary-modal.js`: picture, stats, share text (Daily = stats only; Classic/Tournament = emoji mosaic), +20 / +10 share bonuses.
+- [x] **C3.4 (M)** `firestore.rules`: collections `quiltDaily`, `quiltClassic`, `quiltTournaments`, attempt docs; `maxCreateScore()` caps; share allow-lists; `firestore.indexes.json` if needed.
+- [x] **C3.5 (S)** Registry & cross-site touchpoints: `game-registry.js`, leaderboard tab, `checkPlayedTodayAll()` in `points.js`, home tile in `index.html`, `GAME_LABELS` in `profile.js`, `AD_SLOTS`.
+
+Phase 3 notes: rules also got `quilt` in both championship `gameId` lists and all 18 achievement
+ids (needed as soon as `quilt` is in `GAMES`, since championship/achievement code iterates it), so
+C7.1's rules half is done. The share rules now read the flags with `get(..., false)`, which also
+fixed a live bug: Sudoku/Word Search Daily + Classic "Share with Friends" +10 was always rejected
+(those docs never set `sharedWithFriends`). Home tile, HTP banner and og:image use stand-ins cut from
+the logo (`tile-quilt.png`, `tile-quilt-wide.png`) until O4–O6 arrive. Tips & Strategy + 20-question
+FAQ are in `quilt.html` already (C7.2 content done; sitemap added too).
 
 ### Phase 4 — Classic
 - [ ] **C4.1 (M)** `quilt-classic-data.js`: difficulty picker, pool from `quiltClassic`, unplayed-first selection, D5 scoring.
