@@ -27,6 +27,7 @@ import {
     markSharedWithFriends as markChallengeSharedWithFriends,
 } from './wordle-challenge-data.js';
 import { showWordleSummaryModal } from './wordle-summary-modal.js';
+import { trackGameCompleted } from '../../utils/meta-pixel.js';
 
 const MAX_GUESSES = 6;
 const SHARE_EMOJI = { correct: '🟩', present: '🟨', absent: '⬜' };
@@ -196,6 +197,7 @@ async function renderDailyMode(mount, uid, profile, setActiveRound) {
                 timeTakenSeconds,
             });
             if (!result) return;
+            trackGameCompleted('wordle');
 
             // Phase 3 progression XP (registered players only, see docs/progression-gamification-roadmap.md)
             // -- checked *after* recordDailyResult() above, so it reflects this completion.
@@ -298,6 +300,7 @@ async function finishTournament(mount, uid, profile, tournament, numWords, setAc
         });
         return;
     }
+    trackGameCompleted('wordle-tournament');
 
     const wordAttempts = result.wordAttempts || [];
 
@@ -750,6 +753,7 @@ async function renderChallengeSolve(mount, uid, profile, challengeId, setActiveR
                 showToast("Couldn't save your points -- check the browser console for the error");
                 return;
             }
+            trackGameCompleted('wordle-challenge');
 
             showWordleSummaryModal({
                 title: won ? 'Challenge solved!' : `The word was ${challenge.word}`,

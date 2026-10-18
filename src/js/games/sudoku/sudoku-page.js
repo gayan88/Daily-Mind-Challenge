@@ -15,6 +15,7 @@ import {
     markSharedWithFriends as markTournamentSharedWithFriends,
 } from './sudoku-tournament-data.js';
 import { showSudokuSummaryModal } from './sudoku-summary-modal.js';
+import { trackGameCompleted } from '../../utils/meta-pixel.js';
 
 const DIFFICULTY_LABELS = { easy: 'Easy', medium: 'Medium', hard: 'Hard' };
 const DIFFICULTY_POINTS = { easy: 10, medium: 15, hard: 25 };
@@ -115,6 +116,7 @@ async function renderDailyMode(mount, uid, profile, setActiveRound) {
                 timeTakenSeconds,
             });
             if (!result) return;
+            trackGameCompleted('sudoku');
 
             // Phase 3 progression XP (registered players only, see docs/progression-gamification-roadmap.md)
             // -- checked *after* recordDailyResult() above, so it reflects this completion.
@@ -192,6 +194,7 @@ async function playClassicRound(mount, uid, profile, difficulty, setActiveRound)
                 timeTakenSeconds,
             });
             if (!result) return;
+            trackGameCompleted('sudoku-classic');
 
             showSudokuSummaryModal({
                 title: 'Solved!',
@@ -287,6 +290,7 @@ async function finishSudokuTournament(mount, uid, profile, tournament, setActive
         });
         return;
     }
+    trackGameCompleted('sudoku-tournament');
 
     const numPuzzles = tournament.puzzles.length;
     const puzzleResults = result.puzzleResults || [];
@@ -366,6 +370,7 @@ async function playSudokuTournamentRound(mount, uid, profile, tournament, setAct
                 showToast("Couldn't save this puzzle's result");
                 return;
             }
+            trackGameCompleted('sudoku-tournament');
 
             if (updated.currentPuzzleIndex >= numPuzzles) {
                 await finishSudokuTournament(mount, uid, profile, tournament, setActiveRound);

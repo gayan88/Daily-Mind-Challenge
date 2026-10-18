@@ -16,6 +16,7 @@ import {
     markSharedWithFriends as markTournamentSharedWithFriends,
 } from './wordsearch-tournament-data.js';
 import { showWordSearchSummaryModal } from './wordsearch-summary-modal.js';
+import { trackGameCompleted } from '../../utils/meta-pixel.js';
 
 const DIFFICULTY_LABELS = { easy: 'Easy', medium: 'Medium', hard: 'Hard' };
 const DIFFICULTY_POINTS = { easy: 10, medium: 15, hard: 25 };
@@ -112,6 +113,7 @@ async function renderDailyMode(mount, uid, profile, setActiveRound) {
                 totalWords,
             });
             if (!result) return;
+            trackGameCompleted('wordsearch');
 
             // Phase 3 progression XP (registered players only, see docs/progression-gamification-roadmap.md)
             // -- checked *after* recordDailyResult() above, so it reflects this completion.
@@ -195,6 +197,7 @@ async function playClassicRound(mount, uid, profile, difficulty, setActiveRound)
                 totalWords,
             });
             if (!result) return;
+            trackGameCompleted('wordsearch-classic');
 
             showWordSearchSummaryModal({
                 title: 'Solved!',
@@ -287,6 +290,7 @@ async function finishWordsearchTournament(mount, uid, profile, tournament, setAc
         });
         return;
     }
+    trackGameCompleted('wordsearch-tournament');
 
     const settings = await getConfig('wordsearchTournamentSettings');
     const numPuzzles = tournament.puzzles.length;
@@ -378,6 +382,7 @@ async function playWordsearchTournamentRound(mount, uid, profile, tournament, se
                 showToast("Couldn't save this puzzle's result");
                 return;
             }
+            trackGameCompleted('wordsearch-tournament');
 
             if (updated.currentPuzzleIndex >= numPuzzles) {
                 await finishWordsearchTournament(mount, uid, profile, tournament, setActiveRound);

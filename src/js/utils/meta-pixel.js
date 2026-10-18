@@ -38,3 +38,24 @@ export function loadMetaPixel() {
     window.fbq('init', PIXEL_ID);
     window.fbq('track', 'PageView');
 }
+
+/**
+ * Standard Meta conversion event -- fired once, right after a new registered account's profile
+ * doc is created (src/js/pages/home.js's signup handler). A no-op if the pixel never loaded (the
+ * visitor declined cookies, or the banner is admin-disabled) -- `window.fbq` won't exist yet.
+ */
+export function trackCompleteRegistration() {
+    if (!window.fbq) return;
+    window.fbq('track', 'CompleteRegistration');
+}
+
+/**
+ * Custom event (not one of Meta's standard event names, hence `trackCustom` rather than `track`)
+ * -- fired after every successful `gameScores` write across all four games' Daily/Classic/
+ * Tournament modes, so Meta has an actual engagement signal beyond PageView to optimize ads
+ * against. Same no-op-if-not-loaded guard as trackCompleteRegistration().
+ */
+export function trackGameCompleted(gameType) {
+    if (!window.fbq) return;
+    window.fbq('trackCustom', 'GameCompleted', { gameType });
+}

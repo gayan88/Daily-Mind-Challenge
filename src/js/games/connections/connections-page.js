@@ -10,6 +10,7 @@ import { getTodayChallenge, recordDailyResult, getDailyAttemptState, recordDaily
 import { getRandomClassicPuzzle, recordClassicResult } from './connections-classic-data.js';
 import { listActiveTournaments, getAttempt, getOrStartAttempt, recordPuzzleResult, finalizeTournament } from './connections-tournament-data.js';
 import { showConnectionsSummaryModal } from './connections-summary-modal.js';
+import { trackGameCompleted } from '../../utils/meta-pixel.js';
 
 const FACEBOOK_GROUP_URL = 'https://www.facebook.com/groups/playdailymindchallenge';
 const TOURNAMENTS_TAB_URL = `${window.location.origin}/connections?tab=tournaments`;
@@ -145,6 +146,7 @@ async function renderDailyMode(mount, uid, profile, setActiveRound) {
 
             const result = await recordDailyResult(uid, profile, { challengeId: challenge.challengeId, mistakes, timeTakenSeconds });
             if (!result) return;
+            trackGameCompleted('connections');
 
             if (profile.kind === 'registered') {
                 const playedToday = await checkPlayedTodayAll(uid);
@@ -248,6 +250,7 @@ async function playClassicRound(mount, uid, profile, difficulty, setActiveRound,
                 backToPicker();
                 return;
             }
+            trackGameCompleted('connections-classic');
 
             showConnectionsSummaryModal({
                 title: 'You solved it!',
@@ -343,6 +346,7 @@ async function finishTournament(mount, uid, profile, tournament, numPuzzles, set
         document.getElementById('cx-back-btn').addEventListener('click', () => renderTournamentsMode(mount, uid, profile, setActiveRound));
         return;
     }
+    trackGameCompleted('connections-tournament');
 
     const puzzleMistakes = result.puzzleMistakes || [];
 
