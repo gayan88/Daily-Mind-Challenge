@@ -660,3 +660,104 @@
         padding-left: 16px;
     }
 }
+
+/* ---------- Quilt admin (quilt-admin-page.js) ----------
+   quiltPictureHtml() emits .quilt-summary-picture (styled in quilt.css, which this page doesn't
+   load), so its grid rules are repeated here for the thumbnails. */
+#quilt-admin-root .quilt-summary-picture {
+    display: grid;
+    grid-template-columns: repeat(var(--qt-cols), 1fr);
+    aspect-ratio: var(--qt-cols) / var(--qt-rows);
+    width: 100%;
+    border-radius: 3px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.qa-row-thumb {
+    flex: 0 0 32px;
+    width: 32px;
+}
+
+.qa-preview-summary {
+    margin: 12px 0 8px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+}
+
+.qa-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.qa-preview-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px;
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+}
+
+.qa-preview-card .quilt-summary-picture,
+.qa-preview-nopic {
+    width: 80px !important;
+    margin: 0 auto;
+}
+
+.qa-preview-nopic {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 1;
+    border: 1.5px dashed var(--color-danger);
+    border-radius: 3px;
+    color: var(--color-danger);
+    font-weight: 800;
+}
+
+.qa-preview-bad {
+    border-color: var(--color-danger);
+}
+
+.qa-preview-title {
+    font-weight: 700;
+    text-align: center;
+}
+
+.qa-preview-meta {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    text-align: center;
+}
+
+.qa-preview-error {
+    font-size: 12px;
+    color: var(--color-danger);
+}
+
+.qa-preview-warning {
+    font-size: 12px;
+    color: #9A6A00;
+}
+
+/* Patchwork Run preview: the picture with the tile cuts drawn over it. */
+.qa-run-preview-pic {
+    position: relative;
+    width: min(220px, 100%);
+    margin: 8px 0;
+}
+
+.qa-run-grid {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+        linear-gradient(to right, rgba(255, 255, 255, 0.95) 2px, transparent 2px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.95) 2px, transparent 2px);
+    background-size: calc(100% / var(--qa-cols)) calc(100% / var(--qa-rows));
+    background-position: -1px -1px;
+}

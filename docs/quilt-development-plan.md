@@ -1,6 +1,6 @@
 # Quilt — Development Plan & Backlogs
 
-> Status: **in development** — Phases 1–5 (puzzle core, engine, Daily, Classic, Patchwork Run) done 2026-10-18; all §2 decisions accepted
+> Status: **in development** — Phases 1–6 (puzzle core, engine, Daily, Classic, Patchwork Run, Admin) done 2026-10-18; all §2 decisions accepted
 > with the recommended defaults; content deferred until the build is done. Logo: `docs/Images/QUILT Logo.png`.
 > Follows `docs/adding-a-new-game.md` — that checklist is the source of truth for *every*
 > touchpoint; this doc orders the work and splits it between **Claude (implementation)** and
@@ -115,10 +115,17 @@ in Phase 6). Known limitation shared with Sudoku's tournament: leaving mid-tile 
 restarts that tile with a fresh clock.
 
 ### Phase 6 — Admin
-- [ ] **C6.1 (L)** `quilt-admin.js` + admin section: Daily (grouped by year → month) and Classic (grouped by difficulty) tables using `admin-table-grouping.js` helpers from the first draft; add / edit / delete / export.
-- [ ] **C6.2 (L)** **Import from pixel art in the browser** — upload PNG(s) where 1 pixel = 1 cell (or paste text grids), generator + solver run client-side, preview board + picture, then all-or-nothing save. No local scripts for the owner to run.
-- [ ] **C6.3 (M)** Tournament builder: upload one big picture (e.g. 20×20), auto-split into 4/9 tiles, each validated as a unique puzzle; activate/deactivate/delete.
-- [ ] **C6.4 (S)** `ACTIVITY_ROWS` (count completion doc only), `CONFIG_FORMS` / `CONFIG_DEFAULTS` for tournament settings.
+- [x] **C6.1 (L)** `quilt-admin.js` + admin section: Daily (grouped by year → month) and Classic (grouped by difficulty) tables using `admin-table-grouping.js` helpers from the first draft; add / edit / delete / export.
+- [x] **C6.2 (L)** **Import from pixel art in the browser** — upload PNG(s) where 1 pixel = 1 cell (or paste text grids), generator + solver run client-side, preview board + picture, then all-or-nothing save. No local scripts for the owner to run.
+- [x] **C6.3 (M)** Tournament builder: upload one big picture (e.g. 20×20), auto-split into 4/9 tiles, each validated as a unique puzzle; activate/deactivate/delete.
+- [x] **C6.4 (S)** `ACTIVITY_ROWS` (count completion doc only), `CONFIG_FORMS` / `CONFIG_DEFAULTS` for tournament settings.
+
+Phase 6 notes: Admin → Quilt (`quilt-admin.js` + `quilt-admin-page.js`, Connections' two-module
+pattern). Pictures in (PNG at 1 px/cell or text), Preview generates every puzzle and shows a card per
+picture with errors/warnings, Add is all-or-nothing. Tables use `admin-table-grouping.js`; Edit
+regenerates; Download exports the text format. Patchwork Run builder previews the tile cuts. Also:
+`quiltTournamentSettings` config form in the Quilt section, Quilt ad-slot forms, activity-summary
+rows. `docs/content-creation-guide.md` has the Quilt format + an AI prompt (C7.4's content-guide part).
 
 ### Phase 7 — Progression, SEO, docs
 - [ ] **C7.1 (S)** Achievement ids in `firestore.rules` `playerAchievements` allow-list (definitions auto-generate from `GAMES`); wire `CUSTOM_IMAGES` once badge art arrives.

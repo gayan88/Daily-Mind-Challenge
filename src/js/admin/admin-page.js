@@ -17,6 +17,7 @@ import {
     listWordsearchTournaments, createWordsearchTournament, setWordsearchTournamentActive, deleteWordsearchTournament,
 } from './wordsearch-admin.js';
 import { initConnectionsAdmin } from './connections-admin-page.js';
+import { initQuiltAdmin } from './quilt-admin-page.js';
 import { getDailyActivitySummary } from './activity-summary-data.js';
 import { escapeHtml, showToast, getTodayDateString } from '../utils/helpers.js';
 import { GAMES } from '../progression/game-registry.js';
@@ -77,6 +78,13 @@ const CONFIG_FORMS = [
             { key: 'puzzleCount', type: 'number', label: 'Puzzles per tournament' },
             { key: 'timeLimitSeconds', type: 'number', label: 'Seconds allowed per puzzle' },
             { key: 'maxErrors', type: 'number', label: 'Errors allowed per puzzle' },
+        ],
+    },
+    {
+        id: 'quiltTournamentSettings',
+        title: 'Quilt Patchwork Run Settings',
+        fields: [
+            { key: 'timeLimitSeconds', type: 'number', label: 'Seconds allowed per tile' },
         ],
     },
     {
@@ -347,6 +355,7 @@ async function renderAdSlotForms() {
     renderGroup('ad-slot-forms-sudoku', 'sudoku');
     renderGroup('ad-slot-forms-wordsearch', 'wordsearch');
     renderGroup('ad-slot-forms-connections', 'connections');
+    renderGroup('ad-slot-forms-quilt', 'quilt');
 }
 
 async function renderDailyWordsTable() {
@@ -1798,7 +1807,7 @@ async function init() {
     populateTop10ScopeSelect();
     wireTop10PeriodTypeToggle();
     wireTop10Run();
-    const gameSectionConfigIds = ['challengeExpiration', 'sudokuTournamentSettings', 'wordsearchTournamentSettings'];
+    const gameSectionConfigIds = ['challengeExpiration', 'sudokuTournamentSettings', 'wordsearchTournamentSettings', 'quiltTournamentSettings'];
     const generalConfigIds = CONFIG_FORMS
         .map((form) => form.id)
         .filter((id) => !gameSectionConfigIds.includes(id));
@@ -1830,6 +1839,10 @@ async function init() {
     wireWordsearchTournamentCreate();
     await renderWordsearchTournamentsTable();
     await initConnectionsAdmin();
+    // Quilt's section is rendered by its own module; its global tournament setting is a normal
+    // CONFIG_FORMS entry rendered into a container inside that section (like Sudoku/Word Search).
+    await initQuiltAdmin();
+    await renderConfigForms('quilt-tournament-settings-form', ['quiltTournamentSettings']);
 }
 
 init();

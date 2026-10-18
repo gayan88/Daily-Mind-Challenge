@@ -236,6 +236,52 @@ Ready-made starter sets already exist in `docs/connections-content/` (`daily.txt
 
 ---
 
+## Quilt
+
+Admin → Quilt takes **pictures, not puzzles**: the admin page turns each picture into a puzzle and
+proves it has exactly one solution before it can be saved (`src/js/admin/quilt-admin.js`, using
+`src/js/games/quilt/quilt-generator.js`). Nothing to hand-check — Preview shows every problem.
+
+Two ways to supply a picture:
+
+- **PNG** drawn at **1 image pixel = 1 grid cell**, no smoothing/anti-aliasing, **at most 8
+  colours** (Piskel, Aseprite, Lospec Pixel Editor). The file name becomes the title
+  (`little-tree.png` → "Little tree"). Several files can be uploaded at once.
+- **Text blocks**, separated by a blank line:
+
+```
+title: Cosy House
+difficulty: medium
+palette: #87ceeb #b22222 #f5deb3 #8b4513 #2e7d32
+0000110000
+0001111000
+0011111100
+0111111110
+1111111111
+0222222220
+0233223320
+0233223320
+0222332220
+4444334444
+```
+
+`palette` = 2–8 `#rrggbb` colours; each digit in the rows is a palette index (first colour = 0).
+`difficulty` is optional (the form's dropdown fills it in; Daily defaults to medium). Every row the
+same length; each side 5–20 cells.
+
+| Mode | Size | Notes |
+|---|---|---|
+| Daily | 10×10 (Medium) | Order in the input = play order, dated one per day from the start date. |
+| Classic | Easy 7×7 · Medium 10×10 · Hard 14×14 | Hard automatically gets knots (its single-cell pieces) and shape clues. |
+| Patchwork Run | one picture, e.g. 20×20 | Cut into 2×2, 3×2 or 3×3 tiles; sides must divide evenly, each tile 5–20 a side. |
+
+- **"Duplicate"** = the same palette + pixel rows, whatever the title (Daily: anywhere in the pool;
+  Classic: within the same difficulty). The whole batch is rejected if any picture fails.
+- **Picture quality:** blocky shapes with areas of solid colour make good puzzles. Single-pixel
+  details and diagonal staircases produce lots of 1×1 pieces — Preview warns when more than a
+  quarter of the pieces are single cells. Smooth gradients / photos can't work (>8 colours).
+- **Download** exports the text format, and re-importing it is a no-op (duplicates are rejected).
+
 ## Quick copy-paste prompts
 
 Fill in the puzzle count and hand the whole block to any AI.
@@ -267,3 +313,11 @@ mid-difficulty categories, then a wordplay-based trickiest category — hidden w
 a shared prefix/suffix). No word over 14 characters. Format each puzzle as 4 lines, `Group name:
 word, word, word, word`, with a blank line between puzzles. No duplicate words within a puzzle, and
 no two puzzles sharing the exact same 16 words."*
+
+**Quilt (any mode)** — *"Draw N pixel-art pictures for a picture-reveal logic puzzle. Each is a
+10×10 grid [7×7 easy / 14×14 hard / 20×20 for a tournament] using 3–6 colours with large blocky
+areas of solid colour and few single-pixel details. Output each as a text block: `title: <name>`,
+`difficulty: medium`, `palette: #rrggbb #rrggbb ...`, then one line of digits per row where each
+digit is the palette index (0 = first colour). Every row exactly the same length. Blank line between
+pictures; no two pictures the same."* Paste the result into Admin → Quilt and press Preview —
+anything the generator can't use is flagged there.

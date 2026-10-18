@@ -29,6 +29,9 @@ const ACTIVITY_ROWS = [
     { game: 'Connections', label: 'Daily Challenge Completed', gameType: 'connections' },
     { game: 'Connections', label: 'Classic Connections Completed', gameType: 'connections-classic' },
     { game: 'Connections', label: 'Tournament Completed', gameType: 'connections-tournament' },
+    { game: 'Quilt', label: 'Daily Challenge Completed', gameType: 'quilt' },
+    { game: 'Quilt', label: 'Classic Quilt Completed', gameType: 'quilt-classic' },
+    { game: 'Quilt', label: 'Patchwork Run Completed', gameType: 'quilt-tournament-bonus' },
 ];
 
 /**
