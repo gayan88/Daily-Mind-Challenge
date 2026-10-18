@@ -89,8 +89,8 @@ Phase 3 notes: rules also got `quilt` in both championship `gameId` lists and al
 ids (needed as soon as `quilt` is in `GAMES`, since championship/achievement code iterates it), so
 C7.1's rules half is done. The share rules now read the flags with `get(..., false)`, which also
 fixed a live bug: Sudoku/Word Search Daily + Classic "Share with Friends" +10 was always rejected
-(those docs never set `sharedWithFriends`). Home tile, HTP banner and og:image use stand-ins cut from
-the logo (`tile-quilt.png`, `tile-quilt-wide.png`) until O4–O6 arrive. Tips & Strategy + 20-question
+(those docs never set `sharedWithFriends`). Home tile and HTP banner use tiles cut from the owner's
+logo (`tile-quilt.png`, `tile-quilt-wide.png`; O4 done); og:image reuses the wide tile until O6. Tips & Strategy + 20-question
 FAQ are in `quilt.html` already (C7.2 content done; sitemap added too).
 
 ### Phase 4 — Classic
@@ -157,7 +157,7 @@ copy already counts `GAMES` dynamically ("all 5 games"); note for players: addin
 - [ ] **O3** Create **5–10 test pictures** for development (any size from 7×7 to 14×14, ≤ 8 colours, blocky shapes). PNG where 1 pixel = 1 cell (Piskel / Aseprite / Lospec), or ask an AI for text grids.
 
 ### Artwork (needed by Phase 3 / 7)
-- [ ] **O4** Home tile image `tile-quilt.png` (match the existing tiles' size/style).
+- [x] **O4** Home tile image `tile-quilt.png` — done: cut from the owner's Quilt logo (`tile-quilt.png` 400×400, `tile-quilt-wide.png` 500×384).
 - [ ] **O5** How to Play banner image.
 - [ ] **O6** **Purpose-made** Facebook/link-preview image, wide ~1.91:1 (e.g. 1200×630), simple enough to read as a thumbnail — not a crop of the logo/tile (see `adding-a-new-game.md` §7b).
 - [ ] **O7** 18 achievement badges: `quilt-expert`, `-master`, `-grandmaster`, and the Daily / Weekly / Monthly champion tiers (same set as the other games). The game ships with emoji fallbacks if these come later.

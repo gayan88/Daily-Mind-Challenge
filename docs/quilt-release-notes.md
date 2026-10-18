@@ -91,7 +91,7 @@ production serves without a composite index).
 
 ## Still open (owner backlog)
 
-- Artwork: real home tile (O4), How to Play banner (O5), 1.91:1 share image (O6, the page uses a
+- Artwork: How to Play banner (O5; currently uses the tile/logo), 1.91:1 share image (O6, the page uses a
   logo stand-in for now), 18 achievement badges (O7, emoji fallback until then).
 - Content: 30 Daily, 20 per Classic difficulty, 2 Patchwork Runs (O8–O11).
 - Trademark check for "Quilt" (O2).
