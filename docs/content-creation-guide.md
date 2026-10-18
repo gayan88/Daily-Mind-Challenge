@@ -273,7 +273,7 @@ same length; each side 5–20 cells.
 |---|---|---|
 | Daily | 10×10 (Medium) | Order in the input = play order, dated one per day from the start date. |
 | Classic | Easy 7×7 · Medium 10×10 · Hard 14×14 | Hard automatically gets knots (its single-cell pieces) and shape clues. |
-| Patchwork Run | one picture, e.g. 20×20 | Cut into 2×2, 3×2 or 3×3 tiles; sides must divide evenly, each tile 5–20 a side. |
+| Patchwork Run | one picture per run, e.g. 20×20 | Cut into 2×2, 3×2 or 3×3 tiles; sides must divide evenly, each tile 5–20 a side. **Bulk import runs** takes a whole file (one run per picture, named from `title:`). |
 
 - **"Duplicate"** = the same palette + pixel rows, whatever the title (Daily: anywhere in the pool;
   Classic: within the same difficulty). The whole batch is rejected if any picture fails.

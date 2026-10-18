@@ -761,3 +761,16 @@
     background-size: calc(100% / var(--qa-cols)) calc(100% / var(--qa-rows));
     background-position: -1px -1px;
 }
+
+/* Bulk run import block, below the single-run builder. */
+.qa-bulk-runs {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 0.5px solid var(--color-border);
+}
+
+.qa-bulk-title {
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: 4px;
+}

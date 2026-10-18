@@ -216,7 +216,8 @@ export async function listQuiltTournaments() {
     const snap = await getDocs(collection(db, TOURNAMENTS_COLLECTION));
     return snap.docs
         .map((d) => ({ id: d.id, ...d.data() }))
-        .sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
+        // newest first; runs created in one bulk import share a createdAt, so those keep file order
+        .sort((a, b) => ((b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0)) || ((a.importOrder ?? 0) - (b.importOrder ?? 0)));
 }
 
 /** Cuts a picture into tiles (quilt-generator.js#buildPatchwork) for preview; throws an admin-readable Error. */
@@ -246,6 +247,50 @@ export async function createQuiltTournament({ name, patchwork, completionBonus }
         createdAt: serverTimestamp(),
     });
     return ref.id;
+}
+
+/**
+ * Bulk version of createQuiltTournament(): `runs` is `[{ name, patchwork }]` (each already built by
+ * preparePatchwork()), all sharing `completionBonus` and starting `active` or not. All-or-nothing:
+ * a repeated picture in the input, or one already used by an existing run, rejects the whole batch
+ * before any write. Written in batches (one doc per run, well under Firestore's 500-write limit).
+ */
+export async function createQuiltTournaments(runs, { completionBonus, active }) {
+    if (runs.length === 0) throw new Error('No runs to create');
+    if (!(completionBonus >= 0)) throw new Error('Completion bonus must be 0 or more.');
+    const seen = new Set();
+    runs.forEach(({ name, patchwork }) => {
+        if (!name.trim()) throw new Error('Every run needs a name (its picture title).');
+        const sig = signature(patchwork);
+        if (seen.has(sig)) throw new Error(`${name}: this picture appears more than once in the input.`);
+        seen.add(sig);
+    });
+    const existing = new Set((await listQuiltTournaments()).map(signature));
+    const dup = runs.find(({ patchwork }) => existing.has(signature(patchwork)));
+    if (dup) throw new Error(`${dup.name}: a run with this picture already exists.`);
+
+    for (let i = 0; i < runs.length; i += BATCH_LIMIT - 1) {
+        const batch = writeBatch(db);
+        runs.slice(i, i + BATCH_LIMIT - 1).forEach(({ name, patchwork }, j) => {
+            batch.set(doc(collection(db, TOURNAMENTS_COLLECTION)), {
+                name: name.trim(),
+                title: patchwork.title,
+                palette: patchwork.palette,
+                pixels: patchwork.pixels,
+                width: patchwork.width,
+                height: patchwork.height,
+                cols: patchwork.cols,
+                rows: patchwork.rows,
+                tiles: patchwork.tiles.map((t) => ({ ...puzzleFields(t), tileX: t.tileX, tileY: t.tileY })),
+                completionBonus,
+                active,
+                importOrder: i + j, // same createdAt for a whole batch, so keep the file's order explicitly
+                createdAt: serverTimestamp(),
+            });
+        });
+        await batch.commit();
+    }
+    return { count: runs.length };
 }
 
 export async function setQuiltTournamentActive(id, active) {

@@ -3,7 +3,7 @@ import {
     DIFFICULTY_IDS, pictureFromFile, picturesFromText, puzzleToText, preparePuzzles,
     listDailyQuiltPuzzles, addDailyQuiltPuzzles, updateDailyQuiltPuzzle,
     listClassicQuiltPuzzles, addClassicQuiltPuzzles, updateClassicQuiltPuzzle,
-    listQuiltTournaments, preparePatchwork, createQuiltTournament, setQuiltTournamentActive, deleteQuiltTournament,
+    listQuiltTournaments, preparePatchwork, createQuiltTournament, createQuiltTournaments, setQuiltTournamentActive, deleteQuiltTournament,
 } from './quilt-admin.js';
 import { quiltPictureHtml } from '../games/quilt/quilt-summary-modal.js';
 import { DIFFICULTIES } from '../games/quilt/quilt-generator.js';
@@ -121,6 +121,39 @@ const ADMIN_HTML = `
                     <button class="btn primary" id="qa-run-create" type="button" disabled>Create Run</button>
                 </div>
                 <div id="qa-run-preview"></div>
+            </div>
+            <div class="tournament-form qa-bulk-runs">
+                <div class="qa-bulk-title">Bulk import runs</div>
+                <p class="config-form-desc">Upload a .txt with many pictures (blank line between them, e.g. <code>docs/quilt-content/test-patchwork-runs-100.txt</code>). One run is created per picture, named after its <code>title:</code>, all with the layout, bonus and status below. Tip: import as Inactive and activate a few at a time &mdash; every active run is listed to players.</p>
+                <div class="form-field">
+                    <label for="qa-bulk-file">Pictures file (.txt)</label>
+                    <input type="file" id="qa-bulk-file" accept=".txt,text/plain">
+                </div>
+                <div class="tournament-form-row">
+                    <div class="form-field">
+                        <label for="qa-bulk-layout">Tiles</label>
+                        <select id="qa-bulk-layout">
+                            <option value="2x2">2 &times; 2 (4 tiles)</option>
+                            <option value="3x2">3 wide &times; 2 tall (6 tiles)</option>
+                            <option value="3x3">3 &times; 3 (9 tiles)</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label for="qa-bulk-bonus">Completion bonus (each)</label>
+                        <input type="number" id="qa-bulk-bonus" value="100" min="0">
+                    </div>
+                    <div class="form-field">
+                        <label for="qa-bulk-active">Start as</label>
+                        <select id="qa-bulk-active">
+                            <option value="inactive">Inactive</option>
+                            <option value="active">Active</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mod-search-row">
+                    <button class="btn" id="qa-bulk-preview-btn" type="button">Preview Runs</button>
+                </div>
+                <div id="qa-bulk-preview"></div>
             </div>
         </div>
     </div>
@@ -442,6 +475,79 @@ function wireRunCreate() {
 }
 
 /**
+ * Bulk run import: one run per picture in an uploaded .txt, all with the same layout/bonus/status.
+ * Preview builds every run (buildPatchwork) and shows a card each; "Create N Runs" appears only
+ * when all of them cut cleanly.
+ */
+function wireRunBulk() {
+    const previewEl = $('qa-bulk-preview');
+    ['qa-bulk-file', 'qa-bulk-layout'].forEach((id) => $(id).addEventListener('change', () => { previewEl.innerHTML = ''; }));
+
+    $('qa-bulk-preview-btn').addEventListener('click', async () => {
+        const file = $('qa-bulk-file').files[0];
+        if (!file) { showToast('Choose a .txt file first'); return; }
+        const [cols, rows] = $('qa-bulk-layout').value.split('x').map(Number);
+        let pictures;
+        try {
+            pictures = picturesFromText(await file.text(), 'medium');
+        } catch (err) {
+            errorToast(err, "Couldn't read that file");
+            return;
+        }
+        if (pictures.length === 0) { showToast('No pictures found in that file'); return; }
+        previewEl.innerHTML = `<div class="loading-text">Building ${pictures.length} run${pictures.length === 1 ? '' : 's'}&hellip;</div>`;
+        await new Promise((r) => setTimeout(r, 30)); // let the loading text paint before the CPU work
+
+        const built = pictures.map((picture, i) => {
+            const name = picture.title || `Run ${i + 1}`;
+            try {
+                return { name, picture, patchwork: preparePatchwork({ name, picture, cols, rows }), error: null };
+            } catch (err) {
+                return { name, picture, patchwork: null, error: err.message };
+            }
+        });
+        const okCount = built.filter((b) => !b.error).length;
+        previewEl.innerHTML = `
+            <div class="qa-preview-summary">${okCount} of ${built.length} run${built.length === 1 ? '' : 's'} ready (${cols}&times;${rows} tiles each)${okCount < built.length ? ' &mdash; fix or remove the ones marked in red, then preview again' : ''}.</div>
+            <div class="qa-preview-grid">
+                ${built.map((b) => `
+                    <div class="qa-preview-card ${b.error ? 'qa-preview-bad' : ''}">
+                        ${safePictureHtml(b.picture, b.name)}
+                        <div class="qa-preview-title">${escapeHtml(b.name)}</div>
+                        ${b.error ? `<div class="qa-preview-error">${escapeHtml(b.error)}</div>` : `<div class="qa-preview-meta">${b.patchwork.width}&times;${b.patchwork.height} &middot; ${b.patchwork.tiles.length} tiles</div>`}
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        if (okCount !== built.length) return;
+
+        const active = $('qa-bulk-active').value === 'active';
+        const createBtn = document.createElement('button');
+        createBtn.className = 'btn primary';
+        createBtn.type = 'button';
+        createBtn.id = 'qa-bulk-create';
+        createBtn.textContent = `Create ${built.length} Run${built.length === 1 ? '' : 's'} (${active ? 'active' : 'inactive'})`;
+        previewEl.appendChild(createBtn);
+        createBtn.addEventListener('click', async () => {
+            createBtn.disabled = true;
+            try {
+                const result = await createQuiltTournaments(built.map(({ name, patchwork }) => ({ name, patchwork })), {
+                    completionBonus: Number($('qa-bulk-bonus').value),
+                    active: $('qa-bulk-active').value === 'active',
+                });
+                $('qa-bulk-file').value = '';
+                previewEl.innerHTML = '';
+                showToast(`Created ${result.count} Patchwork Run${result.count === 1 ? '' : 's'}`);
+                renderRunsTable();
+            } catch (err) {
+                createBtn.disabled = false;
+                errorToast(err, "Couldn't create -- check Firestore rules are deployed");
+            }
+        });
+    });
+}
+
+/**
  * Renders the whole Quilt admin section into `#quilt-admin-root`. Called once by admin-page.js's
  * init(), which afterwards renders the `quiltTournamentSettings` config form into
  * `#quilt-tournament-settings-form` (inside this section, like Sudoku/Word Search's own settings).
@@ -464,5 +570,6 @@ export async function initQuiltAdmin() {
         exportFn: () => $('qa-classic-table')._puzzles || [],
     });
     wireRunCreate();
+    wireRunBulk();
     await Promise.all([renderDailyTable(), renderClassicTable(), renderRunsTable()]);
 }
