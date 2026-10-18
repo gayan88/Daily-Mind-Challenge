@@ -50,6 +50,18 @@ export function trackCompleteRegistration() {
 }
 
 /**
+ * Custom event (not CompleteRegistration -- a guest session is a much lower-commitment action
+ * than a real account, and blending the two into one standard event would dilute the signal
+ * CompleteRegistration gives Meta to optimize ad delivery against) -- fired once, right after a
+ * new guest profile doc is created (src/js/pages/home.js's "Continue as Guest" handler). Same
+ * no-op-if-not-loaded guard as trackCompleteRegistration().
+ */
+export function trackGuestStarted() {
+    if (!window.fbq) return;
+    window.fbq('trackCustom', 'GuestStarted');
+}
+
+/**
  * Custom event (not one of Meta's standard event names, hence `trackCustom` rather than `track`)
  * -- fired after every successful `gameScores` write across all four games' Daily/Classic/
  * Tournament modes, so Meta has an actual engagement signal beyond PageView to optimize ads

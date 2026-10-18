@@ -24,7 +24,7 @@ import {
     BannedError,
 } from '../auth/user-profile.js';
 import { containsBlockedWord } from '../utils/profanity.js';
-import { trackCompleteRegistration } from '../utils/meta-pixel.js';
+import { trackCompleteRegistration, trackGuestStarted } from '../utils/meta-pixel.js';
 
 /* ---------- Sign-in modal ---------- */
 
@@ -114,6 +114,7 @@ function wireAuthForms() {
 
         const user = await signInAsGuest();
         await createGuestProfile(user.uid, name);
+        trackGuestStarted();
         goToApp();
     });
 
