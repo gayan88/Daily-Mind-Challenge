@@ -39,6 +39,10 @@ export const CONFIG_DEFAULTS = {
         maxErrors: 3,
         description: 'Global rules applied to every Sudoku Tournament: puzzle count (a guideline for admins creating one), seconds allowed per puzzle, and errors allowed per puzzle before it\'s failed. The completion bonus is set per tournament when it\'s created.',
     },
+    quiltTournamentSettings: {
+        timeLimitSeconds: 180,
+        description: 'Global rules applied to every Quilt Patchwork Run: seconds allowed per tile. Tile points (30 pass / 10 fail) and the +25 Perfect Patchwork bonus are fixed in code; the completion bonus is set per run when it\'s created.',
+    },
     wordsearchTournamentSettings: {
         puzzleCount: 10,
         timeLimitSeconds: 300,

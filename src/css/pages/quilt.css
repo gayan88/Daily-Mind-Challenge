@@ -836,6 +836,40 @@
     font-weight: 700;
 }
 
+/* Patchwork Run mosaic: the run's big picture, with later tiles covered and the current one
+   highlighted (quilt-page.js#mosaicHtml). */
+.quilt-mosaic {
+    position: relative;
+    width: min(200px, 60%);
+    margin: 0 auto 16px;
+}
+
+.quilt-mosaic .quilt-summary-picture {
+    width: 100%;
+    margin: 0;
+}
+
+.quilt-mosaic-tile {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid rgba(255, 255, 255, 0.9);
+    font-weight: 800;
+    font-size: 18px;
+    color: var(--color-primary);
+}
+
+.quilt-mosaic-locked {
+    background: var(--color-primary-tint);
+}
+
+.quilt-mosaic-current {
+    background: #FDF3C8;
+    color: var(--color-primary-dark);
+    box-shadow: inset 0 0 0 3px var(--color-primary);
+}
+
 /* ---------- How to Play: Quilt-specific mini visuals (shared .htp-* layout is in components.css) */
 .htp-mini-quilt {
     position: relative;

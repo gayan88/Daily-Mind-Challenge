@@ -249,6 +249,39 @@ service cloud.firestore {
             allow write: if isAdmin();
         }
 
+        // Admin-managed Patchwork Runs (one big picture cut into tiles + completionBonus); the
+        // per-tile time limit is global (config/quiltTournamentSettings).
+        match /quiltTournaments/{id} {
+            allow read: if true;
+            allow write: if isAdmin();
+        }
+
+        // One progress doc per player per run, id = {tournamentId}_{uid} -- same bounded,
+        // advance-by-at-most-one shape as sudokuTournamentAttempts (a failed tile never resets
+        // the run). Points are granted separately via the guarded gameScores create.
+        match /quiltTournamentAttempts/{attemptId} {
+            allow read: if true;
+            allow create: if isSignedIn()
+                && request.resource.data.uid == request.auth.uid
+                && attemptId == request.resource.data.tournamentId + '_' + request.auth.uid
+                && request.resource.data.currentPuzzleIndex == 0
+                && request.resource.data.puzzlesPassed == 0
+                && request.resource.data.puzzlesFailed == 0
+                && request.resource.data.completed == false
+                && request.resource.data.bonusAwarded == false;
+            allow update: if isSignedIn() && request.auth.uid == resource.data.uid
+                && request.resource.data.uid == resource.data.uid
+                && request.resource.data.tournamentId == resource.data.tournamentId
+                && (resource.data.completed == false || request.resource.data.completed == true)
+                && (request.resource.data.currentPuzzleIndex == resource.data.currentPuzzleIndex
+                    || request.resource.data.currentPuzzleIndex == resource.data.currentPuzzleIndex + 1)
+                && (request.resource.data.puzzlesPassed == resource.data.puzzlesPassed
+                    || request.resource.data.puzzlesPassed == resource.data.puzzlesPassed + 1)
+                && (request.resource.data.puzzlesFailed == resource.data.puzzlesFailed
+                    || request.resource.data.puzzlesFailed == resource.data.puzzlesFailed + 1);
+            allow delete: if isAdmin();
+        }
+
         // ---------- Connections (see src/js/games/connections/) ----------
         // Admin-managed Daily puzzles, keyed by the "YYYY-MM-DD" date they play on, with a
         // `_meta` doc ({ totalCount, firstDate, lastDate }) -- same scheme as wordleDailyWords.

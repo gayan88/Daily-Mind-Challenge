@@ -6,6 +6,27 @@ const ICON_SHARE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" s
 const ICON_CHEVRON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>`;
 const ICON_CHECK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
 
+function greyOf(hex) {
+    const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+    const v = Math.round(0.3 * r + 0.59 * g + 0.11 * b);
+    const mixed = Math.round(v * 0.6 + 200 * 0.4); // lifted towards light grey, like the engine's failed-tile look
+    return `rgb(${mixed}, ${mixed}, ${mixed})`;
+}
+
+/**
+ * A picture as a small grid of coloured cells (`.quilt-summary-picture`). Cells inside any of
+ * `greyRegions` (Patchwork Run tiles that timed out) are drawn in grey. Shared by the summary
+ * modal, the already-played Daily view and the Patchwork Run mosaic.
+ */
+export function quiltPictureHtml({ palette, pixels, greyRegions = [] }, label) {
+    const inGrey = (x, y) => greyRegions.some((r) => x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h);
+    const cells = pixels.map((row, y) => [...row].map((d, x) => {
+        const hex = palette[Number(d)] || '#ffffff';
+        return `<span style="background:${escapeHtml(inGrey(x, y) ? greyOf(hex) : hex)}"></span>`;
+    }).join('')).join('');
+    return `<div class="quilt-summary-picture" style="--qt-cols: ${pixels[0].length}; --qt-rows: ${pixels.length};" role="img" aria-label="${escapeHtml(label)}">${cells}</div>`;
+}
+
 /**
  * Post-round popup for every Quilt mode -- adapted from sudoku-summary-modal.js (same breakdown +
  * two independent share options; each game keeps its own copy of this modal by convention), plus
@@ -21,9 +42,11 @@ const ICON_CHECK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" s
  * @param {number} opts.totalPoints
  * @param {boolean} [opts.celebrate] - trophy + confetti header (only when there's no `picture`
  *   -- the picture is the celebration otherwise).
- * @param {{palette: string[], pixels: string[]}} [opts.picture] - solved picture, drawn as a small
- *   grid of coloured cells above the title.
- * @param {boolean} [opts.perfect] - shows a "Perfect Stitch" badge under the subtitle.
+ * @param {{palette: string[], pixels: string[], greyRegions?: {x,y,w,h}[]}} [opts.picture] - solved
+ *   picture, drawn as a small grid of coloured cells above the title (see quiltPictureHtml).
+ * @param {boolean} [opts.perfect] - shows a badge under the subtitle, reading `perfectLabel`.
+ * @param {string} [opts.perfectLabel] - badge text (default "Perfect Stitch"; Patchwork Run passes
+ *   "Perfect Patchwork").
  * @param {string} [opts.shareText] - if set, the two share options are shown (each also needs its
  *   own `onShareX` callback below to actually render): "Copy Result & Share with Community"
  *   (copies `shareText` to the clipboard and opens `communityUrl` in a new tab) and "Share with
@@ -49,6 +72,7 @@ export function showQuiltSummaryModal({
     celebrate = false,
     picture = null,
     perfect = false,
+    perfectLabel = 'Perfect Stitch',
     shareText = '',
     communityUrl = '',
     shareLink = window.location.href,
@@ -69,11 +93,7 @@ export function showQuiltSummaryModal({
             </div>
         `).join('');
 
-    const pictureHtml = picture ? `
-        <div class="quilt-summary-picture" style="--qt-cols: ${picture.pixels[0].length}; --qt-rows: ${picture.pixels.length};" role="img" aria-label="Your finished quilt">
-            ${picture.pixels.map((row) => [...row].map((d) => `<span style="background:${escapeHtml(picture.palette[Number(d)] || '#ffffff')}"></span>`).join('')).join('')}
-        </div>
-    ` : '';
+    const pictureHtml = picture ? quiltPictureHtml(picture, 'Your finished quilt') : '';
 
     const shareOptionsHtml = shareText ? `
         <div class="quilt-share-options">
@@ -120,7 +140,7 @@ export function showQuiltSummaryModal({
             ` : ''}
             <div class="quilt-summary-title">${escapeHtml(title)}</div>
             ${subtitle ? `<div class="quilt-summary-subtitle">${escapeHtml(subtitle)}</div>` : ''}
-            ${perfect ? '<span class="quilt-summary-perfect">Perfect Stitch \u{2728}</span>' : ''}
+            ${perfect ? `<span class="quilt-summary-perfect">${escapeHtml(perfectLabel)} \u{2728}</span>` : ''}
             <div class="quilt-summary-breakdown">
                 ${breakdownHtml}
                 <div class="quilt-summary-line quilt-summary-total">

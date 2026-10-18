@@ -164,3 +164,36 @@ export function puzzleWarnings({ width, height, rects, blockers = [] }) {
     if (rects.length < (width * height) / 14) warnings.push('very few rectangles -- the puzzle may be too easy');
     return warnings;
 }
+
+/**
+ * Patchwork Run builder: cuts one big picture into a `cols` × `rows` grid of tiles and generates a
+ * uniquely-solvable puzzle for each (Medium rules -- no knots or shape clues, tiles are timed).
+ * The picture's sides must divide evenly by `cols`/`rows`, and each tile must be 5–20 cells a
+ * side. Returns `{ title, palette, pixels, width, height, cols, rows, tiles }` where `tiles` is in
+ * reading order (left→right, top→bottom), each a full puzzle plus its `tileX`/`tileY` offset in
+ * the big picture. Throws an admin-readable Error naming the failing tile.
+ */
+export function buildPatchwork({ title = '', palette, pixels, cols = 2, rows = 2, seed = '' }) {
+    const problems = pictureProblems({ palette, pixels }, { minSize: 10, maxSize: 60 });
+    if (problems.length) throw new Error(problems.join('; '));
+    const width = pixels[0].length;
+    const height = pixels.length;
+    if (width % cols || height % rows) throw new Error(`a ${width}×${height} picture can't be cut into ${cols}×${rows} equal tiles`);
+    const tileW = width / cols;
+    const tileH = height / rows;
+    if (tileW < 5 || tileH < 5 || tileW > 20 || tileH > 20) throw new Error(`tiles would be ${tileW}×${tileH} (each side must be 5–20)`);
+
+    const tiles = [];
+    for (let ty = 0; ty < rows; ty++) {
+        for (let tx = 0; tx < cols; tx++) {
+            const tilePixels = pixels.slice(ty * tileH, (ty + 1) * tileH).map((row) => row.slice(tx * tileW, (tx + 1) * tileW));
+            try {
+                const puzzle = generatePuzzle({ title: `${title} ${tiles.length + 1}`, difficulty: 'medium', palette, pixels: tilePixels, seed: `${seed}|tile${tiles.length}` });
+                tiles.push({ ...puzzle, tileX: tx * tileW, tileY: ty * tileH });
+            } catch (err) {
+                throw new Error(`tile ${tiles.length + 1}: ${err.message}`);
+            }
+        }
+    }
+    return { title, palette: [...palette], pixels: [...pixels], width, height, cols, rows, tiles };
+}

@@ -1,6 +1,6 @@
 # Quilt — Development Plan & Backlogs
 
-> Status: **in development** — Phases 1–4 (puzzle core, engine, Daily, Classic) done 2026-10-18; all §2 decisions accepted
+> Status: **in development** — Phases 1–5 (puzzle core, engine, Daily, Classic, Patchwork Run) done 2026-10-18; all §2 decisions accepted
 > with the recommended defaults; content deferred until the build is done. Logo: `docs/Images/QUILT Logo.png`.
 > Follows `docs/adding-a-new-game.md` — that checklist is the source of truth for *every*
 > touchpoint; this doc orders the work and splits it between **Claude (implementation)** and
@@ -105,8 +105,14 @@ be reached by scrolling via the 16px margins. Found while testing: the site-wide
 covers ~45% of a phone screen (and any game board under it) until answered — not Quilt-specific.
 
 ### Phase 5 — Tournament "Patchwork Run"
-- [ ] **C5.1 (L)** `quilt-tournament-data.js`: list/start/continue, per-tile countdown, fail-banks-and-advances, completion bonus, attempt-progress docs, finalize + retry-on-write-failure.
-- [ ] **C5.2 (M)** Mosaic progress view (2×2 / 3×3 tiles, greyed failed tiles) + final big-picture reveal in the summary modal.
+- [x] **C5.1 (L)** `quilt-tournament-data.js`: list/start/continue, per-tile countdown, fail-banks-and-advances, completion bonus, attempt-progress docs, finalize + retry-on-write-failure.
+- [x] **C5.2 (M)** Mosaic progress view (2×2 / 3×3 tiles, greyed failed tiles) + final big-picture reveal in the summary modal.
+
+Phase 5 notes: `buildPatchwork()` (generator) cuts one big picture into cols×rows tiles (each 5–20
+a side) and makes each a Medium puzzle — the Phase 6 tournament builder just calls it. Per-tile time
+is `config/quiltTournamentSettings.timeLimitSeconds` (default 180, in `CONFIG_DEFAULTS`; admin form
+in Phase 6). Known limitation shared with Sudoku's tournament: leaving mid-tile and coming back
+restarts that tile with a fresh clock.
 
 ### Phase 6 — Admin
 - [ ] **C6.1 (L)** `quilt-admin.js` + admin section: Daily (grouped by year → month) and Classic (grouped by difficulty) tables using `admin-table-grouping.js` helpers from the first draft; add / edit / delete / export.

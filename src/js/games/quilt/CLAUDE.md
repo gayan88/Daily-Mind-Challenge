@@ -6,9 +6,8 @@ finished board is a pixel-art picture. Plan, decisions and backlogs: `docs/quilt
 
 **Status: Phases 1–3 — Daily mode is live in code** (`/quilt`, registered in `GAMES`, home tile,
 leaderboard option, profile labels, `checkPlayedTodayAll()` — so Perfect Day now needs all five
-Dailies — ad slots, rules, sitemap). Classic is live too (Phase 4); the Patchwork Run tab shows "coming
-soon" until Phase 5. No admin section yet (Phase 6), so puzzles can only be seeded directly in
-Firestore.
+Dailies — ad slots, rules, sitemap). Classic (Phase 4) and Patchwork Run (Phase 5) are live too. No admin
+section yet (Phase 6), so puzzles and runs can only be seeded directly in Firestore.
 
 ## Files
 
@@ -55,13 +54,25 @@ The solver, generator and picture modules are pure ES modules (no DOM, no Fireba
   their own `quilt-classic` gameScores `puzzleId`s), else any but the one just played.
   `recordClassicResult()` — unique `gameDate` token per round + real `scoreDate`, type
   `quilt-classic`, both share flags created `false`.
+- **`quilt-tournament-data.js`** — Patchwork Run: `quiltTournaments/{id}` (`{ name, active,
+  completionBonus, title, palette, pixels, width, height, cols, rows, tiles: [puzzle + tileX/tileY] }`,
+  built by `quilt-generator.js#buildPatchwork`), `quiltTournamentAttempts/{tid}_{uid}` (same fields
+  and rules shape as Sudoku's: `currentPuzzleIndex`/`puzzlesPassed`/`puzzlesFailed`/`puzzleResults
+  [{ passed, timeTakenSeconds, perfect }]`). Each tile banks 30 / 10 as `quilt-tournament` in the
+  same transaction that advances the attempt; a timed-out tile never resets the run. The retry-safe
+  completion doc `quilt-tournament-bonus` holds `completionBonus` + 25 Perfect Patchwork (all tiles
+  passed) and receives the share bonuses. Time per tile: `config/quiltTournamentSettings`.
 - **`quilt-summary-modal.js`** — own copy of the summary modal (convention) plus the solved picture
-  and a Perfect Stitch badge.
+  and a Perfect Stitch badge (`perfectLabel` for "Perfect Patchwork"). Exports `quiltPictureHtml()`
+  (picture as a cell grid, optional `greyRegions` for timed-out tiles), reused by the page.
 - **`quilt-page.js`** — page glue (`trySession()`, sign-in prompt for anonymous visitors, admins
   blocked, single `activeRound` destroyed on tab switch, `?tab=classic|tournament`). Already-played
   Daily shows the revealed picture. Daily share text is stats-only (never the picture); Classic share
   text includes the picture as an emoji mosaic (`pictureToEmojiRows`). Classic flow: picker (size +
-  "up to N pts") → round → summary → "Next {size} Quilt" / "Choose another size".
+  "up to N pts") → round → summary → "Next {size} Quilt" / "Choose another size". Patchwork Run:
+  run list → per tile a mosaic (solved tiles in colour, timed-out grey, current highlighted, later
+  covered) + timed round → inline result + "Next Tile" → final summary with the whole picture; share
+  text has the picture mosaic plus a ✅/❌ per tile.
 
 ## Testing locally
 
