@@ -100,6 +100,11 @@ a real gap: a change to shared code (e.g. `rank-service.js`, `cookie-consent.js`
 developer remembering which scenarios it could affect and re-checking them manually, rather than
 an automated suite catching a regression.
 
+The Quilt release (2026-10-18) was the exception: before handing over the deploy, every Quilt mode
+plus a regression smoke pass over all five games was run end to end against the emulators with
+scripted headless Chrome — results in `docs/quilt-release-notes.md`. Those scripts lived in a
+scratch folder, so they aren't re-runnable from the repo yet.
+
 ## 7. Defect Tracking
 
 No issue tracker (e.g. GitHub Issues) is actively used for this project as of this writing. Defects

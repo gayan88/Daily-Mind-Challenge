@@ -1,6 +1,6 @@
 # Quilt — Development Plan & Backlogs
 
-> Status: **in development** — Phases 1–7 done 2026-10-18 (only owner artwork/content and the Phase 8 release check remain); all §2 decisions accepted
+> Status: **in development** — **all 8 build phases done** 2026-10-18 — ready to deploy (see `docs/quilt-release-notes.md`); owner artwork and content remain; all §2 decisions accepted
 > with the recommended defaults; content deferred until the build is done. Logo: `docs/Images/QUILT Logo.png`.
 > Follows `docs/adding-a-new-game.md` — that checklist is the source of truth for *every*
 > touchpoint; this doc orders the work and splits it between **Claude (implementation)** and
@@ -144,8 +144,8 @@ copy already counts `GAMES` dynamically ("all 5 games"); note for players: addin
 `trackGameCompleted` fires for quilt / quilt-classic / quilt-tournament.
 
 ### Phase 8 — Test & release support
-- [ ] **C8.1 (M)** Run through `test-plan-and-test-cases.md`-style cases for every mode locally (emulators), incl. leaderboard/profile/home-badge checks.
-- [ ] **C8.2 (S)** Prepare the deploy command and release notes; Owner runs the deploy.
+- [x] **C8.1 (M)** Run through `test-plan-and-test-cases.md`-style cases for every mode locally (emulators), incl. leaderboard/profile/home-badge checks.
+- [x] **C8.2 (S)** Prepare the deploy command and release notes; Owner runs the deploy.
 
 ---
 

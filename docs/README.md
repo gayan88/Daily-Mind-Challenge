@@ -25,6 +25,7 @@ in.
 |---|---|
 | [adding-a-new-game.md](adding-a-new-game.md) | Checklist for adding a 5th game, built from the real Connections experience |
 | [quilt-development-plan.md](quilt-development-plan.md) | Plan and split backlogs (Claude / owner) for Quilt, the 5th game |
+| [quilt-release-notes.md](quilt-release-notes.md) | Quilt release notes, test results, deploy and rollback steps |
 | [content-creation-guide.md](content-creation-guide.md) | Exact file formats for AI-assisted puzzle content generation, per game/mode |
 | [progression-gamification-roadmap.md](progression-gamification-roadmap.md) | The phased plan behind Points/XP/Rank/Achievements/Streaks/Championships |
 | [data-flow.md](data-flow.md) | Sequence-level reference for session bootstrap, auth, and scoring flows |

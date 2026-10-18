@@ -54,7 +54,7 @@ Hosting-only changes (HTML/CSS/JS/images) need just `--only hosting`. Any change
 
 ## Static root files
 
-`src/ads.txt` (AdSense publisher line), `src/robots.txt` (allows all, disallows the session-gated `/profile`, `/settings`, `/admin`, points at the sitemap), `src/sitemap.xml` (the 10 public pages -- add new public pages here), and `src/404.html` (Firebase Hosting serves it automatically for any unmatched path; no rewrite needed) are served from the site root because `public` is `src`.
+`src/ads.txt` (AdSense publisher line), `src/robots.txt` (allows all, disallows the session-gated `/profile`, `/settings`, `/admin`, points at the sitemap), `src/sitemap.xml` (the 11 public pages -- add new public pages here), and `src/404.html` (Firebase Hosting serves it automatically for any unmatched path; no rewrite needed) are served from the site root because `public` is `src`.
 
 ## Search engine verification files
 
