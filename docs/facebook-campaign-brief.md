@@ -207,7 +207,8 @@ No app-install step — every destination below is the live site itself, playabl
 
 ## 8b. Tracking and measurement
 
-- **Meta Pixel is live** on `dailymindchallenge.com` (ID `1627198078795313`). It records page views and enables retargeting and conversion measurement for Meta ads.
+- **Meta Pixel is live** on `dailymindchallenge.com` (ID `1883519629480679`). It records page views and enables retargeting and conversion measurement for Meta ads.
+- Beyond page views, it also tracks `CompleteRegistration` (a new account signs up), `GuestStarted` (a visitor continues as guest), and `GameCompleted` (any Daily/Classic/Tournament puzzle is finished, tagged by game) — real engagement signals for Meta to optimize ad delivery against, not just traffic.
 - It loads **only for visitors who accept cookies**. Visitors who decline are not tracked by the pixel, so retargeting audiences and reported conversions will be smaller than total site traffic. Plan budgets and expectations accordingly.
 - Disclosed in the site's privacy policy and cookie notice (both updated 2026-10-03).
 
