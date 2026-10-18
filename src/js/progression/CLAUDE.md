@@ -190,7 +190,7 @@ read-only/derived-only follow-up to Phase 3, picked back up after being deferred
   `CUSTOM_IMAGES` (id -> `/assets/images/achievements/{id}.png`) attaches real illustrated badge
   art to specific achievements via a final `.map()` pass over `ACHIEVEMENTS`, decoupled from the
   definitions themselves so adding more art later never means hand-editing an achievement's own
-  entry. Now covers all 67 achievements (per-game Level and Championship tiers for all three games, all
+  entry. Covers the per-game Level and Championship tiers for every game in `GAMES` (Quilt's 18 currently fall back to the category emoji until its badge art exists), all
   5 streak milestones, and all 8 global ones) -- a future achievement without an entry here falls back to its category's plain emoji icon
   (`profile.js`'s `ACHIEVEMENT_CATEGORY_ICON`). All 67 images live in
   `src/assets/images/achievements/` (moved there from a flat `src/assets/images/` alongside the

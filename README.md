@@ -1,6 +1,6 @@
 # Daily Mind Challenge
 
-A daily puzzle games site — Wordle, Sudoku, and Word Search — with guest/registered login, points, a daily leaderboard, and an admin panel. Wordle has three modes: Daily Challenge, Tournaments, and Challenge a Friend (shareable-link challenges).
+A daily puzzle games site — Wordle, Sudoku, Word Search, Connections, and Quilt — with guest/registered login, points, a daily leaderboard, and an admin panel. Wordle has three modes: Daily Challenge, Tournaments, and Challenge a Friend (shareable-link challenges).
 
 Plain HTML/CSS/JS, no build tooling. Firebase (Auth + Firestore) for the backend.
 

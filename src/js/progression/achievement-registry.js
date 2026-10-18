@@ -18,10 +18,10 @@ import { GAMES } from './game-registry.js';
  *   {
  *     gameProgress: { [gameId]: { level, lifetimePoints, ... } }, // progression-service.js#getGameProgressByGame()
  *     totalPoints: number,           // combined lifetime Points across every game (+ loginPoints for registered players)
- *     totalGamesPlayed: number,      // sum of gameScores doc counts across every gameType, all 3 games
+ *     totalGamesPlayed: number,      // sum of gameScores doc counts across every gameType, every game
  *     currentStreak: number,         // registeredUsers.currentStreak
- *     hasPerfectDay: boolean,        // true once registeredUsers.lastPerfectDayDate has ever been set (completed all 3, any outcome)
- *     hasFlawlessDay: boolean,       // true once registeredUsers.lastFlawlessDayDate has ever been set (completed AND won all 3)
+ *     hasPerfectDay: boolean,        // true once registeredUsers.lastPerfectDayDate has ever been set (completed every Daily, any outcome)
+ *     hasFlawlessDay: boolean,       // true once registeredUsers.lastFlawlessDayDate has ever been set (completed AND won every Daily)
  *     perfectDayCount: number,       // registeredUsers.perfectDayCount -- lifetime count of distinct perfect (all-3-completed) days
  *     championshipTallies: { [gameId]: { day, week, month } }, // championship-service.js#getChampionshipTallies()
  *   }
@@ -176,7 +176,7 @@ const CUSTOM_IMAGES = {
     'mind-athlete': '/assets/images/achievements/mind-athlete.png',
 };
 
-// "All 3 games at once" level tiers -- a lower per-game bar than LEVEL_TIERS above, since it
+// "Every game at once" level tiers -- a lower per-game bar than LEVEL_TIERS above, since it
 // requires every game simultaneously. Same raw-0-indexed / +1-display convention.
 const ALL_GAMES_TIERS = [
     { id: 'all-rounder', label: 'All-Rounder', rawLevel: 1 },
@@ -260,7 +260,7 @@ export const ACHIEVEMENTS = [
         category: 'global',
         label: 'Perfect Day',
         description: 'Complete every Daily Challenge without making an error.',
-        // Stricter than Daily Mind Champion above: also requires having *won* all 3, not just
+        // Stricter than Daily Mind Champion above: also requires having *won* every Daily, not just
         // completed them (Wordle can record a score on a loss; Sudoku/Word Search Daily have no
         // loss condition at all, so this only ever meaningfully gates on Wordle -- see
         // xp-service.js#awardDailyCompletionXp()'s own doc comment for the full reasoning).
@@ -276,8 +276,8 @@ export const ACHIEVEMENTS = [
         target: TRIPLE_THREAT_DAYS,
     },
 
-    // family: 'all-games-level' -- these three all share `target` (3, always -- "how many of the
-    // 3 games meet the threshold"), so `familyOrder` (the actual rawLevel each tier needs) is what
+    // family: 'all-games-level' -- these three all share `target` (the number of games -- "how many of the
+    // games meet the threshold"), so `familyOrder` (the actual rawLevel each tier needs) is what
     // determines which one is "next" within the family, not `target` itself.
     ...ALL_GAMES_TIERS.map(({ id, label, rawLevel }) => ({
         id,

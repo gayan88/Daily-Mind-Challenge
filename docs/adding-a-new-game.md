@@ -2,6 +2,20 @@
 
 > Connections (the fourth game) followed this checklist end to end -- see `src/js/games/connections/CLAUDE.md` for a worked example, including the extra touchpoints it surfaced: achievement/mission copy that said "all 3", the `.game-grid` layout rule, and `firestore.rules`' championship `gameId` lists.
 
+> Quilt (the fifth game) followed it too -- see `docs/quilt-development-plan.md` (its per-phase
+> notes) and `src/js/games/quilt/CLAUDE.md`. Touchpoints it surfaced beyond this list:
+> - `firestore.rules` `championshipWinTallies` / `periodResults` `gameId` lists must include the new
+>   game *as soon as it's in `GAMES`* (championship finalization iterates `GAMES`), not later.
+> - Create **both** share flags (`sharedToFacebook: false`, `sharedWithFriends: false`) on every new
+>   scored doc. (The rules now read them with `get(..., false)`, after it turned out Sudoku/Word
+>   Search Daily + Classic docs never set `sharedWithFriends`, silently blocking that +10.)
+> - Site-wide copy that *lists* the games (meta descriptions, About, Terms, privacy policy, the
+>   footer share text in `app.js`, README) -- grep for the previous game list.
+> - Adding a game makes every "all games" / "every Daily" achievement (All-Rounder, Mind Master,
+>   Perfect Day, Daily Mind Champion, Triple Threat) harder for existing players -- worth telling them.
+> - `admin.html` needs both the game's admin section *and* its ad-slot subsection; a tournament
+>   settings form goes in `CONFIG_FORMS` + `gameSectionConfigIds` and is rendered into the game's section.
+
 A checklist of everything that needs to be built or updated to add a fourth game, based on how
 Wordle, Sudoku, and Word Search are each actually wired into the app.
 

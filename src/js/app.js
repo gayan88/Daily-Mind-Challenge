@@ -81,7 +81,7 @@ function wireUserDropdown() {
     });
 }
 
-const FOOTER_SHARE_TEXT = '🧠 Daily Mind Challenge\n\nPlay daily Wordle, Sudoku, and Word Search puzzles, earn points, and climb the leaderboard!\n\nJoin me:\nhttps://dailymindchallenge.com';
+const FOOTER_SHARE_TEXT = '🧠 Daily Mind Challenge\n\nPlay daily Wordle, Sudoku, Word Search, Connections, and Quilt puzzles, earn points, and climb the leaderboard!\n\nJoin me:\nhttps://dailymindchallenge.com';
 
 function wireFooterShare() {
     const link = document.getElementById('footer-share-fb');

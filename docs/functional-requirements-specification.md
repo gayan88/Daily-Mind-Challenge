@@ -3,8 +3,8 @@
 
 | | |
 |---|---|
-| **Document status** | Reflects the system as implemented, as of 2026-10-17. Supersedes the 2026-09-20 FRS baseline — adds Connections (the fourth game), the retuned XP/Rank curve, the Meta Pixel integration, the cookie-consent reliability fixes, and the Google/Bing Search Console setup. |
-| **Product** | Daily Mind Challenge — a free, browser-based daily puzzle site (Wordle, Sudoku, Word Search, Connections) |
+| **Document status** | Reflects the system as implemented, as of 2026-10-17. Supersedes the 2026-09-20 FRS baseline — adds Connections (the fourth game) and Quilt (the fifth, 2026-10-18), the retuned XP/Rank curve, the Meta Pixel integration, the cookie-consent reliability fixes, and the Google/Bing Search Console setup. |
+| **Product** | Daily Mind Challenge — a free, browser-based daily puzzle site (Wordle, Sudoku, Word Search, Connections, Quilt) |
 | **Live domain** | `dailymindchallenge.com` |
 | **Related docs** | `docs/solution-architecture-document.md` (formerly architecture.md), `docs/database-design-document.md`, `docs/api-documentation.md`, `docs/technical-design-document.md`, `docs/data-flow.md`, `docs/deployment-and-release-document.md`, and the `CLAUDE.md` file colocated with almost every source directory |
 
@@ -39,7 +39,7 @@ panel used to operate it, and the third-party integrations that affect user-visi
 | Registered user | A player with a username + password (Firebase Email/Password Auth under a synthetic or real email) |
 | Admin | A registered user with `isAdmin: true` on their profile doc |
 | Daily Challenge | The mode common to all four games: one puzzle per day, identical for every player, scored once |
-| Classic | Unlimited-replay mode (Sudoku, Word Search, Connections) at a chosen difficulty |
+| Classic | Unlimited-replay mode (Sudoku, Word Search, Connections, Quilt) at a chosen difficulty |
 | Tournament | A timed, multi-puzzle/word run with a completion bonus (all four games) |
 | `gameScores` | The single Firestore collection holding every scored result, across every game/mode |
 | Points | A per-game, per-player currency earned by playing; drives the leaderboard and per-game Level |
@@ -162,6 +162,23 @@ without them, by design — there is no server-rendered fallback.
 | FR-5.8 | The system shall award Tournament points only once a full run is completed without failing, as a single lump sum (30 + 15 × puzzle count + an admin-set completion bonus). |
 | FR-5.9 | The system shall show a live stats bar (mistakes used / 4, elapsed/remaining time); the Daily/Classic stopwatch shall not begin counting until the player's first tile selection. |
 | FR-5.10 | After any Connections round ends, the system shall offer the same two independent, stackable share bonuses described in FR-2.11. |
+
+### 3.5a Quilt
+
+Numbered 3.5a so existing requirement ids don't shift. Plan and decisions: `docs/quilt-development-plan.md`.
+
+| ID | Requirement |
+|---|---|
+| FR-5a.1 | The system shall present a Shikaku-style grid of numbers that the player divides into rectangles by dragging corner to corner (mouse, touch or pen); each rectangle must contain exactly one number equal to its area, rectangles may not overlap, and every cell (except Hard-mode knots) must be covered. Tapping a rectangle removes it; Undo and Clear are available. |
+| FR-5a.2 | The system shall outline in red, immediately, any rectangle that breaks a rule (no number, several numbers, wrong area, wrong shape). |
+| FR-5a.3 | The system shall keep placed rectangles in neutral colours during play and reveal the hidden pixel-art picture (each rectangle in its real colour) only when the board is solved, so colour never reveals a wrong rectangle. |
+| FR-5a.4 | Every stored puzzle shall have exactly one solution, proven by the solver when the admin adds it. |
+| FR-5a.5 | **Daily Challenge**: one shared picture per calendar day, one scored solve per day, no loss condition. Points: 10 + speed bonus (≤3 min 10, ≤5 min 8, ≤10 min 6, else 5) + 5 for a Perfect Stitch (no undo and no removed rectangle). The Daily share text shall show stats only, never the picture. |
+| FR-5a.6 | **Classic**: Easy 7×7 / Medium 10×10 / Hard 14×14, unlimited replays, pictures the player hasn't solved served first. Points: the Daily formula × 0.8 / 1.0 / 1.3. Hard puzzles have knots (cells no rectangle may cover) and shape clues (square / single row-or-column). |
+| FR-5a.7 | **Patchwork Run** (Tournament): an admin-built run of one picture cut into 4, 6 or 9 tiles, each solved under a global per-tile time limit. A tile that times out banks 10 points (30 if solved) and the run continues; progress is shown as a mosaic. Completing every tile awards the run's completion bonus, plus 25 for a Perfect Patchwork (every tile solved). |
+| FR-5a.8 | The stopwatch (Daily/Classic) shall start on the first touch of the board; the Tournament countdown starts on mount. On mount the round scrolls fully into view, since the board blocks touch scrolling. |
+| FR-5a.9 | After any Quilt round the system shall offer the same two independent share bonuses as FR-2.11; Classic and Patchwork Run share text include the picture as an emoji mosaic. |
+| FR-5a.10 | Admins shall add Quilt content as pictures (PNG at 1 pixel per cell, or text), preview every generated puzzle with errors and warnings before saving, and build Patchwork Runs from one picture with a tile-cut preview. |
 
 ### 3.6 Points, Scoring, and Anti-Duplication
 

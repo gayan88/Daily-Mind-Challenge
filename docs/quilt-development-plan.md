@@ -1,6 +1,6 @@
 # Quilt — Development Plan & Backlogs
 
-> Status: **in development** — Phases 1–6 (puzzle core, engine, Daily, Classic, Patchwork Run, Admin) done 2026-10-18; all §2 decisions accepted
+> Status: **in development** — Phases 1–7 done 2026-10-18 (only owner artwork/content and the Phase 8 release check remain); all §2 decisions accepted
 > with the recommended defaults; content deferred until the build is done. Logo: `docs/Images/QUILT Logo.png`.
 > Follows `docs/adding-a-new-game.md` — that checklist is the source of truth for *every*
 > touchpoint; this doc orders the work and splits it between **Claude (implementation)** and
@@ -128,11 +128,20 @@ regenerates; Download exports the text format. Patchwork Run builder previews th
 rows. `docs/content-creation-guide.md` has the Quilt format + an AI prompt (C7.4's content-guide part).
 
 ### Phase 7 — Progression, SEO, docs
-- [ ] **C7.1 (S)** Achievement ids in `firestore.rules` `playerAchievements` allow-list (definitions auto-generate from `GAMES`); wire `CUSTOM_IMAGES` once badge art arrives.
-- [ ] **C7.2 (M)** SEO page content: Tips & Strategy + ~20-question FAQ, `sitemap.xml`, og/twitter tags wired to the supplied share image.
-- [ ] **C7.3 (S)** Review "all N games" copy and All-Rounder/Mind Master tiers now that there are 5 games.
-- [ ] **C7.4 (M)** Docs: `src/js/games/quilt/CLAUDE.md`, every CLAUDE.md that lists the games, `content-creation-guide.md` section (PNG + text-grid formats, AI prompts for pixel art).
-- [ ] **C7.5 (S)** Meta Pixel `GameCompleted` event for Quilt (same as existing games).
+- [x] **C7.1 (S)** Achievement ids in `firestore.rules` `playerAchievements` allow-list (definitions auto-generate from `GAMES`); wire `CUSTOM_IMAGES` once badge art arrives.
+- [x] **C7.2 (M)** SEO page content: Tips & Strategy + ~20-question FAQ, `sitemap.xml`, og/twitter tags wired to the supplied share image.
+- [x] **C7.3 (S)** Review "all N games" copy and All-Rounder/Mind Master tiers now that there are 5 games.
+- [x] **C7.4 (M)** Docs: `src/js/games/quilt/CLAUDE.md`, every CLAUDE.md that lists the games, `content-creation-guide.md` section (PNG + text-grid formats, AI prompts for pixel art).
+- [x] **C7.5 (S)** Meta Pixel `GameCompleted` event for Quilt (same as existing games).
+
+Phase 7 notes: achievement ids in the rules match what `achievement-registry.js` generates from
+`GAMES`; the 18 Quilt badges use the category emoji until art arrives (O7 → add to `CUSTOM_IMAGES`).
+og/twitter tags point at the stand-in `tile-quilt-wide.png` until O6. Every page/README/footer-share
+text that listed the games now lists all five (several had still listed only three). Achievement
+copy already counts `GAMES` dynamically ("all 5 games"); note for players: adding Quilt makes the
+"every game" / "every Daily" achievements harder for anyone who hasn't earned them yet. FRS got a
+§3.5a Quilt section; `adding-a-new-game.md` got the extra touchpoints Quilt surfaced.
+`trackGameCompleted` fires for quilt / quilt-classic / quilt-tournament.
 
 ### Phase 8 — Test & release support
 - [ ] **C8.1 (M)** Run through `test-plan-and-test-cases.md`-style cases for every mode locally (emulators), incl. leaderboard/profile/home-badge checks.

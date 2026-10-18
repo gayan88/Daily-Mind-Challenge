@@ -6,8 +6,8 @@ finished board is a pixel-art picture. Plan, decisions and backlogs: `docs/quilt
 
 **Status: Phases 1–3 — Daily mode is live in code** (`/quilt`, registered in `GAMES`, home tile,
 leaderboard option, profile labels, `checkPlayedTodayAll()` — so Perfect Day now needs all five
-Dailies — ad slots, rules, sitemap). Classic (Phase 4) and Patchwork Run (Phase 5) are live too. No admin
-section yet (Phase 6), so puzzles and runs can only be seeded directly in Firestore.
+Dailies — ad slots, rules, sitemap). Classic (Phase 4) and Patchwork Run (Phase 5) are live too. Content is
+managed in Admin → Quilt (`src/js/admin/quilt-admin*.js`, Phase 6).
 
 ## Files
 
@@ -77,9 +77,9 @@ The solver, generator and picture modules are pure ES modules (no DOM, no Fireba
 ## Testing locally
 
 Same as Connections: `PATH="/opt/homebrew/opt/openjdk/bin:$PATH" firebase emulators:start --only
-firestore,auth,hosting --project playdailymindchallenge`, site at http://127.0.0.1:5002/quilt. Until
-the admin section exists, seed `quiltDailyPuzzles/_meta` + today's doc through the emulator's REST
-API (Bearer `owner`) with a puzzle from `generatePuzzle()`.
+firestore,auth,hosting --project playdailymindchallenge`, site at http://127.0.0.1:5002/quilt. Seed
+content through Admin → Quilt (make an emulator account admin by PATCHing its `registeredUsers` doc
+via the emulator REST API with `Authorization: Bearer owner`).
 
 ## Data shape
 
