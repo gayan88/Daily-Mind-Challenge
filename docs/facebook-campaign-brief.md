@@ -227,8 +227,10 @@ are genuine open decisions, not omissions — resolve them on the kickoff call:
 
 ---
 
-*Last refreshed 2026-10-03 to add the Meta Pixel tracking note (Section 8b). Earlier: 2026-09-25 added the fourth game, Connections (modes, assets, updated tagline,
+*Last refreshed 2026-10-18 to add the Pixel's conversion events (CompleteRegistration/GuestStarted/
+GameCompleted, Section 8b) and update the Pixel ID. Earlier: 2026-10-03 added the Meta Pixel
+tracking note; 2026-09-25 added the fourth game, Connections (modes, assets, updated tagline,
 badge/leaderboard counts, and its own landing URL) -- see Section 2's "Connections" subsection.
-`docs/Daily-Mind-Challenge-Campaign-Brief.pdf` is an older export of this brief and predates both
-this refresh and the 2026-09-20 one (progression/achievements, the Wordle retry rule, and the
-public leaderboard) -- regenerate it from this file if it is still being shared with the agency.*
+This markdown file is the maintained source of truth -- a print-ready PDF export for the agency
+(generated via headless Chrome so every image renders inline, see `docs/changelog-2026-08.md`)
+can be regenerated from it on request rather than kept as a standing file that goes stale.*
