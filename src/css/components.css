@@ -770,6 +770,22 @@
     }
 }
 
+/* Desktop: three per row (6 games = two even rows). A lone tile on a last row sits in the middle
+   column instead of spanning, so it stays the same size as the rest. */
+@media (min-width: 1024px) {
+    .game-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .game-grid > :nth-child(odd):last-child {
+        grid-column: auto;
+    }
+
+    .game-grid > :nth-child(3n + 1):last-child {
+        grid-column: 2;
+    }
+}
+
 .game-tile {
     background: white;
     border: 0.5px solid var(--color-border);

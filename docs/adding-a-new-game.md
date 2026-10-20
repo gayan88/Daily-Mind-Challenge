@@ -111,7 +111,9 @@ Adding a game means updating each of these separately, not registering it once s
 ## 5. Home page
 
 - A new game tile in `src/html/index.html`, plus a new logo/tile image asset
-  (`src/assets/images/tile-<game>.png`).
+  (`src/assets/images/tile-<game>.png`) **and** a home-grid tile `home-tile-<game>.png`: 400×320 on
+  white, the logo trimmed and scaled to the same visual area as the other six (see
+  `src/assets/CLAUDE.md`), so the grid (3 per row on desktop since 2026-10-21) stays even.
 - `checkPlayedTodayAll()` in `src/js/utils/points.js` is **hardcoded to check exactly
   `{wordle, sudoku, wordsearch}`** for the "completed today" tile badges — this needs the new game
   added, or its badge never lights up.
