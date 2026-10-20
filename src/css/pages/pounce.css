@@ -57,7 +57,10 @@
     --pn-ginger: var(--color-pounce);
     --pn-cream: var(--color-pounce-cream);
     display: grid;
-    grid-template-columns: repeat(var(--pn-n), 1fr);
+    /* minmax(0, 1fr), not 1fr: a plain 1fr track may grow to fit its content, and Safari does --
+       placing a ✕ or a cat made that row taller. Fixed, equal tracks keep every cell square. */
+    grid-template-columns: repeat(var(--pn-n), minmax(0, 1fr));
+    grid-template-rows: repeat(var(--pn-n), minmax(0, 1fr));
     width: 100%;
     max-width: 560px;
     aspect-ratio: 1;

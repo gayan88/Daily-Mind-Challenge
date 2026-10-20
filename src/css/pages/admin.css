@@ -780,8 +780,8 @@
    region colours, the solution's cats as ginger dots, dogs as dark squares, pawprint numbers. */
 .pa-thumb {
     display: grid;
-    grid-template-columns: repeat(var(--pa-n), 1fr);
-    grid-template-rows: repeat(var(--pa-n), 1fr);
+    grid-template-columns: repeat(var(--pa-n), minmax(0, 1fr));
+    grid-template-rows: repeat(var(--pa-n), minmax(0, 1fr));
     width: 120px;
     aspect-ratio: 1;
     margin: 0 auto;
