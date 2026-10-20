@@ -87,12 +87,12 @@ Environment Configuration section.
 | TC-21 | Quilt Perfect Stitch | Solve once with no undo/removal, once after one undo | +5 Perfect Stitch only on the first; the score doc's `perfect` matches |
 | TC-22 | Quilt Daily share text never contains the picture | Solve the Daily, use "Copy Result & Share with Community" | Clipboard has stats only (no emoji squares); Classic/Patchwork Run share text does include the emoji mosaic |
 | TC-23 | Quilt admin import is all-or-nothing | Preview a batch where one picture is invalid or already in the pool | No Add button / batch rejected, nothing written, the bad picture named with its reason |
-| TC-24 | Patchwork Run bulk import | Upload `docs/quilt-content/test-patchwork-runs-100.txt`, 2×2, Inactive, Create; activate one | 100 inactive runs in file order; players see only the activated run; re-importing the same file is rejected |
+| TC-24 | Patchwork Run bulk import | Upload `docs/quilt-content/test-patchwork-runs-100.txt` (removed 2026-10-20; recover with `git checkout deaffe8 -- docs/quilt-content`), 2×2, Inactive, Create; activate one | 100 inactive runs in file order; players see only the activated run; re-importing the same file is rejected |
 
 ## 5. Test Data
 
 No synthetic/fixture data files are maintained in the repository, except Quilt's:
-`docs/quilt-content/` holds generated test pictures (500 Daily, 300 Classic, 100 Patchwork Run), each
+`docs/quilt-content/` (removed from the repo 2026-10-20; recover with `git checkout deaffe8 -- docs/quilt-content`) held generated test pictures (500 Daily, 300 Classic, 100 Patchwork Run), each
 verified to make a uniquely solvable puzzle — see its README. Test accounts and content are
 created ad hoc per test session against the emulator (a registered test user, manually promoted to
 `isAdmin: true` via a direct emulator REST write, plus admin-panel-seeded puzzle content for each

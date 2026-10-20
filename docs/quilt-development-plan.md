@@ -1,7 +1,7 @@
 # Quilt — Development Plan & Backlogs
 
 > Status: **live** — all 8 build phases done and deployed 2026-10-18 (see `docs/quilt-release-notes.md`); badge art and bulk run import added 2026-10-19; content live 2026-10-20 (Daily from 1 Nov 2026); the share image and indexing remain; all §2 decisions accepted
-> with the recommended defaults; content deferred until the build is done. Logo: `docs/Images/QUILT Logo.png`.
+> with the recommended defaults; content deferred until the build is done. Logo: `docs/Images/QUILT Logo.png` (removed 2026-10-20; recover with `git checkout 63db3be^ -- "docs/Images/QUILT Logo.png"`).
 > Follows `docs/adding-a-new-game.md` — that checklist is the source of truth for *every*
 > touchpoint; this doc orders the work and splits it between **Claude (implementation)** and
 > **Owner (you)**.

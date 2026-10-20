@@ -8,7 +8,7 @@ finished board is a pixel-art picture. Plan, decisions and backlogs: `docs/quilt
 `GAMES`, home tile, leaderboard option, profile labels, `checkPlayedTodayAll()` (so Perfect Day needs
 all five Dailies), ad slots, rules, sitemap, achievement badge art. Content is managed in
 Admin → Quilt (`src/js/admin/quilt-admin*.js`), including bulk Patchwork Run import; test pictures
-in `docs/quilt-content/`.
+were in `docs/quilt-content/` (removed 2026-10-20; recover with `git checkout deaffe8 -- docs/quilt-content`).
 
 ## Files
 

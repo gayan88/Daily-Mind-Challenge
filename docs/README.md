@@ -36,5 +36,5 @@ in.
 
 - **`assets/campaign/`** — processed images referenced by `facebook-campaign-brief.md` (badges, tiles, share images, logo).
 - **`connections-content/`** — reviewed starter puzzle content for the Connections game (see `adding-a-new-game.md`/`content-creation-guide.md`).
-- **`quilt-content/`** — generated test pictures for Quilt (500 Daily, 300 Classic, 100 Patchwork Run), each verified importable; see its README.
+- **`quilt-content/`** — *removed 2026-10-20.* Generated Quilt test pictures (500 Daily, 300 Classic, 100 Patchwork Run); recover with `git checkout deaffe8 -- docs/quilt-content`.
 - **`Images/`** — raw source images: the Quilt logo and the 18 full-size Quilt achievement badges (renamed to their achievement ids; the site uses processed 240×240 copies). Not referenced by any page; kept as source material.
