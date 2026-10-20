@@ -6,8 +6,8 @@ column and coloured region; no two cats may touch, not even diagonally. Hard add
 Plan, brand and decisions: `docs/pounce-development-plan.md`. Tickets: `docs/pounce-backlog.md`.
 Never call it "Meowdoku" or "Queens" in the product.
 
-**Status: sprint 1 done (puzzle core + cat art), nothing wired into the site yet.** It isn't in
-`GAMES` and has no page, rules or admin.
+**Status: sprints 1–2 done (puzzle core, cat art, engine), nothing wired into the site yet.** It
+isn't in `GAMES` and has no page, rules or admin.
 
 ## Files
 
@@ -34,8 +34,19 @@ Never call it "Meowdoku" or "Queens" in the product.
   `COATS` (ginger, black, white, tabby, calico, grey), `boardCoats(size, seed)` (a different coat
   per row's cat), `cafeCat(date)` (the Cat Café cat a Daily adopts: name, coat, eyes, accessory,
   description).
+- **`pounce-engine.js`** — `playPounceRound({ container, puzzle, mode, timeLimitSeconds, lives,
+  roundLabel, seed, sound, onComplete })` → `{ destroy }`. Modes: daily / classic (stopwatch from
+  the first touch, hisses + tips counted), run (countdown from mount; a wrong cat costs one of
+  `lives`; 0 lives or time up = loss) and zen (no clock, nothing counted). Tap cycles empty → ✕ →
+  cat; long-press or "Tap places 🐱" places a cat; drag paints/erases ✕; keyboard arrows/Space/
+  Enter/X, Ctrl/⌘+Z. Cats are checked against `solution` on landing: right ones lock, wrong ones
+  hiss off and leave a ✕. Optional Auto-✕. Whisker Tip = clear a ✕ on a real cat spot, else
+  `nextStep()` from pounce-logic.js (cells highlighted + sentence). `onComplete({ won, timedOut,
+  outOfLives, timeTakenSeconds, mistakes, tips, perfect, livesLeft })` once, 1.7 s after the
+  curl-up / reveal. `REGION_COLOURS` (10 named muted colours; the names are used in tips).
+  Styles: `src/css/pages/pounce.css` (`pn-` prefix, `--color-pounce-*` tokens in base.css).
 
-All four are pure ES modules (no DOM, no Firebase) importing only `utils/helpers.js`, so they run
+The solver, logic, generator and cats modules are pure ES modules (no DOM, no Firebase) importing only `utils/helpers.js`, so they run
 under plain Node.
 
 ## Tests
@@ -46,3 +57,8 @@ known solution, validity, no giveaway regions, seed determinism, grade spread an
 Nine Lives Runs. Run it after any change to these modules. At 1000 (2026-10-20): every board is
 generated, max ~20 ms each; the hardest steps used are easy = line-lock, medium = would-empty /
 group-lock, hard = mostly what-if.
+
+Engine: `tools/pounce-preview.html` mounts a generated board (`?difficulty=&size=&mode=&seed=`;
+serve the repo root, e.g. `python3 -m http.server 8123 --bind 127.0.0.1`).
+`tools/pounce-browser-test.mjs` drives it in the system Chrome (setup in its header) and checks
+every control and mode at phone and desktop sizes. Run it after any engine/CSS change.

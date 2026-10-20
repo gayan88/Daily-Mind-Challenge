@@ -1,0 +1,390 @@
+/* Pounce -- pounce.html. Two halves: the board/engine (`pn-` prefix, pounce-engine.js) and the page
+   around it (`pounce-` prefix: mode tabs, pickers, run cards, summary modal -- added in sprint 3).
+   Brand: warm cream, ginger #F28C38, charcoal #3A3340; see docs/pounce-development-plan.md. */
+
+.pn-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    padding: 14px 20px;
+    background: var(--color-surface);
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    margin-bottom: 16px;
+}
+
+.pn-stat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pn-stat-icon {
+    font-size: 18px;
+    line-height: 1;
+}
+
+.pn-stat-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-pounce-dark);
+}
+
+.pn-stat-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--color-text);
+    font-variant-numeric: tabular-nums;
+}
+
+.pn-stat-value.urgent {
+    color: var(--color-danger);
+}
+
+.pn-round-label {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-text-secondary);
+}
+
+/* ---- Board ---- */
+
+.pn-board {
+    --pn-cell: 48px;
+    --pn-ink: var(--color-pounce-ink);
+    --pn-ginger: var(--color-pounce);
+    --pn-cream: var(--color-pounce-cream);
+    display: grid;
+    grid-template-columns: repeat(var(--pn-n), 1fr);
+    width: 100%;
+    max-width: 560px;
+    aspect-ratio: 1;
+    margin: 0 auto;
+    background: var(--pn-cream);
+    border: 3px solid var(--pn-ink);
+    border-radius: 12px;
+    overflow: hidden;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+}
+
+.pn-row {
+    display: contents;
+}
+
+.pn-cell {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    min-height: 0;
+    background: var(--pn-region);
+    border-right: 1px solid rgba(58, 51, 64, 0.16);
+    border-bottom: 1px solid rgba(58, 51, 64, 0.16);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+/* Region borders: drawn on the right/bottom edge only, so a boundary is one thick line. */
+.pn-cell.pn-br {
+    border-right: max(2px, calc(var(--pn-cell) * 0.07)) solid var(--pn-ink);
+}
+
+.pn-cell.pn-bb {
+    border-bottom: max(2px, calc(var(--pn-cell) * 0.07)) solid var(--pn-ink);
+}
+
+.pn-cell.pn-last-col {
+    border-right: 0;
+}
+
+.pn-cell.pn-last-row {
+    border-bottom: 0;
+}
+
+.pn-cell.pn-fixed {
+    cursor: default;
+}
+
+@media (hover: hover) {
+    .pn-cell:not(.pn-fixed):hover {
+        background-image: linear-gradient(rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.35));
+    }
+}
+
+.pn-cell:focus {
+    outline: none;
+}
+
+.pn-cell:focus-visible {
+    outline: 3px solid var(--pn-ginger);
+    outline-offset: -3px;
+    z-index: 1;
+}
+
+.pn-xmark {
+    font-size: max(10px, calc(var(--pn-cell) * 0.4));
+    font-weight: 700;
+    line-height: 1;
+    color: rgba(58, 51, 64, 0.5);
+}
+
+.pn-cat {
+    display: block;
+    width: 86%;
+    height: 86%;
+}
+
+.pn-cat svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* Sleeping dog (no cat here) and pawprint clue (how many cats touch this cell). */
+.pn-dog {
+    position: relative;
+    font-size: max(12px, calc(var(--pn-cell) * 0.55));
+    line-height: 1;
+    filter: saturate(0.85);
+}
+
+.pn-dog-z {
+    position: absolute;
+    top: -0.35em;
+    right: -0.45em;
+    font-size: 0.42em;
+    font-weight: 800;
+    color: var(--pn-ink);
+    opacity: 0.6;
+}
+
+.pn-paw {
+    position: relative;
+    display: block;
+    width: 78%;
+    height: 78%;
+}
+
+.pn-paw svg {
+    width: 100%;
+    height: 100%;
+    fill: rgba(58, 51, 64, 0.82);
+}
+
+.pn-paw-n {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 9%;
+    text-align: center;
+    font-size: max(10px, calc(var(--pn-cell) * 0.32));
+    font-weight: 800;
+    color: #FFFFFF;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Whisker Tip highlight. */
+.pn-cell.pn-hl {
+    box-shadow: inset 0 0 0 max(2px, calc(var(--pn-cell) * 0.07)) var(--pn-ginger);
+    animation: pn-glow 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes pn-glow {
+    from { background-image: linear-gradient(rgba(242, 140, 56, 0.08), rgba(242, 140, 56, 0.08)); }
+    to { background-image: linear-gradient(rgba(242, 140, 56, 0.3), rgba(242, 140, 56, 0.3)); }
+}
+
+.pn-cell.pn-wrong {
+    background-image: linear-gradient(rgba(192, 57, 43, 0.28), rgba(192, 57, 43, 0.28));
+}
+
+/* ---- Motion: pounce on place, hiss on a mistake, curl up on solve ---- */
+
+.pn-pounce {
+    animation: pn-pounce 0.38s cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+
+@keyframes pn-pounce {
+    0% { transform: translateY(-40%) scale(0.6) rotate(-10deg); opacity: 0; }
+    45% { transform: translateY(5%) scale(1.1, 0.88); opacity: 1; }
+    70% { transform: scale(0.95, 1.06); }
+    100% { transform: none; }
+}
+
+.pn-hiss {
+    animation: pn-hiss 0.42s ease-in forwards;
+}
+
+@keyframes pn-hiss {
+    0% { transform: scale(1); }
+    18% { transform: scale(1.2) translateX(-7%); }
+    36% { transform: scale(1.2) translateX(7%); }
+    54% { transform: scale(1.2) translateX(-5%); }
+    100% { transform: translateY(-45%) scale(0.6); opacity: 0; }
+}
+
+.pn-solved .pn-cat {
+    animation: pn-curl 0.6s ease-out both;
+    animation-delay: var(--pn-delay, 0ms);
+}
+
+@keyframes pn-curl {
+    0% { transform: none; }
+    40% { transform: scale(1.12) rotate(-6deg); }
+    100% { transform: scale(0.94) rotate(0); }
+}
+
+.pn-zzz {
+    position: absolute;
+    top: 4%;
+    right: 8%;
+    font-size: max(9px, calc(var(--pn-cell) * 0.26));
+    font-weight: 800;
+    color: var(--pn-ink);
+    opacity: 0;
+    animation: pn-zzz 1.6s ease-out forwards;
+    animation-delay: calc(var(--pn-delay, 0ms) + 400ms);
+}
+
+@keyframes pn-zzz {
+    0% { opacity: 0; transform: translate(0, 0) scale(0.6); }
+    30% { opacity: 0.8; }
+    100% { opacity: 0.55; transform: translate(20%, -60%) scale(1); }
+}
+
+/* Lost round: the answer's cats appear faded. */
+.pn-ghost {
+    opacity: 0.45;
+    filter: grayscale(0.6);
+}
+
+.pn-failed .pn-cell {
+    cursor: default;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pn-board *,
+    .pn-board {
+        animation: none !important;
+        transition: none !important;
+    }
+
+    .pn-zzz {
+        opacity: 0.55;
+    }
+}
+
+/* ---- Tip, message, controls ---- */
+
+.pn-tip {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    max-width: 560px;
+    margin: 14px auto 0;
+    padding: 12px 16px;
+    background: var(--color-pounce-tint);
+    border: 1px solid var(--color-pounce-soft);
+    border-radius: var(--radius-md);
+    font-size: 15px;
+    line-height: 1.45;
+    color: var(--color-text);
+}
+
+.pn-tip[hidden] {
+    display: none;
+}
+
+.pn-tip-icon {
+    font-size: 18px;
+    line-height: 1.3;
+}
+
+.pn-message {
+    min-height: 1.6em;
+    margin: 12px 0 8px;
+    text-align: center;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+}
+
+.pn-controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+}
+
+.pn-control-btn {
+    padding: 10px 18px;
+    border: 0.5px solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.pn-control-btn:not(:disabled):hover {
+    border-color: var(--color-pounce);
+    background: var(--color-pounce-tint);
+}
+
+.pn-control-btn:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+.pn-tip-btn {
+    border-color: var(--color-pounce-soft);
+    background: var(--color-pounce-tint);
+}
+
+.pn-options {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 20px;
+    margin-top: 12px;
+}
+
+.pn-options-done {
+    visibility: hidden;
+}
+
+.pn-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+}
+
+.pn-toggle input {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--color-pounce);
+}
+
+@media (max-width: 420px) {
+    .pn-stats {
+        padding: 12px 14px;
+    }
+
+    .pn-stat-label {
+        display: none;
+    }
+
+    .pn-control-btn {
+        padding: 10px 14px;
+    }
+}

@@ -1,0 +1,60 @@
+<!doctype html>
+<!--
+    Dev-only preview of the Pounce engine (not deployed -- hosting serves src/ only).
+    Serve the repo root, e.g. `python3 -m http.server 8123`, then open
+    http://localhost:8123/tools/pounce-preview.html?difficulty=hard&mode=daily&seed=demo
+    Params: difficulty (easy|medium|hard), size (5-10), mode (daily|classic|run|zen), seed,
+    sound (1), lives (run), time (run, seconds).
+-->
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Pounce preview</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="/src/css/base.css">
+    <link rel="stylesheet" href="/src/css/components.css">
+    <link rel="stylesheet" href="/src/css/pages/pounce.css">
+    <style>
+        main { max-width: 640px; margin: 24px auto; padding: 0 16px; }
+        pre { font-size: 12px; background: #fff; padding: 8px; border-radius: 6px; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <main>
+        <h1>Pounce preview</h1>
+        <p data-info></p>
+        <div id="round"></div>
+        <pre data-result></pre>
+    </main>
+    <script type="module">
+        import { generatePuzzle } from '/src/js/games/pounce/pounce-generator.js';
+        import { playPounceRound } from '/src/js/games/pounce/pounce-engine.js';
+
+        const q = new URLSearchParams(location.search);
+        const mode = q.get('mode') || 'daily';
+        const puzzle = generatePuzzle({
+            difficulty: q.get('difficulty') || 'medium',
+            size: q.get('size') ? Number(q.get('size')) : undefined,
+            seed: q.get('seed') || 'demo',
+        });
+        window.__puzzle = puzzle;
+        document.querySelector('[data-info]').textContent =
+            `${puzzle.difficulty} ${puzzle.size}×${puzzle.size} · ${mode} · grade ${puzzle.grade.technique} · ${puzzle.dogs.length} dogs · ${puzzle.pawprints.length} pawprints`;
+        window.__round = playPounceRound({
+            container: document.getElementById('round'),
+            puzzle,
+            mode,
+            lives: mode === 'run' ? Number(q.get('lives') || 9) : null,
+            timeLimitSeconds: mode === 'run' ? Number(q.get('time') || 240) : null,
+            roundLabel: mode === 'run' ? 'Board 1 of 5' : null,
+            seed: q.get('seed') || 'demo',
+            sound: q.get('sound') === '1',
+            onComplete: (result) => {
+                window.__result = result;
+                document.querySelector('[data-result]').textContent = JSON.stringify(result, null, 2);
+            },
+        });
+    </script>
+</body>
+</html>

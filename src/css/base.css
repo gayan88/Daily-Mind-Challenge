@@ -18,6 +18,12 @@
     --color-sudoku-end: #0F6E56;
     --color-wordsearch-start: #D85A30;
     --color-wordsearch-end: #993C1D;
+    --color-pounce: #F28C38;
+    --color-pounce-dark: #C9651A;
+    --color-pounce-tint: #FFF3E6;
+    --color-pounce-soft: #F6C79C;
+    --color-pounce-ink: #3A3340;
+    --color-pounce-cream: #FBF6EC;
 
     --color-success: #1D9E75;
     --color-danger: #C0392B;

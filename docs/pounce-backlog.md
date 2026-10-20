@@ -16,7 +16,7 @@
 | Epic | Tickets | Claude days (approx.) | Status |
 |---|---|---|---|
 | E1 Puzzle core | P-101 – P-105 | 6–7 | ✅ 2026-10-20 |
-| E2 Engine | P-201 – P-207 | 5–6 | 🔄 (P-207 done) |
+| E2 Engine | P-201 – P-207 | 5–6 | ✅ 2026-10-20 |
 | E3 Daily end-to-end | P-301 – P-305 | 4 | ⬜ |
 | E4 Classic + Zen | P-401 – P-402 | 1.5 | ⬜ |
 | E5 Nine Lives Run | P-501 – P-502 | 3 | ⬜ |
@@ -76,35 +76,35 @@ would-empty 17% / group-lock 16% / what-if 67%. Hard leans on what-if; revisit a
 
 ## E2 — Engine
 
-**P-201 · Board render** · M · 🤖 · ⬜ · needs P-101
+**P-201 · Board render** · M · 🤖 · ✅ · needs P-101
 `pounce-engine.js`: an N×N grid; 10 muted, cozy region colours plus thick region borders
 (readable for colour-blind players); dog cells; pawprint numbers.
 
-**P-202 · Input** · M · 🤖 · ⬜ · needs P-201
+**P-202 · Input** · M · 🤖 · ✅ · needs P-201
 - Tap cycles empty → ✕ → 🐱 → empty; long-press places a cat; a toolbar "cat / ✕" toggle;
   pointer events for mouse + touch.
 - The optional Auto-✕ assist (off by default) marks the cells a new cat rules out.
 - Undo.
 
-**P-203 · Checking + motion** · M · 🤖 · ⬜ · needs P-202
+**P-203 · Checking + motion** · M · 🤖 · ✅ · needs P-202
 - A cat is checked against the solution on placement; a wrong cat counts as a mistake ("Hiss!
   That spot's taken.") and hops off.
 - Animations: pounce on place, hiss on a mistake, everyone curls up + a "zzz" ripple on solve.
   Each ≤ 400 ms, respecting `prefers-reduced-motion`.
 - Optional sounds (off by default).
 
-**P-204 · Whisker Tip hints** · M · 🤖 · ⬜ · needs P-103, P-201
+**P-204 · Whisker Tip hints** · M · 🤖 · ✅ · needs P-103, P-201
 A hint button → highlights the cells involved, shows the P-103 sentence and applies the
 eliminations as ✕ marks. It never reveals a cat outright, except as the very last resort (when
 only placements remain).
 
-**P-205 · Stats + lifecycle** · S · 🤖 · ⬜ · needs P-203
+**P-205 · Stats + lifecycle** · S · 🤖 · ✅ · needs P-203
 - Stats bar: a stopwatch from the first touch, cats placed / N, mistakes, tips used.
 - Purrfect tracking (0 mistakes, 0 tips; Auto-✕ is allowed).
 - A `zen` option (no clock, mistakes highlighted rather than counted, free tips).
 - A single `onComplete(result)` and `destroy()`.
 
-**P-206 · Styles** · S · 🤖 · ⬜ · needs P-201
+**P-206 · Styles** · S · 🤖 · ✅ · needs P-201
 `src/css/pages/pounce.css`: brand colours (cream, ginger `#F28C38`, charcoal), responsive down
 to 360px. A 9×9 board with pawprints must stay readable on a phone; the board auto-scrolls into
 view (as Quilt's does).
@@ -112,6 +112,16 @@ view (as Quilt's does).
 **P-207 · Cat coats** · S · 🤖 · ✅
 `pounce-cats.js`: SVG cat faces in 6 coats (ginger, black, white, tabby, calico, grey), shared
 by the board and the Cat Café (P-701).
+
+**Sprint 2 notes (2026-10-20):** `pounce-engine.js` + `src/css/pages/pounce.css` (colours come
+from new `--color-pounce-*` tokens in `base.css`). Beyond the tickets: drag paints ✕ (or erases
+them when the drag starts on one), arrow-key/Space/Enter/X keyboard play with ARIA grid labels,
+and correct cats lock in place (a wrong cat never stays on the board, so a cat is always right).
+A tip first clears any ✕ the player put on a real cat spot. `tools/pounce-preview.html` and
+`tools/pounce-browser-test.mjs` (24 checks in the system Chrome: every control, Daily/Classic/
+Run/Zen results, keyboard-only Purrfect, out of lives, 360px with no sideways scroll and 36px
+cells on 9×9) all pass. While testing, the lilac region colour was swapped for plum (it looked
+too like lavender). The engine isn't mounted on a real page yet; that's P-301.
 
 ---
 
