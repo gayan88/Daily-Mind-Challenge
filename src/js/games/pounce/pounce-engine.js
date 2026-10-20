@@ -87,10 +87,11 @@ export function staticBoardHtml(puzzle, { cats = true, label = 'Pounce board', c
  * tips, perfect, livesLeft })` fires once, FINISH_DELAY_MS later so the curl-up / reveal is seen.
  * Purrfect = a win with no mistakes and no tips (never in Zen). The engine has no Firebase/session
  * knowledge; the mode data files own scoring. `sound` (default off) plays tiny synth chirps.
+ * `onLifeLost(livesLeft)` (Run) fires on each wrong cat, so the page can save the lost life at once.
  */
 export function playPounceRound({
     container, puzzle, mode = 'daily', timeLimitSeconds = null, lives = null, roundLabel = null,
-    seed = '', sound = false, onComplete,
+    seed = '', sound = false, onLifeLost = null, onComplete,
 }) {
     const { size: n, solution, dogs = [], pawprints = [] } = puzzle;
     const zen = mode === 'zen';
@@ -338,8 +339,12 @@ export function playPounceRound({
         hissing.add(idx);
         chirp('hiss');
         if (!zen) {
-            if (run) livesLeft = Math.max(0, livesLeft - 1);
-            else mistakes++;
+            // Counted in the Run too (it's not shown there, but a hiss must cost Purrfect).
+            mistakes++;
+            if (run) {
+                livesLeft = Math.max(0, livesLeft - 1);
+                onLifeLost?.(livesLeft);
+            }
         }
         messageEl.textContent = zen ? 'That spot\'s taken. Try another!' : 'Hiss! That spot\'s taken.';
         cellEls[idx].classList.add('pn-wrong');

@@ -52,3 +52,21 @@ export function classicPoints({ timeTakenSeconds, mistakes, tips, perfect, diffi
         score: completionPoints + timeBonusPoints + penaltyPoints + perfectBonusPoints,
     };
 }
+
+/** Nine Lives Run, per board: solved 30 / ran out of time (or out of lives) 10 (rules cap: 30). */
+export const RUN_BOARD_PASS_POINTS = 30;
+export const RUN_BOARD_FAIL_POINTS = 10;
+/** On the run's bonus doc, with the admin-set completion bonus -- only when all 5 boards were played. */
+export const RUN_LIFE_BONUS = 5;
+
+/**
+ * The run's bonus: the admin-set completion bonus + 5 per life left, but only for a run that
+ * reached the end of its last board with lives left; a run that ran out of lives gets none (its
+ * boards' points are already banked).
+ */
+export function runBonusFor(tournament, attempt) {
+    const finished = attempt.currentPuzzleIndex >= tournament.boards.length && attempt.livesLeft > 0;
+    const completionBonus = finished ? tournament.completionBonus : 0;
+    const livesBonus = finished ? attempt.livesLeft * RUN_LIFE_BONUS : 0;
+    return { finished, completionBonus, livesBonus, score: completionBonus + livesBonus };
+}

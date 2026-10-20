@@ -902,6 +902,77 @@
     font-weight: 700;
 }
 
+/* Nine Lives Run progress: one pip per board + lives left (pounce-page.js#runStripHtml). */
+.pounce-run-strip {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 16px;
+    max-width: 560px;
+    margin: 0 auto 14px;
+}
+
+.pounce-run-pips {
+    display: flex;
+    gap: 6px;
+}
+
+.pounce-run-pip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 42px;
+    height: 30px;
+    padding: 0 6px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    border: 1.5px solid var(--color-border-strong);
+    background: var(--color-surface);
+    color: var(--color-text-muted);
+}
+
+.pounce-run-pip-current {
+    border-color: var(--color-pounce);
+    background: var(--color-pounce-tint);
+    color: var(--color-pounce-dark);
+}
+
+.pounce-run-pip-passed {
+    border-color: var(--color-success);
+    background: var(--color-success);
+    color: #FFFFFF;
+    font-size: 15px;
+}
+
+.pounce-run-pip-failed {
+    border-color: var(--color-danger);
+    background: rgba(192, 57, 43, 0.1);
+    color: var(--color-danger);
+    font-size: 15px;
+}
+
+.pounce-run-lives {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-pounce-dark);
+}
+
+.pounce-run-lives svg {
+    width: 20px;
+    height: 20px;
+    color: var(--color-pounce);
+}
+
+.pounce-run-lives span {
+    font-size: 18px;
+    font-variant-numeric: tabular-nums;
+}
+
 /* The Cat Café cat a Daily solve adopts, at the top of the summary modal. */
 .pounce-summary-cat {
     width: 120px;

@@ -130,10 +130,10 @@ check(await page.$eval('#game-mount', (el) => el.textContent.includes('You alrea
 check(await page.$$eval('.pounce-played-board .pn-cat', (els) => els.length) === size, 'replay: solved board shows every cat');
 await page.screenshot({ path: `${out}/e4-already-played.png`, fullPage: true });
 
-// 7. Other tabs say coming soon.
+// 7. Switching tabs tears the Daily view down and shows the Zen picker.
 await page.click('.pounce-mode-tab[data-mode="zen"]');
-await wait(300);
-check(await page.$eval('#game-mount', (el) => el.textContent.includes('coming soon')), 'zen tab: coming soon');
+await page.waitForSelector('.pounce-difficulty-btn', { timeout: 30000 }).catch(() => {});
+check((await page.$$('.pounce-difficulty-btn')).length === 3, 'zen tab: difficulty picker');
 
 // 9. Leaderboard: Pounce option and the guest's row.
 await page.goto(`${site}/leaderboard`, { waitUntil: 'domcontentloaded' });

@@ -43,6 +43,11 @@ export const CONFIG_DEFAULTS = {
         timeLimitSeconds: 180,
         description: 'Global rules applied to every Quilt Patchwork Run: seconds allowed per tile. Tile points (30 pass / 10 fail) and the +25 Perfect Patchwork bonus are fixed in code; the completion bonus is set per run when it\'s created.',
     },
+    pounceTournamentSettings: {
+        timeLimitSeconds: 240,
+        lives: 9,
+        description: 'Global rules applied to every Pounce Nine Lives Run: seconds allowed per board and lives for the whole run (1-9). Board points (30 solved / 10 out of time) and +5 per life left are fixed in code; the completion bonus is set per run when it\'s created.',
+    },
     wordsearchTournamentSettings: {
         puzzleCount: 10,
         timeLimitSeconds: 300,

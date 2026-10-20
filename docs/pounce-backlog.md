@@ -18,8 +18,8 @@
 | E1 Puzzle core | P-101 – P-105 | 6–7 | ✅ 2026-10-20 |
 | E2 Engine | P-201 – P-207 | 5–6 | ✅ 2026-10-20 |
 | E3 Daily end-to-end | P-301 – P-305 | 4 | ✅ 2026-10-20 |
-| E4 Classic + Zen | P-401 – P-402 | 1.5 | ⬜ |
-| E5 Nine Lives Run | P-501 – P-502 | 3 | ⬜ |
+| E4 Classic + Zen | P-401 – P-402 | 1.5 | ✅ 2026-10-20 |
+| E5 Nine Lives Run | P-501 – P-502 | 3 | ✅ 2026-10-20 |
 | E6 Admin | P-601 – P-604 | 5 | ⬜ |
 | E7 Progression, Cat Café, SEO, docs | P-701 – P-708 | 4 | 🔄 (P-702–P-704 done) |
 | E8 Test & release | P-801 – P-802 | 1.5 | ⬜ |
@@ -183,11 +183,11 @@ counts for Perfect Day / "every Daily" achievements, so Daily content must be li
 
 ## E4 — Classic + Zen
 
-**P-401 · Classic** · M · 🤖 · ⬜ · needs E3 · *D2, D5*
+**P-401 · Classic** · M · 🤖 · ✅ · needs E3 · *D2, D5*
 `pounce-classic-data.js`: a difficulty picker (Easy 6×6 / Medium 8×8 / Hard 9×9), a pool from
 `pounceClassic` with unplayed boards first, scoring × 0.8 / 1.0 / 1.3.
 
-**P-402 · Zen** · S · 🤖 · ⬜ · needs P-401
+**P-402 · Zen** · S · 🤖 · ✅ · needs P-401
 A Zen tab over the same Classic pool with the engine's `zen` option. It writes no score docs and
 has a "Next board" button.
 
@@ -195,7 +195,7 @@ has a "Next board" button.
 
 ## E5 — Nine Lives Run
 
-**P-501 · Run data** · L · 🤖 · ⬜ · needs E4 · *D6*
+**P-501 · Run data** · L · 🤖 · ✅ · needs E4 · *D6*
 `pounce-tournament-data.js`: list / start / continue.
 - 5 boards (5×5 → 9×9), 9 lives shared, 4 minutes per board.
 - A wrong cat −1 life; a timeout −1 life and the next board starts; 0 lives ends the run with
@@ -203,8 +203,24 @@ has a "Next board" button.
 - Pass 30 per board, +5 per life left, the admin-set completion bonus.
 - Attempt-progress docs, finalize + retry on write failure.
 
-**P-502 · Run UI** · S · 🤖 · ⬜ · needs P-501
+**P-502 · Run UI** · S · 🤖 · ✅ · needs P-501
 A progress strip (5 board pips, 🐾 × 9 lives) and the run summary in the modal.
+
+**Sprint 4 notes (2026-10-20):** Owner OK'd **10 points for a board that runs out of time** (or
+out of lives), like Quilt. `pounce-classic-data.js` (unplayed boards first; Zen reads the same pool
+with `preferUnplayed: false` and writes nothing) and `pounce-tournament-data.js`: `livesLeft` from
+`config/pounceTournamentSettings.lives`; each wrong cat is saved at once by `spendLife()` (engine
+`onLifeLost`), so leaving mid-board can't refund lives; a timeout costs one more. The run is over
+when all 5 boards are played or lives hit 0. The bonus doc is the completion bonus + 5 × lives, but
+only for a finished run (0 for out of lives) and it carries the share bonuses. Run UI: a pip
+strip (✓ / ✕ / current size) + lives left; the summary lists each board. Settings defaults:
+240 s per board, 9 lives (`CONFIG_DEFAULTS`; the admin form is P-604). Engine fix found in testing:
+Run hisses now count as mistakes, so a board that lost a life is no longer "Purrfect".
+`tools/pounce-e2e-modes-test.mjs`: 28/28 against the emulators. It covers Classic Purrfect Easy = 20
+plus the gameScores doc and next-unplayed board; Zen with no clock, no popup and nothing written; Run A
+with a life saved at once, a 20 s timeout and out of lives on board 3 = 50, bonus 0; Run B with all 5 =
+150 + 100 + 15 = 265. Still known: leaving mid-board restarts that board's clock (same as Quilt and
+Sudoku).
 
 ---
 
