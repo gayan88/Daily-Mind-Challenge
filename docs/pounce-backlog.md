@@ -17,11 +17,11 @@
 |---|---|---|---|
 | E1 Puzzle core | P-101 – P-105 | 6–7 | ✅ 2026-10-20 |
 | E2 Engine | P-201 – P-207 | 5–6 | ✅ 2026-10-20 |
-| E3 Daily end-to-end | P-301 – P-305 | 4 | ⬜ |
+| E3 Daily end-to-end | P-301 – P-305 | 4 | ✅ 2026-10-20 |
 | E4 Classic + Zen | P-401 – P-402 | 1.5 | ⬜ |
 | E5 Nine Lives Run | P-501 – P-502 | 3 | ⬜ |
 | E6 Admin | P-601 – P-604 | 5 | ⬜ |
-| E7 Progression, Cat Café, SEO, docs | P-701 – P-708 | 4 | ⬜ (art ready) |
+| E7 Progression, Cat Café, SEO, docs | P-701 – P-708 | 4 | 🔄 (P-702–P-704 done) |
 | E8 Test & release | P-801 – P-802 | 1.5 | ⬜ |
 | **Total** | **33 tickets** | **~30 working days** by ticket size | |
 | Owner (you) | O-01 – O-12 | — | 3 of 12 done |
@@ -129,34 +129,55 @@ too like lavender). The engine isn't mounted on a real page yet; that's P-301.
 
 Built before Classic on purpose, to catch the `scoreDate` / `GAME_TYPES` gotchas early.
 
-**P-301 · Page + routing** · M · 🤖 · ⬜ · needs E2
+**P-301 · Page + routing** · M · 🤖 · ✅ · needs E2
 `src/html/pounce.html` (mode tabs Daily / Classic / Zen / Nine Lives Run, ad slots, How to Play,
 meta/og tags) + `pounce-page.js` (`trySession()`, `wireModeTabs()`, `activeRound` destroy) + the
 `firebase.json` rewrite for `/pounce`.
 
-**P-302 · Daily data + scoring** · M · 🤖 · ⬜ · needs P-301 · *D4, D8*
+**P-302 · Daily data + scoring** · M · 🤖 · ✅ · needs P-301 · *D4, D8*
 `pounce-daily-data.js` + `pounce-scoring.js`.
 - One scored solve per day; score = 10 base + time bonus − mistakes − tips + Purrfect, capped
   at 100.
 - Writes `gameDate` **and** `scoreDate`, plus `sharedToFacebook: false` and
   `sharedWithFriends: false`.
 
-**P-303 · Summary modal + share** · M · 🤖 · ⬜ · needs P-302
+**P-303 · Summary modal + share** · M · 🤖 · ✅ · needs P-302
 `pounce-summary-modal.js`: stats, the adopted cat (P-207 / P-701), share text in the plan's
 format (no spoilers), +20 / +10 share bonuses.
 
-**P-304 · Firestore rules** · M · 🤖 · ⬜ · needs P-302
+**P-304 · Firestore rules** · M · 🤖 · ✅ · needs P-302
 - Collections `pounceDaily`, `pounceClassic`, `pounceTournaments` + attempt docs.
 - `maxCreateScore()` caps for all 4 gameTypes; share allow-lists.
 - The championship `gameId` lists and **all 18 achievement ids**, added at the same time as
   `pounce` goes into `GAMES`; `firestore.indexes.json` if needed.
 
-**P-305 · Cross-site touchpoints** · S · 🤖 · ⬜ · needs P-302
+**P-305 · Cross-site touchpoints** · S · 🤖 · ✅ · needs P-302
 `game-registry.js`, the leaderboard tab, `checkPlayedTodayAll()`, the home tile in `index.html`,
 `GAME_LABELS` in `profile.js`, `AD_SLOTS`, and every page or footer that lists the games (grep for
 the five-game list).
 - **Done when:** a Daily solve appears on the leaderboard (Pounce + Overall), in profile Recent
   Activity and in Level, and the home tile shows its "played today" badge.
+
+**Sprint 3 notes (2026-10-20):** `/pounce` page (tabs Daily / Classic / Zen / Nine Lives Run; the
+last three say "coming soon" until sprint 4), `pounce-scoring.js` (penalty line shows the deduction
+actually applied, so the breakdown adds up), `pounce-daily-data.js` (`pounceDailyPuzzles`, gameScores
+`{uid}_pounce_{date}` with `mistakes`, `tips`, `cafeCat`), `pounce-summary-modal.js` (adopted cat at
+the top, "−n" lines). Rules: all four Pounce collections (incl. Run attempts with a `livesLeft`
+that can only go down), caps 30/40/30/2000, both share allow-lists, 18 achievement ids, both
+championship `gameId` lists. Wired into `GAMES`, `checkPlayedTodayAll()`, `GAME_LABELS`,
+`AD_SLOTS` + admin ad-slot forms, home tile (6 tiles = 3 even rows on desktop), sitemap, rewrite,
+and every page that lists the games. P-702: 18 badges at 240×240 in `CUSTOM_IMAGES`, checked on dark
+and light. P-703: `tile-pounce.png` / `tile-pounce-wide.png` cut from the logo. P-704 was done early:
+the How to Play card has a generated example board, Tips & Strategy and a 20-question FAQ; og:image is
+the logo on white as `fb-share-pounce.png` until O-05.
+`tools/pounce-e2e-test.mjs` + `tools/pounce-emulator-seed.mjs`: 24/24 against the emulators. The run
+covers sign-in, a Daily solve with 1 hiss + 1 tip = 15 points, the gameScores doc, the +20 share
+allowed by the rules (35), the already-played view, leaderboard, profile and home tile. Found while testing, and true of
+**Quilt too** (not Pounce bugs): the cookie banner covers a phone board's bottom rows until
+answered; on the emulators pages load ~25 s slowly after the home page, and a session restored after
+visiting the home page sometimes comes back signed out (the home-tile check can flake); accepting
+cookies freezes headless Chrome on localhost (ad/analytics scripts). **Launch note:** `pounce` now
+counts for Perfect Day / "every Daily" achievements, so Daily content must be live before deploy.
 
 ---
 
@@ -217,15 +238,15 @@ Generate a run (one board per size) or bulk-generate N runs; activate / deactiva
 - The profile gets a "Cat Café" panel built from the player's `pounce` Daily score docs. No new
   collection, no new rules.
 
-**P-702 · Badges** · S · 🤖 · ⬜ · needs P-304 · **art ready ✅**
+**P-702 · Badges** · S · 🤖 · ✅ · needs P-304 · **art ready ✅**
 - 240×240 copies of the 18 transparent badges in `docs/Images/` → `src/assets/images/achievements/`.
 - `CUSTOM_IMAGES` entries; checked on dark + light.
 
-**P-703 · Home tile** · S · 🤖 · ⬜ · **logo ready ✅**
+**P-703 · Home tile** · S · 🤖 · ✅ · **logo ready ✅**
 Cut `tile-pounce.png` (400×400) and `tile-pounce-wide.png` from
 `docs/Images/Playful Pounce Cat Puzzle Logo.png`.
 
-**P-704 · SEO content** · M · 🤖 · ⬜ · needs P-301
+**P-704 · SEO content** · M · 🤖 · ✅ · needs P-301
 - Tips & Strategy, a ~20-question FAQ, `sitemap.xml`.
 - og/twitter tags (stand-in wide tile until O-05 arrives).
 

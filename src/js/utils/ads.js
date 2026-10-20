@@ -20,6 +20,8 @@ export const AD_SLOTS = [
     { id: 'connections-bottom', label: 'Connections — Bottom', group: 'connections' },
     { id: 'quilt-top', label: 'Quilt — Top', group: 'quilt' },
     { id: 'quilt-bottom', label: 'Quilt — Bottom', group: 'quilt' },
+    { id: 'pounce-top', label: 'Pounce — Top', group: 'pounce' },
+    { id: 'pounce-bottom', label: 'Pounce — Bottom', group: 'pounce' },
 ];
 
 function defaultSlotSettings() {

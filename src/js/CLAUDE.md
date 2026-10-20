@@ -8,7 +8,7 @@ Plain ES modules, loaded via `<script type="module">` directly in each HTML page
 |---|---|
 | `api/` | Firebase SDK initialization only |
 | `auth/` | Session/login logic + guest & registered profile documents |
-| `games/wordle/`, `games/sudoku/`, `games/wordsearch/`, `games/connections/`, `games/quilt/` | Each game's engine, page glue, and daily-content data, colocated |
+| `games/wordle/`, `games/sudoku/`, `games/wordsearch/`, `games/connections/`, `games/quilt/`, `games/pounce/` | Each game's engine, page glue, and daily-content data, colocated |
 | `leaderboard/` | Daily leaderboard queries + the leaderboard page |
 | `progression/` | Game-agnostic Points → Level engine (game registry + derived progress calculations) |
 | `admin/` | Moderation actions + the admin page |

@@ -35,6 +35,10 @@ const GAME_LABELS = {
     'quilt-classic': 'Quilt Classic',
     'quilt-tournament': 'Patchwork Run Tile',
     'quilt-tournament-bonus': 'Patchwork Run Bonus',
+    pounce: 'Pounce',
+    'pounce-classic': 'Pounce Classic',
+    'pounce-tournament': 'Nine Lives Run Board',
+    'pounce-tournament-bonus': 'Nine Lives Run Bonus',
 };
 
 /** Avatar (a Rank badge image -- see progression/rank-service.js), name, current-rank tagline

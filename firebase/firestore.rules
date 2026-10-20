@@ -110,7 +110,7 @@ service cloud.firestore {
 
             function isCommunityShareUpdate() {
                 return isSignedIn() && request.auth.uid == resource.data.userId
-                    && resource.data.gameType in ['wordle', 'wordle-tournament', 'wordle-challenge', 'sudoku', 'sudoku-classic', 'sudoku-tournament-bonus', 'wordsearch', 'wordsearch-classic', 'wordsearch-tournament-bonus', 'connections', 'connections-classic', 'connections-tournament', 'quilt', 'quilt-classic', 'quilt-tournament-bonus']
+                    && resource.data.gameType in ['wordle', 'wordle-tournament', 'wordle-challenge', 'sudoku', 'sudoku-classic', 'sudoku-tournament-bonus', 'wordsearch', 'wordsearch-classic', 'wordsearch-tournament-bonus', 'connections', 'connections-classic', 'connections-tournament', 'quilt', 'quilt-classic', 'quilt-tournament-bonus', 'pounce', 'pounce-classic', 'pounce-tournament-bonus']
                     && resource.data.get('sharedToFacebook', false) != true
                     && request.resource.data.sharedToFacebook == true
                     && request.resource.data.score == resource.data.score + 20
@@ -124,7 +124,7 @@ service cloud.firestore {
             // doc to attach it to.
             function isFriendsShareUpdate() {
                 return isSignedIn() && request.auth.uid == resource.data.userId
-                    && resource.data.gameType in ['wordle', 'wordle-tournament', 'wordle-challenge', 'sudoku', 'sudoku-classic', 'sudoku-tournament-bonus', 'wordsearch', 'wordsearch-classic', 'wordsearch-tournament-bonus', 'connections', 'connections-classic', 'connections-tournament', 'quilt', 'quilt-classic', 'quilt-tournament-bonus']
+                    && resource.data.gameType in ['wordle', 'wordle-tournament', 'wordle-challenge', 'sudoku', 'sudoku-classic', 'sudoku-tournament-bonus', 'wordsearch', 'wordsearch-classic', 'wordsearch-tournament-bonus', 'connections', 'connections-classic', 'connections-tournament', 'quilt', 'quilt-classic', 'quilt-tournament-bonus', 'pounce', 'pounce-classic', 'pounce-tournament-bonus']
                     // get() with a default: Sudoku/Word Search Daily + Classic docs are created
                     // without a `sharedWithFriends` field, and reading a missing field is a rules
                     // error (= deny), which silently blocked their +10 until this default.
@@ -193,6 +193,13 @@ service cloud.firestore {
                 : gameType == 'quilt-classic' ? 40
                 : gameType == 'quilt-tournament' ? 30
                 : gameType == 'quilt-tournament-bonus' ? 2000
+                // Pounce (pounce-scoring.js): Daily max 25, Classic max 33 (Hard ×1.3), 30 per
+                // Nine Lives Run board; the run's bonus doc carries the admin-set completion bonus
+                // + 5 per life left (≤ 9 lives).
+                : gameType == 'pounce' ? 30
+                : gameType == 'pounce-classic' ? 40
+                : gameType == 'pounce-tournament' ? 30
+                : gameType == 'pounce-tournament-bonus' ? 2000
                 : 10;
         }
 
@@ -279,6 +286,61 @@ service cloud.firestore {
                     || request.resource.data.puzzlesPassed == resource.data.puzzlesPassed + 1)
                 && (request.resource.data.puzzlesFailed == resource.data.puzzlesFailed
                     || request.resource.data.puzzlesFailed == resource.data.puzzlesFailed + 1);
+            allow delete: if isAdmin();
+        }
+
+        // ---------- Pounce (see src/js/games/pounce/) ----------
+        // Admin-managed Daily puzzles, keyed by the "YYYY-MM-DD" date they play on, with a
+        // `_meta` doc ({ totalCount, firstDate, lastDate }) -- same scheme as quiltDailyPuzzles.
+        // Puzzles hold their `solution` (the engine checks each cat as it lands), like Quilt's
+        // `rects`.
+        match /pounceDailyPuzzles/{id} {
+            allow read: if true;
+            allow write: if isAdmin();
+        }
+
+        // Admin-managed Classic pool ({ difficulty, size, regions, solution, dogs, pawprints,
+        // grade }). Zen plays from this pool too, without scoring.
+        match /pounceClassicPuzzles/{id} {
+            allow read: if true;
+            allow write: if isAdmin();
+        }
+
+        // Admin-managed Nine Lives Runs (5 boards + completionBonus); time per board and lives are
+        // global (config/pounceTournamentSettings).
+        match /pounceTournaments/{id} {
+            allow read: if true;
+            allow write: if isAdmin();
+        }
+
+        // One progress doc per player per run, id = {tournamentId}_{uid} -- quiltTournamentAttempts'
+        // advance-by-at-most-one shape, plus `livesLeft`, which starts at 1..9 and may only go
+        // down (a wrong cat or a timed-out board costs a life; nothing gives one back).
+        match /pounceTournamentAttempts/{attemptId} {
+            allow read: if true;
+            allow create: if isSignedIn()
+                && request.resource.data.uid == request.auth.uid
+                && attemptId == request.resource.data.tournamentId + '_' + request.auth.uid
+                && request.resource.data.currentPuzzleIndex == 0
+                && request.resource.data.puzzlesPassed == 0
+                && request.resource.data.puzzlesFailed == 0
+                && request.resource.data.livesLeft is int
+                && request.resource.data.livesLeft >= 1 && request.resource.data.livesLeft <= 9
+                && request.resource.data.completed == false
+                && request.resource.data.bonusAwarded == false;
+            allow update: if isSignedIn() && request.auth.uid == resource.data.uid
+                && request.resource.data.uid == resource.data.uid
+                && request.resource.data.tournamentId == resource.data.tournamentId
+                && (resource.data.completed == false || request.resource.data.completed == true)
+                && (request.resource.data.currentPuzzleIndex == resource.data.currentPuzzleIndex
+                    || request.resource.data.currentPuzzleIndex == resource.data.currentPuzzleIndex + 1)
+                && (request.resource.data.puzzlesPassed == resource.data.puzzlesPassed
+                    || request.resource.data.puzzlesPassed == resource.data.puzzlesPassed + 1)
+                && (request.resource.data.puzzlesFailed == resource.data.puzzlesFailed
+                    || request.resource.data.puzzlesFailed == resource.data.puzzlesFailed + 1)
+                && request.resource.data.livesLeft is int
+                && request.resource.data.livesLeft >= 0
+                && request.resource.data.livesLeft <= resource.data.livesLeft;
             allow delete: if isAdmin();
         }
 
@@ -544,6 +606,14 @@ service cloud.firestore {
                     'quilt-monthly-champion', 'quilt-monthly-champion-3', 'quilt-monthly-champion-6',
                     'quilt-monthly-champion-9', 'quilt-monthly-champion-12',
 
+                    'pounce-expert', 'pounce-master', 'pounce-grandmaster',
+                    'pounce-daily-champion', 'pounce-daily-champion-7', 'pounce-daily-champion-30',
+                    'pounce-daily-champion-50', 'pounce-daily-champion-100',
+                    'pounce-weekly-champion', 'pounce-weekly-champion-5', 'pounce-weekly-champion-10',
+                    'pounce-weekly-champion-25', 'pounce-weekly-champion-50',
+                    'pounce-monthly-champion', 'pounce-monthly-champion-3', 'pounce-monthly-champion-6',
+                    'pounce-monthly-champion-9', 'pounce-monthly-champion-12',
+
                     'streak-7', 'streak-30', 'streak-100', 'streak-200', 'streak-365',
                     'daily-mind-champion', 'perfect-day', 'triple-threat',
                     'all-rounder', 'puzzle-enthusiast', 'mind-master',
@@ -569,7 +639,7 @@ service cloud.firestore {
             allow create: if isSignedIn()
                 && request.resource.data.uid == request.auth.uid
                 && tallyId == request.auth.uid + '_' + request.resource.data.gameId + '_' + request.resource.data.periodType
-                && request.resource.data.gameId in ['wordle', 'sudoku', 'wordsearch', 'connections', 'quilt']
+                && request.resource.data.gameId in ['wordle', 'sudoku', 'wordsearch', 'connections', 'quilt', 'pounce']
                 && request.resource.data.periodType in ['day', 'week', 'month']
                 && request.resource.data.count == 1;
             allow update: if isSignedIn() && request.auth.uid == resource.data.uid
@@ -598,7 +668,7 @@ service cloud.firestore {
         match /periodResults/{periodResultId} {
             allow read: if true;
             allow create, update: if isAdmin()
-                && request.resource.data.gameId in ['wordle', 'sudoku', 'wordsearch', 'connections', 'quilt']
+                && request.resource.data.gameId in ['wordle', 'sudoku', 'wordsearch', 'connections', 'quilt', 'pounce']
                 && request.resource.data.periodType in ['day', 'week', 'month']
                 && periodResultId == request.resource.data.gameId + '_' + request.resource.data.periodType + '_' + request.resource.data.periodKey
                 && (request.resource.data.winnerUid == null || request.resource.data.winnerPoints >= 0);

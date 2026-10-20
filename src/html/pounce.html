@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/assets/images/logo-header.png">
+    <title>Pounce - Daily Mind Challenge</title>
+    <meta name="description" content="Play Pounce free online — a daily cat logic puzzle in the Star Battle style. Give every row, column and colour region one cat, with no two cats touching. New board every day, plus Classic, Zen and the Nine Lives Run.">
+    <link rel="canonical" href="https://dailymindchallenge.com/pounce">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://dailymindchallenge.com/pounce">
+    <meta property="og:title" content="Pounce - Daily Mind Challenge">
+    <meta property="og:description" content="Play Pounce free online — a daily cat logic puzzle. Give every row, column and colour region one cat, with no two cats touching.">
+    <!-- Stand-in (the owner's logo on white) until the purpose-made 1.91:1 share image arrives (backlog O-05). -->
+    <meta property="og:image" content="https://dailymindchallenge.com/assets/images/fb-share-pounce.png">
+    <meta property="og:image:width" content="1756">
+    <meta property="og:image:height" content="896">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Pounce - Daily Mind Challenge">
+    <meta name="twitter:description" content="Play Pounce free online — a daily cat logic puzzle. Give every row, column and colour region one cat, with no two cats touching.">
+    <meta name="twitter:image" content="https://dailymindchallenge.com/assets/images/fb-share-pounce.png">
+    <link rel="stylesheet" href="/css/base.css">
+    <link rel="stylesheet" href="/css/components.css">
+    <link rel="stylesheet" href="/css/pages/pounce.css">
+</head>
+<body>
+    <div id="site-header"></div>
+
+    <div class="content">
+        <div class="ad-space" data-ad-slot="pounce-top">Google AdSense - Ad Space (300x250)</div>
+
+        <div class="section">
+            <div class="section-title">Pounce</div>
+            <div class="pounce-mode-tabs">
+                <button class="pounce-mode-tab active" data-mode="daily" type="button">Daily Challenge</button>
+                <button class="pounce-mode-tab" data-mode="classic" type="button">Classic</button>
+                <button class="pounce-mode-tab" data-mode="zen" type="button">Zen</button>
+                <button class="pounce-mode-tab" data-mode="tournament" type="button">Nine Lives Run</button>
+            </div>
+            <div class="game-container">
+                <div id="game-mount">
+                    <div class="loading-text">Loading&hellip;</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="ad-space" data-ad-slot="pounce-bottom">Google AdSense - Ad Space (300x250)</div>
+
+        <div class="section">
+            <div class="card htp-card">
+                <div class="htp-banner">
+                    <img src="/assets/images/tile-pounce.png" alt="Pounce" class="htp-logo">
+                    <h2>How to Play</h2>
+                </div>
+
+                <div class="htp-row">
+                    <span class="htp-icon-badge">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3"/><path d="m9 14 2 2 4-4"/></svg>
+                    </span>
+                    <div class="htp-row-body">
+                        <div class="htp-row-title">Rules</div>
+                        <p>Every cat wants its own nap spot. Place cats so that <strong>every row</strong>, <strong>every column</strong> and <strong>every colour region</strong> holds exactly one cat. Cats don't share: no two cats may <strong>touch</strong>, not even diagonally. Each board has exactly one solution, and you can always reach it by logic.</p>
+                    </div>
+                    <div class="htp-visual" aria-hidden="true">
+                        <div id="htp-pounce-example"></div>
+                    </div>
+                </div>
+
+                <div class="htp-divider"></div>
+
+                <div class="htp-row">
+                    <span class="htp-icon-badge">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51z"/></svg>
+                    </span>
+                    <div class="htp-row-body">
+                        <div class="htp-row-title">Controls</div>
+                        <p><strong>Tap</strong> a cell once to mark it &#10005; (no cat here), and again to place a cat. <strong>Long-press</strong> places a cat straight away, or turn on <em>Tap places 🐱</em>. <strong>Drag</strong> across cells to cross out many at once. A right cat stays put; a wrong one hisses, hops off and leaves a &#10005;. <strong>Undo</strong> (or Ctrl+Z / &#8984;Z) steps back. On a keyboard: arrow keys move, Space taps, Enter places a cat, X marks &#10005;.</p>
+                    </div>
+                </div>
+
+                <div class="htp-divider"></div>
+
+                <div class="htp-row">
+                    <span class="htp-icon-badge">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 9h.01M15 9h.01M8 14s1.5 2 4 2 4-2 4-2"/></svg>
+                    </span>
+                    <div class="htp-row-body">
+                        <div class="htp-row-title">Dogs, Pawprints &amp; Whisker Tips</div>
+                        <p>A <strong>sleeping dog</strong> 🐶 marks a cell no cat will nap on. On Hard boards a <strong>pawprint</strong> 🐾 with a number tells you how many cats touch that cell (including diagonally). Stuck? A <strong>Whisker Tip</strong> highlights the cells that matter and explains the next step in plain words &mdash; it never just gives away a cat. Solve with no hisses and no tips for a <strong>Purrfect</strong> bonus.</p>
+                    </div>
+                </div>
+
+                <div class="htp-divider"></div>
+
+                <div class="htp-row">
+                    <span class="htp-icon-badge">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M17 4h3a2 2 0 0 1 2 2v1a4 4 0 0 1-4 4"/><path d="M7 4H4a2 2 0 0 0-2 2v1a4 4 0 0 0 4 4"/></svg>
+                    </span>
+                    <div class="htp-row-body">
+                        <div class="htp-row-title">Game Modes</div>
+                        <div class="htp-modes">
+                            <div class="htp-mode-item">
+                                <span class="htp-mode-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                </span>
+                                <div>
+                                    <div class="htp-mode-name">Daily Challenge</div>
+                                    <p>One new 8&times;8 board every day, the same for everyone &mdash; and a new cat for your Cat Café.</p>
+                                </div>
+                            </div>
+                            <div class="htp-mode-item">
+                                <span class="htp-mode-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                                </span>
+                                <div>
+                                    <div class="htp-mode-name">Classic</div>
+                                    <p>Play any time: Easy 6&times;6, Medium 8&times;8 with dogs, or Hard 9&times;9 with dogs and pawprints.</p>
+                                </div>
+                            </div>
+                            <div class="htp-mode-item">
+                                <span class="htp-mode-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 18a5 5 0 0 0-10 0"/><line x1="12" y1="2" x2="12" y2="9"/><line x1="4.22" y1="10.22" x2="5.64" y2="11.64"/><line x1="1" y1="18" x2="3" y2="18"/><line x1="21" y1="18" x2="23" y2="18"/><line x1="18.36" y1="11.64" x2="19.78" y2="10.22"/><line x1="23" y1="22" x2="1" y2="22"/></svg>
+                                </span>
+                                <div>
+                                    <div class="htp-mode-name">Zen</div>
+                                    <p>No clock, no score, free tips. Just you and the cats.</p>
+                                </div>
+                            </div>
+                            <div class="htp-mode-item">
+                                <span class="htp-mode-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M9 2h6"/></svg>
+                                </span>
+                                <div>
+                                    <div class="htp-mode-name">Nine Lives Run</div>
+                                    <p>Five timed boards from 5&times;5 to 9&times;9, with nine lives for the whole run.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="htp-divider"></div>
+
+                <div class="htp-row">
+                    <span class="htp-icon-badge">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5.73.73 1.28 1.5 1.5 2.5"/></svg>
+                    </span>
+                    <div class="htp-row-body">
+                        <div class="htp-row-title">Tips &amp; Strategy</div>
+                        <ul class="htp-tips-list">
+                            <li>Start with the smallest regions &mdash; a region with only two or three spots has very few choices.</li>
+                            <li>Every time you place a cat, cross out its row, its column, its region and the eight cells around it. (Auto-&#10005; can do this for you.)</li>
+                            <li>If all of a region's open spots sit in one row, that row belongs to the region: cross out the rest of that row. The same works for columns.</li>
+                            <li>Look for a spot that would wipe out every option in another region if a cat napped there &mdash; it can't hold a cat.</li>
+                            <li>Two regions squeezed into the same two rows own those rows; nothing else in those rows can hold a cat.</li>
+                            <li>Pawprints are strong clues: a 0 empties all eight cells around it, and a number that equals its open neighbours fills them all.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="card faq-card">
+                <div class="faq-title">Pounce FAQ</div>
+
+                <details class="faq-item">
+                    <summary class="faq-question">What is Pounce?</summary>
+                    <p class="faq-answer">Pounce is a daily logic puzzle about cats looking for nap spots. It's in the Star Battle family of puzzles: place one cat in every row, column and colour region, with no two cats touching.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary class="faq-question">Is there a new Pounce every day?</summary>
+                    <p class="faq-answer">Yes &mdash; one Daily Challenge board unlocks for everyone each calendar day.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary class="faq-question">What are the rules, exactly?</summary>
+                    <p class="faq-answer">Each row, each column and each coloured region must contain exactly one cat, and no two cats may be next to each other horizontally, vertically or diagonally.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary class="faq-question">How do I place a cat?</summary>
+                    <p class="faq-answer">Tap a cell twice (the first tap marks &#10005;), long-press it, or switch on "Tap places 🐱" so one tap places a cat. On a keyboard, press Enter on the selected cell.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary class="faq-question">What happens if I place a cat in the wrong spot?</summary>
+                    <p class="faq-answer">The cat hisses, hops off and leaves a &#10005; behind. It counts as a hiss, which lowers your score a little, but you can always keep going &mdash; you can't fail the Daily Challenge.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary class="faq-question">Does every board have only one solution?</summary>
+                    <p class="faq-answer">Yes. Every board is checked by a solver before it's published, and it's also checked to be solvable step by step with logic alone &mdash; no guessing needed.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary class="faq-question">What are the dogs?</summary>
+                    <p class="faq-answer">A sleeping dog marks a cell no cat will nap on. Dogs appear from Medium boards up, and they still belong to their colour region.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary class="faq-question">What do the pawprint numbers mean?</summary>
+                    <p class="faq-answer">A pawprint shows how many cats touch that cell, counting all eight neighbours (diagonals too). A pawprint cell never holds a cat itself. Pawprints appear on Hard boards.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary class="faq-question">How do Whisker Tips work?</summary>
+                    <p class="faq-answer">A tip finds the next logical step, highlights the cells involved and explains it in a sentence &mdash; for example, which row a region is locked into. If you've crossed out a spot where a cat belongs, the tip clears that mark first. Each tip costs 3 points in scored modes.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary class="faq-question">What is a Purrfect solve?</summary>
+                    <p class="faq-answer">Solving a board with no hisses and no Whisker Tips. It earns a 5-point bonus. Using Auto-&#10005; doesn't cost you the Purrfect bonus.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary class="faq-question">How is Daily Challenge scoring calculated?</summary>
+                    <p class="faq-answer">10 points for solving, a speed bonus (10 within 2 minutes, 8 within 4, 6 within 8, otherwise 5), minus 2 per hiss and 3 per tip (never below 5), plus 5 for a Purrfect solve.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary class="faq-question">Does the timer start as soon as the board loads?</summary>
+                    <p class="faq-answer">No &mdash; in the Daily Challenge and Classic the timer starts with your first touch of the board, so you can study it first.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary class="faq-question">What is the Cat Café?</summary>
+                    <p class="faq-answer">Every Daily Challenge you solve adopts a cat with its own name, coat and look. Everyone who solves the same day adopts the same cat, and your collection grows on your profile.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary class="faq-question">What's the difference between Daily, Classic, Zen and the Nine Lives Run?</summary>
+                    <p class="faq-answer">Daily is one shared board per day. Classic lets you play as often as you like at Easy, Medium or Hard. Zen is Classic without the clock or the score. The Nine Lives Run is five timed boards with nine lives shared across the whole run.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary class="faq-question">How does the Nine Lives Run work?</summary>
+                    <p class="faq-answer">You play five boards, from 5&times;5 up to 9&times;9, each against the clock. A wrong cat or running out of time costs one of your nine lives. Lose them all and the run ends &mdash; you keep the points you've banked, and lives left at the end earn a bonus.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary class="faq-question">Do I need an account to play?</summary>
+                    <p class="faq-answer">No &mdash; guests can play and earn points too. A free account also unlocks streaks, XP, Rank and Achievements.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary class="faq-question">Can I share my result without spoiling the board?</summary>
+                    <p class="faq-answer">Yes &mdash; the Daily share text shows your time, hisses, tips, score and the cat you adopted, never the board. "Copy Result &amp; Share with Community" and "Share with Friends" are two separate one-time bonuses.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary class="faq-question">Does playing Pounce count toward my streak?</summary>
+                    <p class="faq-answer">Yes &mdash; completing the Daily Challenge (in any game) advances your daily streak, as long as you play on consecutive calendar days.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary class="faq-question">Does Pounce work on mobile?</summary>
+                    <p class="faq-answer">Yes &mdash; it's built for touch. The page won't scroll while your finger is on the board, so you can drag to cross out cells.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary class="faq-question">What's the Pounce leaderboard based on?</summary>
+                    <p class="faq-answer">Total points from every scored Pounce mode for the period you select (Today, Week, Month, Year or All-time). Zen doesn't score.</p>
+                </details>
+            </div>
+        </div>
+    </div>
+
+    <div id="site-footer"></div>
+
+    <script type="module" src="/js/games/pounce/pounce-page.js"></script>
+</body>
+</html>

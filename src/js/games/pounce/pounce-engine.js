@@ -36,6 +36,35 @@ function formatClock(totalSeconds) {
 const PAW_SVG = '<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="9" cy="15" r="4.5"/><circle cx="16" cy="8" r="4.5"/><circle cx="24" cy="8" r="4.5"/><circle cx="31" cy="15" r="4.5"/><path d="M20 17c-7 0-12 6-12 11.5C8 33 11.5 35 15 35c2 0 3.2-1 5-1s3 1 5 1c3.5 0 7-2 7-6.5C32 23 27 17 20 17z"/></svg>';
 
 /**
+ * A non-interactive board as an HTML string (same `pn-` look as a live round): regions, dogs,
+ * pawprints and -- with `cats: true` -- the solution's cats asleep. Used by the already-played
+ * Daily view and the How to Play example. `className` adds a class to the board.
+ */
+export function staticBoardHtml(puzzle, { cats = true, label = 'Pounce board', className = '', seed = '' } = {}) {
+    const { size: n, solution = [], dogs = [], pawprints = [] } = puzzle;
+    const region = regionGrid(puzzle);
+    const coats = boardCoats(n, seed || puzzle.regions.join(''));
+    const dogAt = new Set(dogs.map((d) => d.y * n + d.x));
+    const pawAt = new Map(pawprints.map((p) => [p.y * n + p.x, p.n]));
+    let cells = '';
+    for (let idx = 0; idx < n * n; idx++) {
+        const x = idx % n;
+        const y = (idx - x) / n;
+        const classes = ['pn-cell', 'pn-fixed'];
+        if (x < n - 1 && region[idx + 1] !== region[idx]) classes.push('pn-br');
+        if (y < n - 1 && region[idx + n] !== region[idx]) classes.push('pn-bb');
+        if (x === n - 1) classes.push('pn-last-col');
+        if (y === n - 1) classes.push('pn-last-row');
+        let inner = '';
+        if (dogAt.has(idx)) inner = '<span class="pn-dog">🐶<span class="pn-dog-z">z</span></span>';
+        else if (pawAt.has(idx)) inner = `<span class="pn-paw">${PAW_SVG}<span class="pn-paw-n">${pawAt.get(idx)}</span></span>`;
+        else if (cats && solution[y] === x) inner = `<span class="pn-cat">${catSvg({ coat: coats[y], eyes: 'sleepy' })}</span>`;
+        cells += `<div class="${classes.join(' ')}" style="--pn-region: ${REGION_COLOURS[region[idx]].colour};">${inner}</div>`;
+    }
+    return `<div class="pn-board pn-static ${escapeHtml(className)}" style="--pn-n: ${n};" role="img" aria-label="${escapeHtml(label)}">${cells}</div>`;
+}
+
+/**
  * Mounts a playable Pounce round into `container`. `puzzle` is the stored shape from
  * pounce-generator.js (`{ size, regions, solution, dogs, pawprints }`).
  *

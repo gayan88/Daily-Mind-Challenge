@@ -71,4 +71,14 @@ export const GAMES = {
             tournament: ['quilt-tournament', 'quilt-tournament-bonus'],
         },
     },
+    pounce: {
+        label: 'Pounce',
+        logo: '/assets/images/tile-pounce.png',
+        scoreTypes: ['pounce', 'pounce-classic', 'pounce-tournament', 'pounce-tournament-bonus'],
+        modes: {
+            daily: ['pounce'],
+            classic: ['pounce-classic'],
+            tournament: ['pounce-tournament', 'pounce-tournament-bonus'],
+        },
+    },
 };

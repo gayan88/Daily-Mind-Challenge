@@ -356,6 +356,7 @@ async function renderAdSlotForms() {
     renderGroup('ad-slot-forms-wordsearch', 'wordsearch');
     renderGroup('ad-slot-forms-connections', 'connections');
     renderGroup('ad-slot-forms-quilt', 'quilt');
+    renderGroup('ad-slot-forms-pounce', 'pounce');
 }
 
 async function renderDailyWordsTable() {

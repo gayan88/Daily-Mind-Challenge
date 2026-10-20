@@ -6,8 +6,9 @@ column and coloured region; no two cats may touch, not even diagonally. Hard add
 Plan, brand and decisions: `docs/pounce-development-plan.md`. Tickets: `docs/pounce-backlog.md`.
 Never call it "Meowdoku" or "Queens" in the product.
 
-**Status: sprints 1–2 done (puzzle core, cat art, engine), nothing wired into the site yet.** It
-isn't in `GAMES` and has no page, rules or admin.
+**Status: sprints 1–3 done, not deployed.** `/pounce` has a working Daily Challenge, wired into the
+site (`GAMES`, rules, home tile, leaderboard, profile, badges). Classic / Zen / Nine Lives Run tabs
+say "coming soon" until sprint 4, and there's no admin section yet (sprint 5).
 
 ## Files
 
@@ -45,6 +46,20 @@ isn't in `GAMES` and has no page, rules or admin.
   outOfLives, timeTakenSeconds, mistakes, tips, perfect, livesLeft })` once, 1.7 s after the
   curl-up / reveal. `REGION_COLOURS` (10 named muted colours; the names are used in tips).
   Styles: `src/css/pages/pounce.css` (`pn-` prefix, `--color-pounce-*` tokens in base.css).
+  `staticBoardHtml(puzzle, { cats, label, className })` draws a non-interactive board (already-
+  played Daily, How to Play example).
+- **`pounce-scoring.js`** — Daily `10 + timeBonus(≤120s 10 / ≤240 8 / ≤480 6 / else 5) − 2/hiss −
+  3/tip (min 5) + 5 Purrfect` (max 25); Classic = Daily parts × {easy .8, medium 1, hard 1.3}
+  rounded (max 33). `penaltyPoints` is the deduction actually applied. Rules caps: pounce 30,
+  pounce-classic 40, pounce-tournament 30, pounce-tournament-bonus 2000.
+- **`pounce-daily-data.js`** — `pounceDailyPuzzles/{YYYY-MM-DD}` + `_meta` (Quilt's scheme) holding
+  `{ challengeNumber, ...puzzle }`; gameScores `{uid}_pounce_{date}`, one solve per day, always
+  `won: true`, stores `mistakes`, `tips`, `cafeCat`, both share flags created `false`.
+- **`pounce-summary-modal.js`** — `showPounceSummaryModal()`, adapted from Quilt's: optional `cat`
+  ({ svg, caption }) at the top, Purrfect badge, breakdown lines may be negative ("−n").
+- **`pounce-page.js`** — `trySession()` page glue, mode tabs with one `activeRound`, Daily flow
+  (record → XP/streak for registered → summary + shares), already-played view, How to Play example
+  (a fixed generated 5×5). Share text never shows the board.
 
 The solver, logic, generator and cats modules are pure ES modules (no DOM, no Firebase) importing only `utils/helpers.js`, so they run
 under plain Node.
@@ -62,3 +77,7 @@ Engine: `tools/pounce-preview.html` mounts a generated board (`?difficulty=&size
 serve the repo root, e.g. `python3 -m http.server 8123 --bind 127.0.0.1`).
 `tools/pounce-browser-test.mjs` drives it in the system Chrome (setup in its header) and checks
 every control and mode at phone and desktop sizes. Run it after any engine/CSS change.
+
+Site: `tools/pounce-e2e-test.mjs` (with `tools/pounce-emulator-seed.mjs`) runs the Daily end to end
+against the Firebase emulators (setup + known emulator quirks in its header): 24 checks incl. the
+gameScores doc, the share rule, leaderboard, profile and home tile.

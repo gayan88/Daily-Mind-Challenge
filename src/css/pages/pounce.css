@@ -388,3 +388,559 @@
         padding: 10px 14px;
     }
 }
+
+/* ==================== Page ==================== */
+
+.pounce-mode-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    max-width: 460px;
+    margin: 0 auto 20px;
+}
+
+.pounce-mode-tab {
+    flex: 1;
+    min-width: 140px;
+    padding: 10px 14px;
+    border: 0.5px solid var(--color-border);
+    background: white;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.pounce-mode-tab.active {
+    background: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+}
+
+.pounce-mode-tab:not(.active):hover {
+    background: var(--color-bg);
+    border-color: var(--color-border-strong);
+}
+
+.game-container {
+    max-width: 460px;
+    margin: 0 auto;
+}
+
+.pounce-title {
+    text-align: center;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: 4px;
+}
+
+.pounce-subtitle {
+    text-align: center;
+    color: var(--color-text-secondary);
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+
+.pounce-difficulty-picker {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.pounce-difficulty-btn {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 16px 20px;
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: white;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.pounce-difficulty-btn:hover {
+    border-color: var(--color-primary);
+    background: var(--color-primary-tint);
+}
+
+.pounce-difficulty-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.pounce-difficulty-points {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-primary);
+}
+
+.pounce-tournament-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.pounce-tournament-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 20px 24px;
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+}
+
+.pounce-tournament-info {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.pounce-tournament-name {
+    font-weight: 800;
+    font-size: 22px;
+    color: var(--color-text);
+}
+
+.pounce-tournament-meta-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 15px;
+    color: var(--color-text-secondary);
+}
+
+.pounce-tournament-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.pounce-tournament-meta-icon {
+    width: 20px;
+    height: 20px;
+    color: var(--color-primary);
+    flex-shrink: 0;
+}
+
+.pounce-tournament-sep {
+    color: var(--color-border-strong);
+}
+
+.pounce-tournament-card .btn {
+    flex: 0 0 auto;
+    padding: 14px 32px;
+    font-size: 15px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+    .pounce-tournament-card {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .pounce-tournament-card .btn {
+        width: 100%;
+    }
+}
+
+.pounce-tournament-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 16px;
+}
+
+
+/* ---------- Post-round summary modal ----------
+   Same overlay/dialog/close pattern as index.html's sign-in modal / wordle.html's summary modal,
+   duplicated here rather than shared since only one page's CSS loads at a time. */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(44, 44, 42, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 300;
+}
+
+.modal-dialog {
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    padding: 52px 24px 24px;
+    width: 100%;
+    max-width: 400px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+}
+
+.modal-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    color: var(--color-text-muted);
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    z-index: 1;
+}
+
+.modal-close:hover {
+    background: var(--color-bg);
+    color: var(--color-text);
+}
+
+.pounce-summary-celebrate {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    height: 64px;
+    margin-bottom: 8px;
+}
+
+.pounce-summary-trophy-wrap {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--color-primary-tint);
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pounce-summary-trophy-wrap svg {
+    width: 30px;
+    height: 30px;
+}
+
+.pounce-summary-confetti {
+    position: absolute;
+    top: 8px;
+    width: 7px;
+    height: 7px;
+    border-radius: 2px;
+}
+
+.pounce-summary-confetti-1 {
+    left: calc(50% - 92px);
+    background: #F2B705;
+    transform: rotate(20deg);
+}
+
+.pounce-summary-confetti-2 {
+    left: calc(50% - 68px);
+    top: 34px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--color-danger);
+}
+
+.pounce-summary-confetti-3 {
+    right: calc(50% - 92px);
+    background: var(--color-primary);
+    transform: rotate(-20deg);
+}
+
+.pounce-summary-confetti-4 {
+    right: calc(50% - 68px);
+    top: 34px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--color-success);
+}
+
+.pounce-summary-title {
+    text-align: center;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--color-text);
+    margin-bottom: 4px;
+}
+
+.pounce-summary-subtitle {
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-primary);
+    margin-bottom: 20px;
+}
+
+.pounce-summary-breakdown {
+    border-top: 0.5px solid var(--color-border);
+    padding-top: 12px;
+    margin-bottom: 16px;
+}
+
+.pounce-summary-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    padding: 4px 0;
+}
+
+.pounce-summary-line-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pounce-summary-line-icon {
+    display: flex;
+    flex: 0 0 auto;
+    color: var(--color-primary);
+}
+
+.pounce-summary-line-icon svg {
+    width: 16px;
+    height: 16px;
+}
+
+.pounce-summary-total {
+    border-top: 0.5px solid var(--color-border);
+    margin-top: 6px;
+    padding-top: 10px;
+    font-weight: 700;
+    color: var(--color-text);
+    font-size: 16px;
+}
+
+/* ---------- Share options (Daily/Classic/Tournament completion) ---------- */
+.pounce-share-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.pounce-share-option {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    padding: 14px 16px;
+    border: 1.5px solid var(--color-primary);
+    border-radius: var(--radius-lg);
+    background: var(--color-primary-tint);
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    transition: filter 0.15s;
+}
+
+.pounce-share-option:hover {
+    filter: brightness(0.97);
+}
+
+.pounce-share-friends {
+    border-color: var(--color-success);
+    background: #E3F5EE;
+}
+
+.pounce-share-option-icon {
+    flex: 0 0 auto;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: white;
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pounce-share-friends .pounce-share-option-icon {
+    color: var(--color-success);
+}
+
+.pounce-share-option-icon svg {
+    width: 22px;
+    height: 22px;
+}
+
+.pounce-share-option-body {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.pounce-share-option-title {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--color-primary);
+}
+
+.pounce-share-friends .pounce-share-option-title {
+    color: var(--color-success);
+}
+
+.pounce-share-option-desc {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    line-height: 1.4;
+}
+
+/* Badge + chevron live in their own column on the right, out of the title's text flow, so a long
+   title never pushes the badge onto its own visual row underneath. */
+.pounce-share-option-side {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    color: var(--color-primary);
+}
+
+.pounce-share-friends .pounce-share-option-side {
+    color: var(--color-success);
+}
+
+.pounce-share-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: var(--color-primary);
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.pounce-share-badge-green {
+    background: var(--color-success);
+}
+
+.pounce-share-option-side svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* Set by markClaimed() once this specific option's bonus has been awarded -- the other option
+   stays fully interactive regardless. */
+.pounce-share-option-claimed {
+    cursor: default;
+    opacity: 0.7;
+}
+
+.pounce-share-option-claimed:hover {
+    filter: none;
+}
+
+.pounce-share-or {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--color-primary);
+    font-weight: 700;
+    font-size: 12px;
+}
+
+.pounce-share-or::before,
+.pounce-share-or::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--color-border);
+}
+
+/* Classic picker: name + size on one line, a short blurb under it. */
+.pounce-difficulty-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    text-align: left;
+}
+
+.pounce-difficulty-points {
+    flex-shrink: 0;
+    margin-left: 12px;
+    white-space: nowrap;
+}
+
+.pounce-difficulty-blurb {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+}
+
+.pounce-summary-perfect {
+    display: block;
+    width: fit-content;
+    margin: -8px auto 14px;
+    padding: 3px 12px;
+    border-radius: 999px;
+    background: var(--color-primary-tint);
+    color: var(--color-primary-dark);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+/* The Cat Café cat a Daily solve adopts, at the top of the summary modal. */
+.pounce-summary-cat {
+    width: 120px;
+    height: 120px;
+    margin: 4px auto 6px;
+    animation: pn-pounce 0.5s cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+
+.pounce-summary-cat svg {
+    width: 100%;
+    height: 100%;
+}
+
+.pounce-summary-adopted {
+    margin: -2px 0 10px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-pounce-dark);
+}
+
+/* Already-played Daily: today's solved board, small and static. */
+.pounce-played-board {
+    max-width: 320px;
+    margin: 16px auto 0;
+    pointer-events: none;
+}
+
+/* ---------- How to Play: Pounce-specific mini visuals (shared .htp-* layout is in components.css) */
+.htp-mini-pounce {
+    width: 152px;
+    max-width: 152px;
+    --pn-cell: 38px;
+    border-width: 2px;
+    margin: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pounce-summary-cat {
+        animation: none;
+    }
+}

@@ -30,6 +30,7 @@ The home page and the three game pages each have `<div class="ad-space" data-ad-
 | `wordsearch.html` | `/js/games/wordsearch/wordsearch-page.js` | `/wordsearch` |
 | `connections.html` | `/js/games/connections/connections-page.js` | `/connections` |
 | `quilt.html` | `/js/games/quilt/quilt-page.js` | `/quilt` |
+| `pounce.html` | `/js/games/pounce/pounce-page.js` | `/pounce` |
 | `leaderboard.html` | `/js/leaderboard/leaderboard-page.js` (`trySession()`, public -- renders for anonymous visitors/crawlers) | `/leaderboard` |
 | `profile.html` | `/js/pages/profile.js` | `/profile` |
 | `settings.html` | `/js/pages/settings.js` (registered users only) | `/settings` |
