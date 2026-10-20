@@ -103,7 +103,6 @@ No cuddling."*
 |---|---|
 | **Daily Challenge** | One 8×8 board a day, the same for everyone, no way to fail. Every Daily solved **adopts a named cat** for the player's **Cat Café** collection ("You adopted Biscuit the tabby!") — a gentle reason to come back tomorrow, and a natural "collect them all" angle. |
 | **Classic** | Easy 6×6, Medium 8×8 (sleeping dogs block cells), Hard 9×9 (plus pawprint clues). Unlimited replays. |
-| **Zen** | No clock, no score, free hints — the relaxing version. |
 | **Nine Lives Run** (Tournament) | Five timed boards from 5×5 to 9×9 with nine lives for the whole run; lives left at the end earn a bonus. "How many lives did you keep?" is a ready-made share line. |
 
 Stuck players get a **Whisker Tip** that explains the next step in plain words rather than just

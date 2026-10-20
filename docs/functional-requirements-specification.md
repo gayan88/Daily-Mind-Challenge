@@ -39,7 +39,7 @@ panel used to operate it, and the third-party integrations that affect user-visi
 | Registered user | A player with a username + password (Firebase Email/Password Auth under a synthetic or real email) |
 | Admin | A registered user with `isAdmin: true` on their profile doc |
 | Daily Challenge | The mode common to all six games: one puzzle per day, identical for every player, scored once |
-| Classic | Unlimited-replay mode (Sudoku, Word Search, Connections, Quilt, Pounce) at a chosen difficulty; Pounce also has Zen (Classic without clock or score) |
+| Classic | Unlimited-replay mode (Sudoku, Word Search, Connections, Quilt, Pounce) at a chosen difficulty |
 | Tournament | A timed, multi-puzzle/word run with a completion bonus (all six games; Quilt's is called Patchwork Run, Pounce's Nine Lives Run) |
 | `gameScores` | The single Firestore collection holding every scored result, across every game/mode |
 | Points | A per-game, per-player currency earned by playing; drives the leaderboard and per-game Level |
@@ -192,7 +192,7 @@ Numbered 3.5b so existing requirement ids don't shift. Plan, brand and decisions
 | FR-5b.4 | **Whisker Tips**: on request the system shall clear a ✕ the player put on a real cat spot, or otherwise show the easiest next deduction — highlighting its cells and explaining it in a sentence — and apply it. It shall never reveal a cat outright except as a last resort. |
 | FR-5b.5 | **Daily Challenge**: one shared Medium 8×8 board per calendar day, one scored solve, no loss condition. Points: 10 + speed bonus (≤2 min 10, ≤4 min 8, ≤8 min 6, else 5) − 2 per hiss − 3 per tip (never below 5) + 5 Purrfect (no hisses, no tips). The share text shall never show the board. |
 | FR-5b.6 | **Classic**: Easy 6×6 / Medium 8×8 (sleeping dogs: blocked cells) / Hard 9×9 (dogs + pawprint clues: how many cats touch that cell), unlimited replays, unsolved boards first. Points: the Daily formula × 0.8 / 1.0 / 1.3. |
-| FR-5b.7 | **Zen**: the Classic boards with no clock, no score, free tips and nothing recorded. |
+| FR-5b.7 | *(Withdrawn: Zen mode, removed 2026-10-21, at the owner's request: four tabs looked odd next to the other games' three, and Zen was only Classic without the clock/score.)* |
 | FR-5b.8 | **Nine Lives Run** (Tournament): five boards (5×5 → 9×9) under a global per-board time limit with one shared set of lives (default 9). A wrong cat costs a life and is saved immediately; a board that runs out of time costs a life and banks 10 (30 if solved); at 0 lives the run ends with banked points. A run that reaches the end adds its completion bonus + 5 per life left. |
 | FR-5b.9 | **Cat Café**: every Daily solved shall adopt that date's cat (name, coat, eyes, accessory — the same cat for everyone that day), shown in the summary and collected on the profile. |
 | FR-5b.10 | After any scored round the system shall offer the same two independent share bonuses as FR-2.11. |

@@ -4,7 +4,8 @@
 > release-tested locally on 2026-10-20. **Deployed to production 2026-10-21** (hosting + rules, at `9a9f951`).
 > Live content at deploy: 1,000 Daily boards (2026-11-01 → 2029-07-27; until 1 Nov players get #1 as a
 > preview), 300 Classic (100 per difficulty), Run settings 240 s / 9 lives, **no Nine Lives Runs yet**.
-> A sample of 35 live boards re-validated after deploy: all uniquely solvable by logic. Plan, brand and decisions:
+> A sample of 35 live boards re-validated after deploy: all uniquely solvable by logic.
+> **2026-10-21: Zen mode removed** (at the owner's request: four tabs looked odd next to the other games' three, and Zen was only Classic without the clock/score). Pounce now has three modes, like the other games. Plan, brand and decisions:
 > `docs/pounce-development-plan.md`; tickets and per-sprint notes: `docs/pounce-backlog.md`.
 
 ## What's in this release
@@ -19,7 +20,6 @@ cat pounces into its spot and stays; a wrong one hisses, hops off and leaves a �
   Café** (same cat for everyone that day). Share text never shows the board.
 - **Classic** — Easy 6×6 / Medium 8×8 + dogs / Hard 9×9 + dogs + pawprint clues; unlimited replays,
   unsolved boards first. The Daily formula × 0.8 / 1.0 / 1.3 (max 20 / 25 / 33).
-- **Zen** — the Classic boards with no clock, no score and free tips; nothing is recorded.
 - **Nine Lives Run** (Tournament) — five timed boards (5×5 → 9×9), one shared set of lives (default
   9, 240 s per board). A wrong cat costs a life (saved at once, so leaving can't refund it); a
   timed-out board costs a life and banks 10 (30 if solved); 0 lives ends the run with banked points.
@@ -58,9 +58,9 @@ All scripts are in `tools/` this time (setup notes in each file's header).
 | Suite | Script | Result |
 |---|---|---|
 | Puzzle core: solver vs brute force (300 boards incl. dogs + pawprints), 1000 boards per difficulty (unique, logic-solvable, every hint step checked against the answer, no giveaway regions, seed-stable), 10 Runs | `pounce-soak-test.mjs 1000` | all pass; ≤ 20 ms per board |
-| Board engine: tap / long-press / drag ✕ / undo, hiss, tips, keyboard-only Purrfect, Run lives + out of lives, Zen, 360 px phone (no sideways scroll, 36 px cells on 9×9) | `pounce-browser-test.mjs` | 24/24 |
+| Board engine: tap / long-press / drag ✕ / undo, hiss, tips, keyboard-only Purrfect, Run lives + out of lives, 360 px phone (no sideways scroll, 36 px cells on 9×9) | `pounce-browser-test.mjs` | 24/24 |
 | Daily: signed-out page, guest sign-in, solve with 1 hiss + 1 tip (15), score doc, +20 share via the rules (35), already-played, tabs, leaderboard, profile + Cat Café, home tile | `pounce-e2e-test.mjs` | 25/25 (see note) |
-| Classic (Purrfect Easy 20, next unplayed), Zen (nothing written), Run A (life saved at once, 20 s timeout, out of lives = 50, bonus 0), Run B (all 5 = 265) | `pounce-e2e-modes-test.mjs` | 28/28 |
+| Classic (Purrfect Easy 20, next unplayed), Run A (life saved at once, 20 s timeout, out of lives = 50, bonus 0), Run B (all 5 = 265) | `pounce-e2e-modes-test.mjs` | 28/28 |
 | Admin on a fresh database: sign-up → admin, Generate 365 + 5 Dailies (dates), Regenerate, Classic add/delete, JSON import (bad board, duplicates), run create + bulk + activate, settings | `pounce-e2e-admin-test.mjs` | 23/23 |
 | Regression smoke: home (6 tiles), every mode tab of all 6 games, leaderboard, profile — no errors | `site-smoke-test.mjs` | 9/9 |
 

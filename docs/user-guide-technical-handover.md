@@ -29,7 +29,7 @@ Connections) or attempted (Sudoku/Word Search/Quilt/Pounce), that day's challeng
 unlocks.
 
 ### Classic and Tournament modes
-- **Classic** (Sudoku, Word Search, Connections, Quilt, Pounce — which also has an unscored **Zen** mode): pick Easy/Medium/Hard and play as many puzzles
+- **Classic** (Sudoku, Word Search, Connections, Quilt, Pounce): pick Easy/Medium/Hard and play as many puzzles
   as you like, any time.
 - **Tournament** (all six games): a timed run through several puzzles set up by the site admin.
   In Wordle and Connections, failing any puzzle resets you to puzzle 1. In Sudoku, Word Search and
@@ -50,8 +50,8 @@ one cat, and no two cats touch, even diagonally. Tap once for ✕, again for a c
 drag to cross out many cells. A right cat stays; a wrong one hisses off (a "hiss" costs a few
 points). Whisker Tips explain the next step in plain words. Medium boards add sleeping dogs (no cat
 there); Hard adds pawprint numbers (how many cats touch that cell). Solving with no hisses and no
-tips is Purrfect. Every Daily solved adopts a cat for your **Cat Café** (on your profile). Zen is
-the same boards without clock or score; the Tournament, **Nine Lives Run**, is five timed boards
+tips is Purrfect. Every Daily solved adopts a cat for your **Cat Café** (on your profile).
+The Tournament, **Nine Lives Run**, is five timed boards
 with nine lives for the whole run.
 
 ### Earning Points, XP, and Rank

@@ -132,7 +132,7 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
     await page.close();
 }
 
-// ---- Run: lives and out-of-lives; Zen: nothing counted ----------------------------------------
+// ---- Run: lives and out-of-lives ------------------------------------------------------------
 {
     const { page, errors } = await open('difficulty=easy&size=5&mode=run&seed=run&lives=2', { width: 390, height: 844 });
     const p = await page.evaluate(() => window.__puzzle);
@@ -150,23 +150,6 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
     check(errors.length === 0, `no console errors (run) ${errors.join(' | ')}`);
     await page.close();
 }
-{
-    const { page, errors } = await open('difficulty=easy&mode=zen&seed=zen', { width: 390, height: 844 });
-    check(!(await page.$('[data-pn-time]')) && !(await page.$('[data-pn-tips]')), 'zen: no clock, no tip counter');
-    const p = await page.evaluate(() => window.__puzzle);
-    const n = p.size;
-    const sol = new Set(p.solution.map((x, y) => y * n + x));
-    await page.click('[data-pn-catpen]');
-    await tapCell(page, [...Array(n * n).keys()].find((i) => !sol.has(i)));
-    await page.click('[data-pn-tip]');
-    for (const i of sol) await tapCell(page, i);
-    await page.waitForFunction(() => window.__result, { timeout: 4000 });
-    const result = await page.evaluate(() => window.__result);
-    check(result.won && !result.perfect && result.mistakes === 0 && result.tips === 0, `zen: nothing counted, never Purrfect ${JSON.stringify(result)}`);
-    check(errors.length === 0, `no console errors (zen) ${errors.join(' | ')}`);
-    await page.close();
-}
-
 // ---- Narrowest phone, 9×9 readability --------------------------------------------------------
 {
     const { page } = await open('difficulty=hard&mode=daily&seed=narrow', { width: 360, height: 740, deviceScaleFactor: 2 });

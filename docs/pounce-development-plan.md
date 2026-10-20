@@ -34,7 +34,7 @@ fairer Easy/Medium/Hard than size alone.
 | **Daily** | One 8×8 puzzle per day, the same for everyone, graded Medium. Dogs allowed, no pawprints. |
 | **Classic** | Unlimited, by difficulty: Easy 6×6 · Medium 8×8 (+ dogs) · Hard 9×9 (+ dogs + pawprints). |
 | **Tournament: "Nine Lives Run"** | 5 boards (5×5 → 9×9), 9 lives for the whole run. A wrong cat costs a life; running out ends the run with the points banked so far. Completion bonus + a bonus per life left. |
-| **Zen** | Unscored Classic boards (any difficulty): no timer, mistakes highlighted rather than counted, free hints. Writes no score docs. Added to v1 on 2026-10-20. |
+| ~~**Zen**~~ | Added to v1 on 2026-10-20 (unscored Classic boards: no timer, free hints); **removed 2026-10-21, at the owner's request: four tabs looked odd next to the other games' three, and Zen was only Classic without the clock/score**. |
 
 **Controls:** tap cycles empty → ✕ → 🐱 → empty. Long-press (or a toolbar toggle) places a cat
 directly. An optional "Auto-✕" assist marks the cells a new cat rules out (off by default, and

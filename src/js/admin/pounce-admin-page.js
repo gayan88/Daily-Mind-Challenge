@@ -78,7 +78,7 @@ const ADMIN_HTML = `
     <div class="section">
         <div class="section-title">Classic Boards</div>
         <div class="card">
-            <p class="config-form-desc">Classic serves boards a player hasn't solved yet first, from the chosen difficulty's pool; Zen plays the same pool without scoring. Easy 6&times;6 &middot; Medium 8&times;8 with dogs &middot; Hard 9&times;9 with dogs and pawprint clues.</p>
+            <p class="config-form-desc">Classic serves boards a player hasn't solved yet first, from the chosen difficulty's pool. Easy 6&times;6 &middot; Medium 8&times;8 with dogs &middot; Hard 9&times;9 with dogs and pawprint clues.</p>
             ${poolInputHtml('pa-classic', { withDifficulty: true, defaultCount: 100 })}
             <div id="pa-classic-table"><div class="loading-text">Loading&hellip;</div></div>
         </div>

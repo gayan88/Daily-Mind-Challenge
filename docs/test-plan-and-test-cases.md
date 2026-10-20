@@ -90,7 +90,7 @@ Environment Configuration section.
 | TC-24 | Patchwork Run bulk import | Upload `docs/quilt-content/test-patchwork-runs-100.txt` (removed 2026-10-20; recover with `git checkout deaffe8 -- docs/quilt-content`), 2×2, Inactive, Create; activate one | 100 inactive runs in file order; players see only the activated run; re-importing the same file is rejected |
 | TC-25 | Pounce wrong cat | Place a cat on a wrong cell (Daily) | It hisses off, leaves a ✕, Hisses +1; the summary shows −2; no Purrfect |
 | TC-26 | Pounce Whisker Tip | Cross out a real cat spot, press Whisker Tip; press it again | First tip clears that ✕ and says so; the next highlights cells and explains a deduction; Tips counter +1 each |
-| TC-27 | Pounce Zen writes nothing | Solve a Zen board with hisses and tips | No popup, no gameScores doc, no points |
+| TC-27 | *(Withdrawn 2026-10-21 with Zen mode)* Pounce has exactly three mode tabs | Open `/pounce` | Daily Challenge, Classic, Nine Lives Run — no Zen tab |
 | TC-28 | Nine Lives Run lives | Lose a life, reload mid-board; time out a board; lose the last life | Lives stay lost after reload; timeout banks 10 and costs a life; 0 lives ends the run, no completion bonus |
 | TC-29 | Pounce admin generate | Admin → Pounce → Daily: start date, 365, Generate, Add; add 5 more | `_meta` covers 365 then 370 days in order; preview shows the grade spread; second batch continues from the last date |
 | TC-30 | Cat Café | Solve a Daily Pounce, open the profile | Cat Café shows that date's cat (same name/look as the summary), newest first |

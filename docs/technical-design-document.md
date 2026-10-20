@@ -66,8 +66,7 @@ Player               connections-page.js         connections-daily-data.js      
 - The actual **"can't be scored twice" guarantee is the Firestore rule**, not the client-side
   `checkPlayedToday()` call — that check is purely a UX optimization to avoid a doomed write.
 - **Pounce** checks each cat against the stored `solution` as it lands (so a cat on the board is
-  always right), has no loss condition in Daily/Classic, and keeps Zen entirely client-side (no
-  writes). The Nine Lives Run saves each lost life immediately (`spendLife()`), and the rules only
+  always right), has no loss condition in Daily/Classic. The Nine Lives Run saves each lost life immediately (`spendLife()`), and the rules only
   let `livesLeft` go down, so leaving mid-board can't refund lives.
 
 ## 3. Business Logic: The Rank/XP Curve

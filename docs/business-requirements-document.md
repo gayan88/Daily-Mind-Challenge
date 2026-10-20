@@ -41,7 +41,7 @@ decision only the project owner can supply.
 ## 3. Scope
 
 **In scope (built and live):**
-- Six playable games, each with Daily Challenge, Classic (where applicable), and Tournament modes. Quilt (added 2026-10-18) is the first original format rather than a well-known one: a Shikaku-style logic puzzle whose solved board reveals a pixel-art picture. Pounce (2026-10-20) is a Star Battle-style cat puzzle (one cat per row, column and region, none touching) with explained hints, a Zen mode, a nine-lives tournament and a Cat Café collection; its content is generated, not authored.
+- Six playable games, each with Daily Challenge, Classic (where applicable), and Tournament modes. Quilt (added 2026-10-18) is the first original format rather than a well-known one: a Shikaku-style logic puzzle whose solved board reveals a pixel-art picture. Pounce (2026-10-20) is a Star Battle-style cat puzzle (one cat per row, column and region, none touching) with explained hints, a nine-lives tournament and a Cat Café collection; its content is generated, not authored.
 - Guest and registered account types.
 - A full progression layer: Points, per-game Level, site-wide XP, Rank (10 tiers × 10 sub-ranks),
   Streaks, 121 Achievements, and Daily/Weekly/Monthly Championships.

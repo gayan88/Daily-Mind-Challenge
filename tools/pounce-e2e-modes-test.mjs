@@ -1,4 +1,4 @@
-// End-to-end checks for Pounce Classic, Zen and the Nine Lives Run against the local Firebase
+// End-to-end checks for Pounce Classic and the Nine Lives Run against the local Firebase
 // emulators, in the system Google Chrome. Same setup as tools/pounce-e2e-test.mjs (see its header):
 // emulators running, then `node tools/pounce-emulator-seed.mjs`, then
 //   node tools/pounce-e2e-modes-test.mjs <screenshot-dir> [hostingPort=5002]
@@ -103,24 +103,6 @@ check(!!(await page.$('#pounce-classic-again-btn')), 'classic: "Next Easy Board"
 await page.click('#pounce-classic-again-btn');
 b = await currentBoard();
 check(colourKey(b) !== firstKey && b.difficulty === 'easy', 'classic: the next board is a different (unplayed) Easy board');
-
-// ---- Zen -------------------------------------------------------------------------------------
-await page.click('.pounce-mode-tab[data-mode="zen"]');
-await page.waitForSelector('.pounce-difficulty-btn', { timeout: 30000 });
-check(!(await mountText()).includes('pts'), 'zen picker: no points shown');
-await page.click('[data-difficulty="hard"]');
-b = await currentBoard();
-check(b.size === 9 && b.pawprints.length >= 2, 'zen: Hard serves a 9×9 board with pawprints');
-check(!(await page.$('[data-pn-time]')), 'zen: no clock');
-await pen();
-await tap(wrongCell(b));
-await wait(500);
-await page.click('[data-pn-tip]');
-await solve(b);
-await page.waitForSelector('#pounce-zen-next-btn', { timeout: 30000 });
-check(!(await page.$('#pounce-summary-modal')), 'zen: no score popup');
-check((await myScores('pounce-classic')).length === 1, 'zen: nothing written to gameScores');
-await page.screenshot({ path: `${out}/m2-zen-done.png`, fullPage: true });
 
 // ---- Nine Lives Run A: hiss, timeout, out of lives ------------------------------------------
 await page.click('.pounce-mode-tab[data-mode="tournament"]');

@@ -131,10 +131,11 @@ check(await page.$eval('#game-mount', (el) => el.textContent.includes('You alrea
 check(await page.$$eval('.pounce-played-board .pn-cat', (els) => els.length) === size, 'replay: solved board shows every cat');
 await page.screenshot({ path: `${out}/e4-already-played.png`, fullPage: true });
 
-// 7. Switching tabs tears the Daily view down and shows the Zen picker.
-await page.click('.pounce-mode-tab[data-mode="zen"]');
+// 7. Exactly three mode tabs; switching tears the Daily view down and shows the Classic picker.
+check((await page.$$eval('.pounce-mode-tab', (els) => els.map((e) => e.dataset.mode).join())) === 'daily,classic,tournament', 'tabs: Daily, Classic, Nine Lives Run (no Zen)');
+await page.click('.pounce-mode-tab[data-mode="classic"]');
 await page.waitForSelector('.pounce-difficulty-btn', { timeout: 30000 }).catch(() => {});
-check((await page.$$('.pounce-difficulty-btn')).length === 3, 'zen tab: difficulty picker');
+check((await page.$$('.pounce-difficulty-btn')).length === 3, 'classic tab: difficulty picker');
 
 // 9. Leaderboard: Pounce option and the guest's row.
 await page.goto(`${site}/leaderboard`, { waitUntil: 'domcontentloaded' });

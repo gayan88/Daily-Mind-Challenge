@@ -14,23 +14,21 @@ import { classicPoints } from './pounce-scoring.js';
 const PUZZLES_COLLECTION = 'pounceClassicPuzzles';
 
 /**
- * Picks a board for `difficulty` from the admin-managed Classic pool. Classic (`preferUnplayed`)
- * serves boards this player has never solved first, from their own pounce-classic gameScores
- * `puzzleId`s (two equality filters, so no composite index); once every board has been solved it
- * falls back to a random one other than `excludeId` (the one just played). Zen plays the same pool
- * without that lookup. Returns `{ puzzleId, puzzle }` or null if none are seeded yet.
+ * Picks a board for `difficulty` from the admin-managed Classic pool, serving boards this player
+ * has never solved first, from their own pounce-classic gameScores `puzzleId`s (two equality
+ * filters, so no composite index); once every board has been solved it falls back to a random one
+ * other than `excludeId` (the one just played). Returns `{ puzzleId, puzzle }` or null if none are
+ * seeded yet.
  */
-export async function getClassicPuzzle(uid, difficulty, excludeId = null, { preferUnplayed = true } = {}) {
+export async function getClassicPuzzle(uid, difficulty, excludeId = null) {
     const [poolSnap, playedSnap] = await Promise.all([
         getDocs(query(collection(db, PUZZLES_COLLECTION), where('difficulty', '==', difficulty))),
-        preferUnplayed
-            ? getDocs(query(collection(db, 'gameScores'), where('userId', '==', uid), where('gameType', '==', 'pounce-classic')))
-            : Promise.resolve(null),
+        getDocs(query(collection(db, 'gameScores'), where('userId', '==', uid), where('gameType', '==', 'pounce-classic'))),
     ]);
     if (poolSnap.empty) return null;
 
-    const played = new Set(playedSnap ? playedSnap.docs.map((d) => d.data().puzzleId) : []);
-    const unplayed = preferUnplayed ? poolSnap.docs.filter((d) => !played.has(d.id) && d.id !== excludeId) : [];
+    const played = new Set(playedSnap.docs.map((d) => d.data().puzzleId));
+    const unplayed = poolSnap.docs.filter((d) => !played.has(d.id) && d.id !== excludeId);
     const others = poolSnap.docs.length > 1 ? poolSnap.docs.filter((d) => d.id !== excludeId) : poolSnap.docs;
     const pool = unplayed.length ? unplayed : others;
     const chosen = pool[Math.floor(Math.random() * pool.length)];

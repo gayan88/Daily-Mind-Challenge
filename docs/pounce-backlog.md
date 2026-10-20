@@ -18,7 +18,7 @@
 | E1 Puzzle core | P-101 – P-105 | 6–7 | ✅ 2026-10-20 |
 | E2 Engine | P-201 – P-207 | 5–6 | ✅ 2026-10-20 |
 | E3 Daily end-to-end | P-301 – P-305 | 4 | ✅ 2026-10-20 |
-| E4 Classic + Zen | P-401 – P-402 | 1.5 | ✅ 2026-10-20 |
+| E4 Classic (+ Zen, since removed) | P-401 – P-402 | 1.5 | ✅ 2026-10-20 |
 | E5 Nine Lives Run | P-501 – P-502 | 3 | ✅ 2026-10-20 |
 | E6 Admin | P-601 – P-604 | 5 | ✅ 2026-10-20 |
 | E7 Progression, Cat Café, SEO, docs | P-701 – P-708 | 4 | ✅ 2026-10-20 |
@@ -181,13 +181,13 @@ counts for Perfect Day / "every Daily" achievements, so Daily content must be li
 
 ---
 
-## E4 — Classic + Zen
+## E4 — Classic + Zen (Zen removed 2026-10-21)
 
 **P-401 · Classic** · M · 🤖 · ✅ · needs E3 · *D2, D5*
 `pounce-classic-data.js`: a difficulty picker (Easy 6×6 / Medium 8×8 / Hard 9×9), a pool from
 `pounceClassic` with unplayed boards first, scoring × 0.8 / 1.0 / 1.3.
 
-**P-402 · Zen** · S · 🤖 · ✅ · needs P-401
+**P-402 · Zen** · S · 🤖 · ✅ → **removed 2026-10-21** · needs P-401
 A Zen tab over the same Classic pool with the engine's `zen` option. It writes no score docs and
 has a "Next board" button.
 
@@ -331,6 +331,9 @@ every game.
 - **P-801:** every suite is green (see `docs/pounce-release-notes.md`), plus a new
   `tools/site-smoke-test.mjs` over all six games.
 - **P-802:** `docs/pounce-release-notes.md`.
+
+**2026-10-21: Zen mode removed** (at the owner's request: four tabs looked odd next to the other games' three, and Zen was only Classic without the clock/score): the tab, `playZenRound` / `renderZenMode`, the engine's `zen` mode, Classic data's `preferUnplayed` option and the Zen tests, How to Play and FAQ text. Notes above are kept as the record of what was built. Re-tested after removal: engine 21/21, Daily 25/26
+(only the known home-tile emulator flake), Classic + Run 23/23, site smoke 9/9; the three tabs fit one row on desktop.
 
 **All 33 Claude tickets are done. What's left is the owner list below: O-02, O-05, O-06, O-08 – O-12.**
 

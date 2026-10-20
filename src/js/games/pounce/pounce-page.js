@@ -21,7 +21,7 @@ import { catSvg, cafeCat } from './pounce-cats.js';
 import { showPounceSummaryModal } from './pounce-summary-modal.js';
 
 const FACEBOOK_GROUP_URL = 'https://www.facebook.com/groups/playdailymindchallenge';
-const MODES = ['daily', 'classic', 'zen', 'tournament'];
+const MODES = ['daily', 'classic', 'tournament'];
 const CLASSIC_TAB_URL = `${window.location.origin}/pounce?tab=classic`;
 const TOURNAMENT_TAB_URL = `${window.location.origin}/pounce?tab=tournament`;
 const DIFFICULTY_BLURB = {
@@ -180,7 +180,7 @@ async function renderDailyMode(mount, uid, profile, setActiveRound) {
     }));
 }
 
-// ---------- Classic + Zen ----------
+// ---------- Classic ----------
 
 function shareTextForClassic(difficulty, size, timeTaken, mistakes, tips, perfect, score) {
     const hisses = `${mistakes} hiss${mistakes === 1 ? '' : 'es'}`;
@@ -188,8 +188,8 @@ function shareTextForClassic(difficulty, size, timeTaken, mistakes, tips, perfec
     return `🐾 Daily Mind Challenge\n\nClassic Pounce — ${DIFFICULTIES[difficulty].label} ${size}×${size}${perfect ? ' — Purrfect! ✨' : ''}\n${'🐱'.repeat(size)}  ${timeTaken} · ${hisses} · ${tipText}\n⭐ Score: ${score.toLocaleString()} points\n\nCan you pounce faster? 👀\n\nPlay here:\n${CLASSIC_TAB_URL}`;
 }
 
-/** Difficulty buttons for Classic (with the best possible score) or Zen (no points). */
-function renderDifficultyPicker(mount, { title, subtitle, zen }, onPick) {
+/** Difficulty buttons for Classic, each with its best possible score. */
+function renderDifficultyPicker(mount, { title, subtitle }, onPick) {
     mount.innerHTML = `
         <h2 class="pounce-title">${title}</h2>
         <p class="pounce-subtitle">${subtitle}</p>
@@ -200,7 +200,7 @@ function renderDifficultyPicker(mount, { title, subtitle, zen }, onPick) {
                         <span class="pounce-difficulty-name">${d.label} &middot; ${d.size}&times;${d.size}</span>
                         <span class="pounce-difficulty-blurb">${DIFFICULTY_BLURB[difficulty]}</span>
                     </span>
-                    ${zen ? '' : `<span class="pounce-difficulty-points">up to ${classicPoints({ timeTakenSeconds: 0, mistakes: 0, tips: 0, perfect: true, difficulty }).score} pts</span>`}
+                    <span class="pounce-difficulty-points">up to ${classicPoints({ timeTakenSeconds: 0, mistakes: 0, tips: 0, perfect: true, difficulty }).score} pts</span>
                 </button>
             `).join('')}
         </div>
@@ -296,49 +296,6 @@ function renderClassicMode(mount, uid, profile, setActiveRound) {
         title: 'Classic Pounce',
         subtitle: 'Pick a size for a new board. Play as many as you like &mdash; boards you haven\'t solved come first.',
     }, (difficulty) => playClassicRound(mount, uid, profile, difficulty, setActiveRound));
-}
-
-/** Zen: the Classic pool with no clock, no score, free tips and nothing written. */
-async function playZenRound(mount, uid, difficulty, setActiveRound, lastPuzzleId = null) {
-    mount.innerHTML = `<div class="loading-text">Loading&hellip;</div>`;
-    const back = () => renderZenMode(mount, uid, setActiveRound);
-    const data = await getClassicPuzzle(uid, difficulty, lastPuzzleId, { preferUnplayed: false });
-    if (!data) {
-        renderNotReady(mount, difficulty, back);
-        return;
-    }
-    const { puzzle, puzzleId } = data;
-    const label = DIFFICULTIES[difficulty].label;
-    mount.innerHTML = `
-        <h2 class="pounce-title">Zen &mdash; ${label}</h2>
-        <p class="pounce-subtitle">No clock, no score, free Whisker Tips. ${HOW_TO}${extrasNote(puzzle)}</p>
-        <div id="pounce-round-mount"></div>
-    `;
-    setActiveRound(playPounceRound({
-        container: document.getElementById('pounce-round-mount'),
-        puzzle,
-        mode: 'zen',
-        seed: puzzleId,
-        onComplete: () => {
-            setActiveRound(null);
-            mount.insertAdjacentHTML('beforeend', `
-                <div class="pounce-tournament-actions">
-                    <button class="btn primary" id="pounce-zen-next-btn" type="button">Next ${label} Board</button>
-                    <button class="btn" id="pounce-back-btn" type="button">Choose another size</button>
-                </div>
-            `);
-            document.getElementById('pounce-zen-next-btn').addEventListener('click', () => playZenRound(mount, uid, difficulty, setActiveRound, puzzleId));
-            document.getElementById('pounce-back-btn').addEventListener('click', back);
-        },
-    }));
-}
-
-function renderZenMode(mount, uid, setActiveRound) {
-    renderDifficultyPicker(mount, {
-        title: 'Zen',
-        subtitle: 'Just you and the cats: no clock, no score, and Whisker Tips are free.',
-        zen: true,
-    }, (difficulty) => playZenRound(mount, uid, difficulty, setActiveRound));
 }
 
 // ---------- Nine Lives Run (Tournament) ----------
@@ -563,7 +520,6 @@ function wireModeTabs(uid, profile, initialMode) {
         mount.innerHTML = `<div class="loading-text">Loading&hellip;</div>`;
         if (mode === 'daily') await renderDailyMode(mount, uid, profile, setActiveRound);
         else if (mode === 'classic') renderClassicMode(mount, uid, profile, setActiveRound);
-        else if (mode === 'zen') renderZenMode(mount, uid, setActiveRound);
         else await renderTournamentMode(mount, uid, profile, setActiveRound);
     }
 

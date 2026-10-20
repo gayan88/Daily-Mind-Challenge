@@ -293,7 +293,7 @@ graded by the hardest step it needs.
   from the last date. A Daily is always Medium 8×8 with sleeping dogs. **Regenerate** on a row swaps
   that day's board without moving its date or number.
 - **Classic:** pick Easy (6×6), Medium (8×8 + dogs) or Hard (9×9 + dogs + pawprints), choose how
-  many, Generate, Add. Zen plays this same pool.
+  many, Generate, Add.
 - **Nine Lives Runs:** "Create one run" (Generate & Preview, then Create) or "Create many runs"
   (N runs at once; create them Inactive and activate a few at a time).
 - **Hand-made boards (optional):** each pool has an "Import hand-made boards (JSON)" box. Format, one

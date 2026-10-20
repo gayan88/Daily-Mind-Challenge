@@ -70,8 +70,7 @@ export function staticBoardHtml(puzzle, { cats = true, label = 'Pounce board', c
  *
  * Modes (`mode`): 'daily' / 'classic' (stopwatch from the first touch, mistakes and tips counted),
  * 'run' (Nine Lives Run: countdown `timeLimitSeconds` from mount, a wrong cat costs one of
- * `lives`; 0 lives or time up ends the round as a loss) and 'zen' (no clock, nothing counted,
- * free tips).
+ * `lives`; 0 lives or time up ends the round as a loss).
  *
  * Controls: tap cycles empty → ✕ → cat; long-press (or the "Tap places 🐱" toggle) places a cat
  * straight away; dragging paints ✕ over empty cells (or erases ✕ when the drag starts on one).
@@ -85,7 +84,7 @@ export function staticBoardHtml(puzzle, { cats = true, label = 'Pounce board', c
  *
  * On the end of a round `onComplete({ won, timedOut, outOfLives, timeTakenSeconds, mistakes,
  * tips, perfect, livesLeft })` fires once, FINISH_DELAY_MS later so the curl-up / reveal is seen.
- * Purrfect = a win with no mistakes and no tips (never in Zen). The engine has no Firebase/session
+ * Purrfect = a win with no mistakes and no tips. The engine has no Firebase/session
  * knowledge; the mode data files own scoring. `sound` (default off) plays tiny synth chirps.
  * `onLifeLost(livesLeft)` (Run) fires on each wrong cat, so the page can save the lost life at once.
  */
@@ -94,7 +93,6 @@ export function playPounceRound({
     seed = '', sound = false, onLifeLost = null, onComplete,
 }) {
     const { size: n, solution, dogs = [], pawprints = [] } = puzzle;
-    const zen = mode === 'zen';
     const run = mode === 'run';
     const region = regionGrid(puzzle);
     const coats = boardCoats(n, seed || puzzle.regions.join(''));
@@ -112,11 +110,11 @@ export function playPounceRound({
     container.innerHTML = `
         <div class="pn-stats">
             ${roundLabel ? `<span class="pn-stat pn-round-label">${escapeHtml(roundLabel)}</span>` : ''}
-            ${zen ? '' : `<span class="pn-stat">
+            <span class="pn-stat">
                 <span class="pn-stat-icon">${icon('STOPWATCH')}</span>
                 <span class="pn-stat-label">Time</span>
                 <span class="pn-stat-value" data-pn-time>${timeLimitSeconds ? formatClock(timeLimitSeconds) : '0:00'}</span>
-            </span>`}
+            </span>
             <span class="pn-stat">
                 <span class="pn-stat-icon" aria-hidden="true">🐱</span>
                 <span class="pn-stat-label">Cats</span>
@@ -127,16 +125,16 @@ export function playPounceRound({
                 <span class="pn-stat-label">Lives</span>
                 <span class="pn-stat-value" data-pn-lives>${lives}</span>
             </span>` : ''}
-            ${zen || run ? '' : `<span class="pn-stat">
+            ${run ? '' : `<span class="pn-stat">
                 <span class="pn-stat-icon" aria-hidden="true">😾</span>
                 <span class="pn-stat-label">Hisses</span>
                 <span class="pn-stat-value" data-pn-mistakes>0</span>
             </span>`}
-            ${zen ? '' : `<span class="pn-stat">
+            <span class="pn-stat">
                 <span class="pn-stat-icon" aria-hidden="true">💡</span>
                 <span class="pn-stat-label">Tips</span>
                 <span class="pn-stat-value" data-pn-tips>0</span>
-            </span>`}
+            </span>
         </div>
         <div class="pn-board" role="grid" style="--pn-n: ${n};"
              aria-label="Pounce board, ${n} by ${n}. Place one cat in every row, column and colour region; cats can't touch, not even diagonally."></div>
@@ -338,15 +336,13 @@ export function playPounceRound({
         marks[idx] = NOT;
         hissing.add(idx);
         chirp('hiss');
-        if (!zen) {
-            // Counted in the Run too (it's not shown there, but a hiss must cost Purrfect).
-            mistakes++;
-            if (run) {
-                livesLeft = Math.max(0, livesLeft - 1);
-                onLifeLost?.(livesLeft);
-            }
+        // Counted in the Run too (it's not shown there, but a hiss must cost Purrfect).
+        mistakes++;
+        if (run) {
+            livesLeft = Math.max(0, livesLeft - 1);
+            onLifeLost?.(livesLeft);
         }
-        messageEl.textContent = zen ? 'That spot\'s taken. Try another!' : 'Hiss! That spot\'s taken.';
+        messageEl.textContent = 'Hiss! That spot\'s taken.';
         cellEls[idx].classList.add('pn-wrong');
         renderCell(idx);
         renderStats();
@@ -419,7 +415,7 @@ export function playPounceRound({
         if (gameOver) return;
         startTimer();
         snapshot();
-        if (!zen) tips++;
+        tips++;
         messageEl.textContent = '';
 
         const wrongX = solution.map((x, y) => y * n + x).find((idx) => marks[idx] === NOT);
@@ -604,7 +600,7 @@ export function playPounceRound({
         press = null;
         hideTip();
 
-        const perfect = didWin && !zen && mistakes === 0 && tips === 0;
+        const perfect = didWin && mistakes === 0 && tips === 0;
         if (didWin) {
             messageEl.textContent = perfect ? 'Purrfect! Every cat found its spot. \u{2728}' : 'Every cat found its spot.';
             boardEl.classList.add('pn-solved');
@@ -641,13 +637,13 @@ export function playPounceRound({
     }
 
     function startTimer() {
-        if (timerInterval || gameOver || zen) return;
+        if (timerInterval || gameOver) return;
         timerInterval = setInterval(tick, 1000);
     }
 
     // The Run's countdown starts at mount (a real time-attack limit); Daily/Classic's stopwatch
-    // starts on the first touch of the board; Zen has no clock.
-    if (timeLimitSeconds != null && !zen) startTimer();
+    // starts on the first touch of the board.
+    if (timeLimitSeconds != null) startTimer();
     render();
 
     // Bring the whole round (stats bar → options) into view on mount, as quilt-engine.js does:
