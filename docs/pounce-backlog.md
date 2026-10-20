@@ -347,9 +347,9 @@ every game.
 | O-05 | **Share image** 1200×630 for Pounce **and Quilt** (deferred Quilt O6) | P-704 | ⬜ |
 | O-06 | **How to Play banner** for Pounce **and Quilt** (deferred Quilt O5) | P-301 | ⬜ |
 | O-07 | Decide about the Quilt originals deleted from `docs/Images/` (restore from git or leave) | any time | ✅ removed on purpose (committed) |
-| O-08 | Generate content in Admin → Pounce (after deploying the code, see below): 365 Daily, 100 per Classic difficulty, 10 Runs | after P-602 ✅ — ready | ⬜ |
+| O-08 | Generate content in Admin → Pounce (after deploying the code, see below): 365 Daily, 100 per Classic difficulty, 10 Runs | after P-602 ✅ — ready | 🔄 1,000 Daily + 300 Classic live; **Runs still to create** |
 | O-09 | Play-test on phone + desktop (tap feel, 9×9 readability, hint wording, share text) | P-801 | ⬜ |
-| O-10 | Deploy, then straight away Generate + Add content (O-08) and activate a Run — steps in `docs/pounce-release-notes.md` | after P-802 ✅ — ready | ⬜ |
+| O-10 | Deploy, then straight away Generate + Add content (O-08) and activate a Run — steps in `docs/pounce-release-notes.md` | after P-802 ✅ — ready | ✅ deployed 2026-10-21 |
 | O-11 | Indexing: Google + Bing for `/pounce`, **plus Bing for `/quilt`** | after O-10 | ⬜ |
 | O-12 | One Facebook-group launch post for **Quilt + Pounce** | after O-10 | ⬜ |
 

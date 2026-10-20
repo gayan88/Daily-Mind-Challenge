@@ -1,7 +1,10 @@
 # Pounce — Release Notes & Deploy Steps
 
 > Release: Pounce, the sixth game (commits `deaffe8` → sprint 6, plus this doc). Built and
-> release-tested locally on 2026-10-20. **Not deployed yet.** Plan, brand and decisions:
+> release-tested locally on 2026-10-20. **Deployed to production 2026-10-21** (hosting + rules, at `9a9f951`).
+> Live content at deploy: 1,000 Daily boards (2026-11-01 → 2029-07-27; until 1 Nov players get #1 as a
+> preview), 300 Classic (100 per difficulty), Run settings 240 s / 9 lives, **no Nine Lives Runs yet**.
+> A sample of 35 live boards re-validated after deploy: all uniquely solvable by logic. Plan, brand and decisions:
 > `docs/pounce-development-plan.md`; tickets and per-sprint notes: `docs/pounce-backlog.md`.
 
 ## What's in this release
