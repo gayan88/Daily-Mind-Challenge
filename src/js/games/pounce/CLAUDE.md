@@ -1,0 +1,48 @@
+# src/js/games/pounce
+
+Pounce — a Star Battle-style cat puzzle (the sixth game, in development). Place one cat per row,
+column and coloured region; no two cats may touch, not even diagonally. Hard adds pawprint clues
+(how many cats touch this cell) and every level from Medium up adds sleeping dogs (blocked cells).
+Plan, brand and decisions: `docs/pounce-development-plan.md`. Tickets: `docs/pounce-backlog.md`.
+Never call it "Meowdoku" or "Queens" in the product.
+
+**Status: sprint 1 done (puzzle core + cat art), nothing wired into the site yet.** It isn't in
+`GAMES` and has no page, rules or admin.
+
+## Files
+
+- **`pounce-solver.js`** — board helpers (`regionGrid()`, `neighbours()`, `blockedGrid()`),
+  `solve(puzzle, { limit, maxSteps })` (row-by-row backtracking; returns `{ count, solutions,
+  exhausted }`), `hasUniqueSolution()`, `ruleProblems(puzzle, cats)` (rules-only check, readable
+  messages). A puzzle is `{ size, regions: [digit strings], dogs: [{x,y}], pawprints: [{x,y,n}] }`;
+  a solution is `cats[row] = column`. Pawprint cells never hold a cat.
+- **`pounce-logic.js`** — the human-technique solver behind both Whisker Tips and grading.
+  `analyse(puzzle, { regionNames })` once, then `nextStep(a, state)` returns the easiest deduction
+  `{ technique, tier, place, eliminate, cells, text }`; `apply(state, step)`; `solveByLogic(puzzle)`
+  returns the hardest technique used. State is an Int8Array of `UNKNOWN` / `CAT` / `NOT`.
+  Techniques, tiers 1–5: cat-neighbours, last-cell, pawprint, line-lock, would-empty, group-lock,
+  what-if (bounded look-ahead using only tier ≤ 2 steps). Step `text` is shown to players, so keep
+  it plain English.
+- **`pounce-generator.js`** — `DIFFICULTIES` (easy 6×6 tiers 1–2 · medium 8×8 + ≤3 dogs, tiers
+  2–4 · hard 9×9 + ≤4 dogs + ≥2 pawprints, tiers 3–5), `RUN_BOARDS` (5→9), `generatePuzzle({
+  difficulty, size?, seed })` (cats → grown regions → repair until unique by moving a cell to a
+  neighbouring region / adding a dog / adding a disagreeing pawprint → logic grade inside the band,
+  no region with < 2 usable cells), `buildRun({ seed })`, `validatePuzzle()` (admin-readable
+  errors, incl. uniqueness + logic-solvable), `puzzleWarnings()`, `smallestFreeRegion()`.
+  Stored shape adds `difficulty`, `solution`, `grade: { technique, tier, steps }`.
+- **`pounce-cats.js`** — code-drawn SVG cat faces: `catSvg({ coat, eyes, accessory, title })`,
+  `COATS` (ginger, black, white, tabby, calico, grey), `boardCoats(size, seed)` (a different coat
+  per row's cat), `cafeCat(date)` (the Cat Café cat a Daily adopts: name, coat, eyes, accessory,
+  description).
+
+All four are pure ES modules (no DOM, no Firebase) importing only `utils/helpers.js`, so they run
+under plain Node.
+
+## Tests
+
+`node tools/pounce-soak-test.mjs [boardsPerDifficulty]` (default 200; the backlog's bar is 1000).
+It checks the solver against brute force (incl. dogs + pawprints), every logic step against the
+known solution, validity, no giveaway regions, seed determinism, grade spread and timing, plus 10
+Nine Lives Runs. Run it after any change to these modules. At 1000 (2026-10-20): every board is
+generated, max ~20 ms each; the hardest steps used are easy = line-lock, medium = would-empty /
+group-lock, hard = mostly what-if.
