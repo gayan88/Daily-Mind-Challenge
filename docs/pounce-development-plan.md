@@ -1,6 +1,7 @@
 # Pounce — Development Plan & Backlogs
 
-> Status: **planning → sprint 1** — drafted 2026-10-20. All §2 decisions accepted with the
+> Status: **built and release-tested, not deployed** (2026-10-20) — all six sprints done; deploy steps in
+> `docs/pounce-release-notes.md`. All §2 decisions accepted with the
 > recommended defaults (2026-10-20). Name chosen 2026-10-20: **Pounce** (trademark check still to do, D1).
 > Follows `docs/adding-a-new-game.md`, which stays the source of truth for *every* touchpoint.
 > This doc orders the work and splits it between **Claude (implementation)** and **Owner (you)**,

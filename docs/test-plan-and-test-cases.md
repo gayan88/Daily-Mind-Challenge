@@ -10,7 +10,7 @@
 
 ## 1. Testing Scope
 
-**In scope:** functional correctness of all five games (Daily/Classic/Tournament modes),
+**In scope:** functional correctness of all six games (Daily/Classic/Tournament modes),
 authentication flows, the progression system (Points/XP/Rank/Streaks/Achievements/Championships),
 the admin panel, Firestore security rules, and third-party integration behavior (cookie consent,
 Meta Pixel, SEO verification files).
@@ -77,7 +77,7 @@ Environment Configuration section.
 | TC-11 | Meta Pixel loads after Accept | Click Accept on the cookie banner | `fbevents.js` and a `PageView` request are sent; `window.fbq` is defined |
 | TC-12 | Meta Pixel declines to load after Decline | Click Decline on the cookie banner | `window.fbq` remains `undefined`; no Meta network requests at any point in the session |
 | TC-13 | Rank display at the Legend X boundary | Set a test account's `xp` to 274,999, then to 275,000+ | At 274,999: "Legend X," 4,999/5,000 progress. At 275,000 or beyond: "Legend X," 100%, "Max rank reached!" |
-| TC-14 | "Perfect Day" requires every game | Complete 4 of 5 Daily Challenges (not Quilt), then check Perfect Day status; then complete the 5th | Not awarded after 4; awarded after the 5th, same calendar day |
+| TC-14 | "Perfect Day" requires every game | Complete 5 of 6 Daily Challenges (not Pounce), then check Perfect Day status; then complete the 6th | Not awarded after 5; awarded after the 6th, same calendar day |
 | TC-15 | Admin cannot play a game | Log in as an admin, navigate to any game page | Game mount shows an "admins don't play games" state, not a playable board |
 | TC-16 | Search-engine verification files serve correctly | `curl` the exact verification URLs for Google and Bing | Both return HTTP 200 directly (no redirect), with content byte-for-byte matching what each service issued |
 | TC-17 | Tournament failure resets progress (Wordle/Connections) | Fail one puzzle/word partway through a multi-puzzle Tournament run | `currentWordIndex`/`currentPuzzleIndex` resets to 0; no points banked for that run |
@@ -88,10 +88,16 @@ Environment Configuration section.
 | TC-22 | Quilt Daily share text never contains the picture | Solve the Daily, use "Copy Result & Share with Community" | Clipboard has stats only (no emoji squares); Classic/Patchwork Run share text does include the emoji mosaic |
 | TC-23 | Quilt admin import is all-or-nothing | Preview a batch where one picture is invalid or already in the pool | No Add button / batch rejected, nothing written, the bad picture named with its reason |
 | TC-24 | Patchwork Run bulk import | Upload `docs/quilt-content/test-patchwork-runs-100.txt` (removed 2026-10-20; recover with `git checkout deaffe8 -- docs/quilt-content`), 2×2, Inactive, Create; activate one | 100 inactive runs in file order; players see only the activated run; re-importing the same file is rejected |
+| TC-25 | Pounce wrong cat | Place a cat on a wrong cell (Daily) | It hisses off, leaves a ✕, Hisses +1; the summary shows −2; no Purrfect |
+| TC-26 | Pounce Whisker Tip | Cross out a real cat spot, press Whisker Tip; press it again | First tip clears that ✕ and says so; the next highlights cells and explains a deduction; Tips counter +1 each |
+| TC-27 | Pounce Zen writes nothing | Solve a Zen board with hisses and tips | No popup, no gameScores doc, no points |
+| TC-28 | Nine Lives Run lives | Lose a life, reload mid-board; time out a board; lose the last life | Lives stay lost after reload; timeout banks 10 and costs a life; 0 lives ends the run, no completion bonus |
+| TC-29 | Pounce admin generate | Admin → Pounce → Daily: start date, 365, Generate, Add; add 5 more | `_meta` covers 365 then 370 days in order; preview shows the grade spread; second batch continues from the last date |
+| TC-30 | Cat Café | Solve a Daily Pounce, open the profile | Cat Café shows that date's cat (same name/look as the summary), newest first |
 
 ## 5. Test Data
 
-No synthetic/fixture data files are maintained in the repository, except Quilt's:
+No synthetic/fixture data files are maintained in the repository (Pounce generates its own content; `tools/pounce-emulator-seed.mjs` seeds the emulators), except Quilt's:
 `docs/quilt-content/` (removed from the repo 2026-10-20; recover with `git checkout deaffe8 -- docs/quilt-content`) held generated test pictures (500 Daily, 300 Classic, 100 Patchwork Run), each
 verified to make a uniquely solvable puzzle — see its README. Test accounts and content are
 created ad hoc per test session against the emulator (a registered test user, manually promoted to
@@ -121,3 +127,8 @@ described in the corresponding git commit message. **Recommendation, not yet ado
 project grows beyond single-session, single-developer iteration, adopting GitHub Issues (already
 available at no extra cost via the existing repository) for anything that can't be fixed
 immediately would be the lowest-friction next step.
+
+Pounce (2026-10-20) keeps its scripted tests in the repo: `tools/pounce-soak-test.mjs` (puzzle core,
+1000 boards per difficulty), `tools/pounce-browser-test.mjs` (engine), and `tools/pounce-e2e-test.mjs`,
+`pounce-e2e-modes-test.mjs`, `pounce-e2e-admin-test.mjs` against the emulators. Results:
+`docs/pounce-release-notes.md`.

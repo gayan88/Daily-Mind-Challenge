@@ -3,7 +3,7 @@
 
 | | |
 |---|---|
-| **Document status** | New as of 2026-10-17; Quilt added 2026-10-20. Written as the single entry point for someone taking over this project — a new developer, a new admin, or an AI assistant — with no prior context. |
+| **Document status** | New as of 2026-10-17; Quilt and Pounce added 2026-10-20. Written as the single entry point for someone taking over this project — a new developer, a new admin, or an AI assistant — with no prior context. |
 | **Related docs** | Every other document in `docs/` is referenced below at the point it becomes relevant; this document doesn't repeat their content, it tells you when to go read them. |
 
 ---
@@ -11,8 +11,8 @@
 ## Part A: Player-Facing User Guide
 
 ### What the site is
-A free, browser-based puzzle site at `dailymindchallenge.com` with five games — Wordle, Sudoku,
-Word Search, Connections, and Quilt — each with a Daily Challenge, a Classic/replay mode, and a
+A free, browser-based puzzle site at `dailymindchallenge.com` with six games — Wordle, Sudoku,
+Word Search, Connections, Quilt, and Pounce — each with a Daily Challenge, a Classic/replay mode, and a
 Tournament mode. No download, no app install, and playable immediately as a guest.
 
 ### Getting started
@@ -24,14 +24,14 @@ Tournament mode. No download, no app install, and playable immediately as a gues
 ### Playing a Daily Challenge
 Every game offers one Daily Challenge per calendar day, identical for every player. Wordle and
 Connections allow unlimited retries after a loss (a 1-hour cooldown between attempts, no spoiler
-shown); Sudoku, Word Search and Quilt allow exactly one scored attempt per day. Once solved (Wordle/
-Connections) or attempted (Sudoku/Word Search/Quilt), that day's challenge is done until the next one
+shown); Sudoku, Word Search, Quilt and Pounce allow exactly one scored attempt per day. Once solved (Wordle/
+Connections) or attempted (Sudoku/Word Search/Quilt/Pounce), that day's challenge is done until the next one
 unlocks.
 
 ### Classic and Tournament modes
-- **Classic** (Sudoku, Word Search, Connections, Quilt): pick Easy/Medium/Hard and play as many puzzles
+- **Classic** (Sudoku, Word Search, Connections, Quilt, Pounce — which also has an unscored **Zen** mode): pick Easy/Medium/Hard and play as many puzzles
   as you like, any time.
-- **Tournament** (all five games): a timed run through several puzzles set up by the site admin.
+- **Tournament** (all six games): a timed run through several puzzles set up by the site admin.
   In Wordle and Connections, failing any puzzle resets you to puzzle 1. In Sudoku, Word Search and
   Quilt, a failed puzzle banks a smaller reward and the run continues.
 
@@ -43,6 +43,16 @@ colours and reveal a pixel-art picture. Solving without any undo or removed piec
 Stitch bonus. Hard puzzles add knots (cells you can't cover) and framed numbers (box = must be a
 square, pill = must be one row or column). Quilt's Tournament, Patchwork Run, is one big picture
 cut into timed tiles that join up as you go.
+
+### Pounce in one paragraph
+Place cats on a grid of coloured regions so every row, every column and every region has exactly
+one cat, and no two cats touch, even diagonally. Tap once for ✕, again for a cat (or long-press);
+drag to cross out many cells. A right cat stays; a wrong one hisses off (a "hiss" costs a few
+points). Whisker Tips explain the next step in plain words. Medium boards add sleeping dogs (no cat
+there); Hard adds pawprint numbers (how many cats touch that cell). Solving with no hisses and no
+tips is Purrfect. Every Daily solved adopts a cat for your **Cat Café** (on your profile). Zen is
+the same boards without clock or score; the Tournament, **Nine Lives Run**, is five timed boards
+with nine lives for the whole run.
 
 ### Earning Points, XP, and Rank
 - **Points** are earned per game by playing, and drive your position on the per-game and overall
@@ -132,17 +142,19 @@ These are referenced in more depth throughout the other docs; collected here for
 ### Maintenance Guidance
 
 **Adding a sixth game:** follow `docs/adding-a-new-game.md` exactly — it's a checklist built from
-the real experience of adding the fourth and fifth games (Connections, then Quilt), including the specific things that
+the real experience of adding the fourth, fifth and sixth games (Connections, Quilt, then Pounce), including the specific things that
 were missed the first time (achievement/mission copy that assumed exactly three games, the
 `firestore.rules` allow-lists, the admin table's year/month grouping). Reusing it is significantly
-faster than re-deriving the pattern from the existing five games' code. Quilt's own build is
-documented phase by phase in `docs/quilt-development-plan.md` and `docs/quilt-release-notes.md`.
+faster than re-deriving the pattern from the existing six games' code. Quilt's own build is
+documented phase by phase in `docs/quilt-development-plan.md` and `docs/quilt-release-notes.md`; Pounce's
+sprint by sprint in `docs/pounce-backlog.md` and `docs/pounce-release-notes.md`.
 
 **Generating puzzle content with an AI:** `docs/content-creation-guide.md` has the exact file
 format and validation rules per game/mode, written specifically so a prompt like "generate 100
 Wordle Daily Challenge words" produces something the admin import will actually accept. Quilt takes
 pictures (PNG at 1 pixel per cell, or text), not puzzles — Admin → Quilt turns each into a puzzle and
 proves it has one solution.
+Pounce needs no content at all: Admin → Pounce generates every board itself.
 
 **Retuning the progression economy** (XP amounts, the Rank curve, Point formulas): see
 `docs/technical-design-document.md` §3 for how the Rank curve is structured, and

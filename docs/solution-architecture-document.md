@@ -3,7 +3,7 @@
 
 | | |
 |---|---|
-| **Document status** | Reflects the system as implemented, as of 2026-10-17 (Quilt added 2026-10-20). Formerly `docs/architecture.md`; renamed and expanded to the Solution Architecture Document template (system architecture, components, technology stack, architectural decisions, integrations, security, scalability, deployment architecture). |
+| **Document status** | Reflects the system as implemented, as of 2026-10-17 (Quilt and Pounce added 2026-10-20). Formerly `docs/architecture.md`; renamed and expanded to the Solution Architecture Document template (system architecture, components, technology stack, architectural decisions, integrations, security, scalability, deployment architecture). |
 | **Related docs** | `docs/functional-requirements-specification.md` (SRS), `docs/technical-design-document.md` (TDD), `docs/database-design-document.md`, `docs/api-documentation.md`, `docs/data-flow.md`, `docs/deployment-and-release-document.md` |
 
 ---
@@ -42,9 +42,10 @@ Third parties
 |---|---|---|
 | Page shell | Header/footer injection, session resolution, cookie banner | `src/js/app.js`, `src/partials/` |
 | Auth | Guest/registered session logic | `src/js/auth/` |
-| Game engines (×5) | Mode-agnostic playable mechanic per game | `src/js/games/{wordle,sudoku,wordsearch,connections,quilt}/*-engine.js` |
+| Game engines (×6) | Mode-agnostic playable mechanic per game | `src/js/games/{wordle,sudoku,wordsearch,connections,quilt,pounce}/*-engine.js` |
 | Quilt puzzle core | Solver (proves exactly one solution), picture → puzzle generator, picture parsing/emoji mosaic — pure modules shared by the Quilt engine and the admin importer | `src/js/games/quilt/quilt-{solver,generator,picture}.js` |
-| Game page glue (×5) | Mode tab wiring, session gating, per-mode render functions | `src/js/games/*/​*-page.js` |
+| Pounce puzzle core | Uniqueness solver, human-technique logic solver (Whisker Tips + difficulty grading), board generator/validator, SVG cats — pure modules shared by the engine, the page and the admin generator | `src/js/games/pounce/pounce-{solver,logic,generator,cats}.js` |
+| Game page glue (×6) | Mode tab wiring, session gating, per-mode render functions | `src/js/games/*/​*-page.js` |
 | Per-mode data layers | Firestore reads/writes, points formulas, share bonuses | `src/js/games/*/​*-{daily,classic,tournament}-data.js` |
 | Progression engine | Points→Level, XP→Rank, Streaks, Achievements, Championships, Missions | `src/js/progression/` |
 | Leaderboard | Aggregation queries, leaderboard page, player-profile popup | `src/js/leaderboard/` |
@@ -89,14 +90,14 @@ This app never uses `onSnapshot()` real-time listeners, so Firestore's default s
 connection is pure overhead — and on some networks it hangs for 30+ seconds before falling back.
 Long-polling skips that entirely. See `src/js/api/CLAUDE.md`.
 
-### 4.4 Why five parallel game implementations instead of one generic engine
-Each game (Wordle, Sudoku, Word Search, Connections, Quilt) has a genuinely distinct playable mechanic,
+### 4.4 Why six parallel game implementations instead of one generic engine
+Each game (Wordle, Sudoku, Word Search, Connections, Quilt, Pounce) has a genuinely distinct playable mechanic,
 distinct scoring formula shape, and distinct Firestore content schema. Rather than build one
 over-abstracted "puzzle engine," each game owns its own engine/page/data files, following an
 established, copy-and-adapt convention (`docs/adding-a-new-game.md`). What *is* shared and
 genuinely generic — the game registry, progression math, admin table grouping, the leaderboard —
 lives in dedicated cross-game modules (`src/js/progression/game-registry.js`,
-`src/js/admin/admin-table-grouping.js`) specifically so those pieces don't drift into five
+`src/js/admin/admin-table-grouping.js`) specifically so those pieces don't drift into six
 near-duplicate copies the way the gameplay itself deliberately does.
 
 ### 4.5 Why the cookie banner doesn't block on a Firestore read indefinitely

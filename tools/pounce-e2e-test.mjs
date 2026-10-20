@@ -97,6 +97,7 @@ await wait(600);
 const modal = await page.$eval('#pounce-summary-modal', (el) => el.innerText);
 check(modal.includes('Every cat found its spot!'), 'summary: title');
 check(/You adopted .+!/.test(modal), `summary: adopted cat caption (${(modal.match(/You adopted [^\n]+/) || [''])[0]})`);
+const adoptedName = (modal.match(/You adopted (\S+) the/) || [])[1];
 check(modal.includes('−5'), 'summary: hisses & tips line shows −5 (1 hiss −2, 1 tip −3)');
 check(/Total Score\s*\+15/.test(modal), 'summary: total +15 (10 + 10 speed − 5)');
 await page.screenshot({ path: `${out}/e3-summary.png` });
@@ -148,12 +149,14 @@ if (hasOption) {
     await page.screenshot({ path: `${out}/e6-leaderboard.png`, fullPage: true });
 }
 
-// 10. Profile: recent activity label + Pounce level card.
+// 10. Profile: recent activity label + Cat Café.
 await page.goto(`${site}/profile`, { waitUntil: 'domcontentloaded' });
 await page.waitForFunction(() => /Pounce/.test(document.querySelector('.content').innerText), { timeout: 60000 }).catch(() => {});
 await wait(3000);
 const profText = await page.$eval('.content', (el) => el.innerText);
 check(/Pounce/.test(profText) && !/pounce-/.test(profText) && !/undefined/.test(profText), 'profile: shows "Pounce" (no raw gameType / undefined)');
+const cafe = await page.$$eval('#profile-cafe .cafe-cat-name', (els) => els.map((e) => e.textContent));
+check(cafe.length === 1 && cafe[0] === adoptedName, `profile: Cat Café shows the adopted cat (${cafe.join(', ')} vs ${adoptedName})`);
 await page.screenshot({ path: `${out}/e7-profile.png`, fullPage: true });
 
 // 8. Home tile marked done.

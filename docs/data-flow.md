@@ -32,6 +32,17 @@ numbers) is then written to `quiltDailyPuzzles` / `quiltClassicPuzzles`, or cut 
 against the rules (`checkBoard()`), not against the stored answer, and only colours the pieces once
 the board is solved.
 
+## Pounce content (admin) → play
+
+Pounce has no authored content. Admin → Pounce calls `pounce-generator.js#generatePuzzle()` in the
+browser for each board: random cats → regions grown around them → repaired (move a cell, add a
+dog or a pawprint) until `pounce-solver.js#solve()` proves one solution → kept only if
+`pounce-logic.js#solveByLogic()` solves it inside the difficulty's grade band. Boards are written
+all-or-nothing to `pounceDailyPuzzles` (date-keyed + `_meta`), `pounceClassicPuzzles` or, five at a
+time via `buildRun()`, `pounceTournaments`. At play time the engine checks each cat against the
+stored `solution`; Whisker Tips run the same logic solver on the player's current marks. A solved
+Daily's `gameScores` doc is also the player's Cat Café entry (`pounce-cafe-data.js`).
+
 ## Leaderboard
 
 `src/js/leaderboard/leaderboard-data.js` queries `gameScores where gameDate == today` (optionally `+ gameType`), sums per user client-side, and filters out banned users (a separately-cached `registeredUsers where isBanned == true` query). **Login points are excluded** from this ranking — see `src/js/leaderboard/CLAUDE.md` for why.

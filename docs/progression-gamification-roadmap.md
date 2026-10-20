@@ -1,7 +1,7 @@
 # Progression & Gamification Roadmap
 
 > Note (2026-10-20): this roadmap is a historical build record. Games added later (Connections,
-> Quilt) plug into everything here through `GAMES` in `game-registry.js`; their achievements, XP and
+> Quilt, Pounce) plug into everything here through `GAMES` in `game-registry.js`; their achievements, XP and
 > championships needed no changes beyond the rules allow-lists.
 
 Tracking doc for implementing `Daily-Mind-Challenge-Master-Progression-Gamification-Specification.md`.

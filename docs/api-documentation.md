@@ -3,7 +3,7 @@
 
 | | |
 |---|---|
-| **Document status** | New as of 2026-10-17; Quilt added 2026-10-20. |
+| **Document status** | New as of 2026-10-17; Quilt and Pounce added 2026-10-20. |
 | **Related docs** | `docs/database-design-document.md`, `docs/solution-architecture-document.md`, `firebase/firestore.rules` |
 
 ---
@@ -62,6 +62,13 @@ follows the `{game}…` rows above; its Tournament attempts never reset (Sudoku'
 caps for its types: `quilt` 30, `quilt-classic` 40, `quilt-tournament` 30, `quilt-tournament-bonus`
 2000. The two share-bonus updates read `sharedToFacebook` / `sharedWithFriends` with a `false`
 default, so score docs created without one of those fields can still claim it once.
+
+Pounce (`pounceDailyPuzzles`, `pounceClassicPuzzles`, `pounceTournaments`, `pounceTournamentAttempts`)
+follows the same rows. Its Run attempts are created with `livesLeft` 1–9 and every update must keep
+`livesLeft` ≤ the stored value (the advance-by-at-most-one rules are Quilt's). `gameScores` caps:
+`pounce` 30, `pounce-classic` 40, `pounce-tournament` 30, `pounce-tournament-bonus` 2000; `pounce`,
+`pounce-classic` and `pounce-tournament-bonus` take both share bonuses. Achievement ids
+(`pounce-expert` … `pounce-monthly-champion-12`) and the championship `gameId` lists include `pounce`.
 
 ## 4. Representative Request/Response Shapes
 

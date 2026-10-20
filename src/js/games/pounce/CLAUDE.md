@@ -6,10 +6,10 @@ column and coloured region; no two cats may touch, not even diagonally. Hard add
 Plan, brand and decisions: `docs/pounce-development-plan.md`. Tickets: `docs/pounce-backlog.md`.
 Never call it "Meowdoku" or "Queens" in the product.
 
-**Status: sprints 1–5 done, not deployed.** `/pounce` has all four modes working (Daily, Classic,
-Zen, Nine Lives Run), wired into the site (`GAMES`, rules, home tile, leaderboard, profile, badges),
-and Admin → Pounce generates all content (`src/js/admin/pounce-admin*.js`). Left: sprint 6 (Cat
-Café panel, copy review, docs, final test, release notes).
+**Status: built and release-tested, not deployed (2026-10-20).** All four modes (Daily, Classic, Zen,
+Nine Lives Run), wired into the site (`GAMES`, rules, home tile, leaderboard, profile + Cat Café,
+badges), and Admin → Pounce generates all content (`src/js/admin/pounce-admin*.js`). Deploy order
+and steps: `docs/pounce-release-notes.md`.
 
 ## Files
 
@@ -68,6 +68,8 @@ Café panel, copy review, docs, final test, release notes).
   `runIsOver()` = all boards played or 0 lives; `completeTournamentIfNeeded()` writes the bonus doc
   (completion bonus + 5 × lives for a finished run, else 0) where the share bonuses land.
   Settings: `config/pounceTournamentSettings` `{ timeLimitSeconds: 240, lives: 9 }`.
+- **`pounce-cafe-data.js`** — `getAdoptedCats(uid)`: the player's `pounce` gameScores dates →
+  `cafeCat(date)`, newest first (the profile's Cat Café panel, `pages/profile.js#renderCafe`).
 - **`pounce-summary-modal.js`** — `showPounceSummaryModal()`, adapted from Quilt's: optional `cat`
   ({ svg, caption }) at the top, Purrfect badge, breakdown lines may be negative ("−n").
 - **`pounce-page.js`** — `trySession()` page glue, mode tabs with one `activeRound`, Daily flow

@@ -11,6 +11,8 @@ import { syncPlayerAchievements } from '../progression/achievement-engine.js';
 import { claimChampionshipAchievements, getChampionshipTallies } from '../progression/championship-service.js';
 import { DAILY_MISSIONS, syncDailyMissions } from '../progression/mission-service.js';
 import { calculateRankProgress, GUEST_RANK_IMAGE, MAIN_RANKS } from '../progression/rank-service.js';
+import { getAdoptedCats } from '../games/pounce/pounce-cafe-data.js';
+import { catSvg } from '../games/pounce/pounce-cats.js';
 
 // Every gameType any gameScores doc can be written under, across all 9 game/mode data files --
 // GAME_LABELS used to only know the three Daily Challenge ones, so a Classic/Tournament/Challenge
@@ -493,6 +495,48 @@ function renderAchievements(earnedCounts, context, isRegistered) {
     el.innerHTML = summaryHtml + completedHtml + inProgressHtml + notStartedHtml;
 }
 
+const CAFE_PREVIEW = 12;
+
+function formatCafeDate(date) {
+    const [y, m, d] = date.split('-').map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+/**
+ * Pounce's Cat Café: one cat per solved Daily Pounce, newest first (games/pounce/pounce-cafe-data.js).
+ * Guests collect cats too -- like points, it only needs the Daily played. Shows the first
+ * CAFE_PREVIEW and a "Show all" toggle.
+ */
+function renderCafe(adopted) {
+    const el = document.getElementById('profile-cafe');
+    if (adopted.length === 0) {
+        el.innerHTML = `
+            <div class="cafe-empty">
+                <div class="cafe-empty-cat" aria-hidden="true">${catSvg({ coat: 'ginger', eyes: 'sleepy' })}</div>
+                <div>No cats yet. Every Daily Pounce you solve adopts a new cat for your caf&eacute;.</div>
+                <a class="btn primary" href="/pounce">Play today's Pounce</a>
+            </div>
+        `;
+        return;
+    }
+    const card = ({ date, cat }) => `
+        <div class="cafe-cat" title="${escapeHtml(cat.description)}">
+            <div class="cafe-cat-art" aria-hidden="true">${catSvg(cat)}</div>
+            <div class="cafe-cat-name">${escapeHtml(cat.name)}</div>
+            <div class="cafe-cat-date">${formatCafeDate(date)}</div>
+        </div>
+    `;
+    el.innerHTML = `
+        <div class="cafe-summary">${adopted.length} cat${adopted.length === 1 ? '' : 's'} adopted &mdash; one for every Daily Pounce you've solved.</div>
+        <div class="cafe-grid" role="list">${adopted.slice(0, CAFE_PREVIEW).map(card).join('')}</div>
+        ${adopted.length > CAFE_PREVIEW ? '<button class="btn cafe-more" type="button">Show all cats</button>' : ''}
+    `;
+    el.querySelector('.cafe-more')?.addEventListener('click', (e) => {
+        el.querySelector('.cafe-grid').innerHTML = adopted.map(card).join('');
+        e.currentTarget.remove();
+    });
+}
+
 function renderHistory(history) {
     const el = document.getElementById('profile-history');
     if (history.length === 0) {
@@ -564,9 +608,10 @@ async function init() {
         });
     }
 
-    const [{ byGameType, totalScore, gamesPlayedCount }, history] = await Promise.all([
+    const [{ byGameType, totalScore, gamesPlayedCount }, history, adoptedCats] = await Promise.all([
         getUserScoreByGameType(uid),
         getUserGameHistory(uid, 20),
+        getAdoptedCats(uid).catch(() => []),
     ]);
 
     const isRegistered = profile.kind === 'registered';
@@ -620,6 +665,7 @@ async function init() {
     renderGameProgress(gameProgress, isRegistered);
     renderMissions(missionContext, completedMissionIds, isRegistered);
     renderAchievements(earnedCounts, achievementContext, isRegistered);
+    renderCafe(adoptedCats);
     renderHistory(history);
 }
 

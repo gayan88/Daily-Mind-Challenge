@@ -21,10 +21,10 @@
 | E4 Classic + Zen | P-401 – P-402 | 1.5 | ✅ 2026-10-20 |
 | E5 Nine Lives Run | P-501 – P-502 | 3 | ✅ 2026-10-20 |
 | E6 Admin | P-601 – P-604 | 5 | ✅ 2026-10-20 |
-| E7 Progression, Cat Café, SEO, docs | P-701 – P-708 | 4 | 🔄 (P-702–P-704, P-707 done) |
-| E8 Test & release | P-801 – P-802 | 1.5 | ⬜ |
+| E7 Progression, Cat Café, SEO, docs | P-701 – P-708 | 4 | ✅ 2026-10-20 |
+| E8 Test & release | P-801 – P-802 | 1.5 | ✅ 2026-10-20 |
 | **Total** | **33 tickets** | **~30 working days** by ticket size | |
-| Owner (you) | O-01 – O-12 | — | 3 of 12 done |
+| Owner (you) | O-01 – O-12 | — | 4 of 12 done |
 
 ---
 
@@ -271,7 +271,7 @@ away, then announce. Mind the Perfect Day note from sprint 3.
 
 ## E7 — Progression, Cat Café, SEO, docs
 
-**P-701 · Cat Café (lite)** · M · 🤖 · ⬜ · needs P-207, P-302 · *D9*
+**P-701 · Cat Café (lite)** · M · 🤖 · ✅ · needs P-207, P-302 · *D9*
 - Each Daily date seeds a cat (coat, pattern, eyes, accessory, name).
 - The profile gets a "Cat Café" panel built from the player's `pounce` Daily score docs. No new
   collection, no new rules.
@@ -288,11 +288,11 @@ Cut `tile-pounce.png` (400×400) and `tile-pounce-wide.png` from
 - Tips & Strategy, a ~20-question FAQ, `sitemap.xml`.
 - og/twitter tags (stand-in wide tile until O-05 arrives).
 
-**P-705 · Six-game copy review** · S · 🤖 · ⬜ · needs P-305
+**P-705 · Six-game copy review** · S · 🤖 · ✅ · needs P-305
 "All N games" copy and the All-Rounder / Mind Master tiers; note that the "every game"
 achievements get harder.
 
-**P-706 · Docs** · M · 🤖 · ⬜
+**P-706 · Docs** · M · 🤖 · ✅
 - `src/js/games/pounce/CLAUDE.md` and every CLAUDE.md that lists the games.
 - A `content-creation-guide.md` section; BRD/FRS/SAD/TDD/DB/API/test plan/user guide game
   lists (as done for Quilt).
@@ -301,7 +301,7 @@ achievements get harder.
 **P-707 · Meta Pixel** · S · 🤖 · ✅ (wired in sprints 3–4) · needs P-302
 `GameCompleted` for `pounce` / `pounce-classic` / `pounce-tournament`.
 
-**P-708 · Badge tool in the repo** · S · 🤖 · ⬜ · optional
+**P-708 · Badge tool in the repo** · S · 🤖 · ✅ · optional
 Save the background-removal + 240px script as `tools/process-badges.py`, so it isn't rebuilt for
 every game.
 
@@ -309,13 +309,30 @@ every game.
 
 ## E8 — Test & release
 
-**P-801 · Test pass** · M · 🤖 · ⬜ · needs everything above
+**P-801 · Test pass** · M · 🤖 · ✅ · needs everything above
 - Test-plan cases for every mode on the emulators: leaderboard, profile, Cat Café, home badge,
   admin generate/import, rules.
 - Re-run P-105.
 
-**P-802 · Release notes + deploy** · S · 🤖 · ⬜ · needs P-801
+**P-802 · Release notes + deploy** · S · 🤖 · ✅ · needs P-801
 `docs/pounce-release-notes.md` with deploy and rollback steps.
+
+---
+
+**Sprint 6 notes (2026-10-20):**
+- **P-701:** a Cat Café panel on the profile (`pounce-cafe-data.js`: the player's `pounce` gameScores →
+  `cafeCat(date)`, newest first, 12 shown + "Show all", an empty state linking to `/pounce`; guests
+  too).
+- **P-705:** nothing to change. Achievement and mission copy is all derived from `GAMES` ("all 6
+  games"), and no page says "five"; the harder all-games achievements go in the launch post.
+- **P-706:** every project doc covers Pounce (FRS §3.5b, test plan TC-25–30, campaign brief section +
+  assets, `adding-a-new-game.md` lessons).
+- **P-708:** `tools/process-badges.py`.
+- **P-801:** every suite is green (see `docs/pounce-release-notes.md`), plus a new
+  `tools/site-smoke-test.mjs` over all six games.
+- **P-802:** `docs/pounce-release-notes.md`.
+
+**All 33 Claude tickets are done. What's left is the owner list below: O-02, O-05, O-06, O-08 – O-12.**
 
 ---
 
@@ -329,10 +346,10 @@ every game.
 | O-04 | 18 achievement badges | P-702 | ✅ 2026-10-20 (made transparent) |
 | O-05 | **Share image** 1200×630 for Pounce **and Quilt** (deferred Quilt O6) | P-704 | ⬜ |
 | O-06 | **How to Play banner** for Pounce **and Quilt** (deferred Quilt O5) | P-301 | ⬜ |
-| O-07 | Decide about the Quilt originals deleted from `docs/Images/` (restore from git or leave) | any time | ⬜ |
+| O-07 | Decide about the Quilt originals deleted from `docs/Images/` (restore from git or leave) | any time | ✅ removed on purpose (committed) |
 | O-08 | Generate content in Admin → Pounce (after deploying the code, see below): 365 Daily, 100 per Classic difficulty, 10 Runs | after P-602 ✅ — ready | ⬜ |
 | O-09 | Play-test on phone + desktop (tap feel, 9×9 readability, hint wording, share text) | P-801 | ⬜ |
-| O-10 | Deploy and activate the first Run | after P-802 | ⬜ |
+| O-10 | Deploy, then straight away Generate + Add content (O-08) and activate a Run — steps in `docs/pounce-release-notes.md` | after P-802 ✅ — ready | ⬜ |
 | O-11 | Indexing: Google + Bing for `/pounce`, **plus Bing for `/quilt`** | after O-10 | ⬜ |
 | O-12 | One Facebook-group launch post for **Quilt + Pounce** | after O-10 | ⬜ |
 

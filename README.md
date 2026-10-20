@@ -1,6 +1,6 @@
 # Daily Mind Challenge
 
-A daily puzzle games site — Wordle, Sudoku, Word Search, Connections, and Quilt — with guest/registered login, points, a daily leaderboard, and an admin panel. Wordle has three modes: Daily Challenge, Tournaments, and Challenge a Friend (shareable-link challenges).
+A daily puzzle games site — Wordle, Sudoku, Word Search, Connections, Quilt, and Pounce — with guest/registered login, points, a daily leaderboard, and an admin panel. Wordle has three modes: Daily Challenge, Tournaments, and Challenge a Friend (shareable-link challenges).
 
 Plain HTML/CSS/JS, no build tooling. Firebase (Auth + Firestore) for the backend.
 
@@ -75,11 +75,12 @@ Full data-flow write-up: `docs/data-flow.md`.
 - **Wordle Tournaments** and **Challenge a Friend** links: also created from `admin.html` (Tournaments) or in-page from `wordle.html` itself (Challenge a Friend) — no source file to edit for either.
 - **Sudoku puzzles**: add `{ puzzle, solution }` pairs (81-character strings, `0` = blank) to `src/js/games/sudoku/sudoku-puzzles.js`.
 - **Quilt pictures**: add from `admin.html`'s Quilt section — PNG files at 1 pixel per cell or the text format; each picture is turned into a puzzle and proven to have exactly one solution before it's saved. Patchwork Runs can be bulk-imported from one file. Formats in `docs/content-creation-guide.md`; the test pictures that used to be in `docs/quilt-content/` were removed 2026-10-20 (recover with `git checkout deaffe8 -- docs/quilt-content`).
+- **Pounce boards**: nothing to write — `admin.html`'s Pounce section **generates** Daily and Classic boards in the browser (a year of Dailies in about a second, each proven uniquely solvable by logic), previews them, and adds them in one click; Nine Lives Runs are generated the same way, one or many at a time. Hand-made boards can be imported as JSON. See `docs/content-creation-guide.md`.
 - **Word Search themes**: add a day's word list to `src/js/games/wordsearch/wordsearch-words.js`; the grid itself is generated at runtime from a date-seeded random layout, so you only supply words.
 
 ## Known v1 scope limitations
 
-- 13 ad slots across the site (3 on the home page, 2 on each of the five game pages) are admin-configurable via `admin.html` — each can be turned off, left as a static "Google AdSense" placeholder (still no real AdSense integration), or swapped for a manual image ad with a click-through URL.
+- 15 ad slots across the site (3 on the home page, 2 on each of the six game pages) are admin-configurable via `admin.html` — each can be turned off, left as a static "Google AdSense" placeholder (still no real AdSense integration), or swapped for a manual image ad with a click-through URL.
 - "Share on Facebook" links to the plain `sharer.php` share dialog, no App ID/rich cards.
 - Challenge a Friend is a shareable link, not a real friends graph.
 - Points are protected by Firestore security rules capping per-write deltas, not full server-authoritative scoring (no Cloud Functions in v1).

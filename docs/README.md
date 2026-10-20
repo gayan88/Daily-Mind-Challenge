@@ -23,9 +23,12 @@ in.
 
 | Document | Covers |
 |---|---|
-| [adding-a-new-game.md](adding-a-new-game.md) | Checklist for adding a new game, built from the real Connections and Quilt experience |
+| [adding-a-new-game.md](adding-a-new-game.md) | Checklist for adding a new game, built from the real Connections, Quilt and Pounce experience |
 | [quilt-development-plan.md](quilt-development-plan.md) | Plan and split backlogs (Claude / owner) for Quilt, the 5th game |
 | [quilt-release-notes.md](quilt-release-notes.md) | Quilt release notes, test results, deploy and rollback steps |
+| [pounce-development-plan.md](pounce-development-plan.md) | Plan, brand and decisions for Pounce, the 6th game (a Star Battle-style cat puzzle) |
+| [pounce-backlog.md](pounce-backlog.md) | Pounce tickets (Claude + owner) with per-sprint notes and test results |
+| [pounce-release-notes.md](pounce-release-notes.md) | Pounce release notes, test results, deploy order and rollback steps |
 | [content-creation-guide.md](content-creation-guide.md) | Exact file formats for AI-assisted puzzle content generation, per game/mode |
 | [progression-gamification-roadmap.md](progression-gamification-roadmap.md) | The phased plan behind Points/XP/Rank/Achievements/Streaks/Championships |
 | [data-flow.md](data-flow.md) | Sequence-level reference for session bootstrap, auth, and scoring flows |
@@ -37,4 +40,4 @@ in.
 - **`assets/campaign/`** — processed images referenced by `facebook-campaign-brief.md` (badges, tiles, share images, logo).
 - **`connections-content/`** — reviewed starter puzzle content for the Connections game (see `adding-a-new-game.md`/`content-creation-guide.md`).
 - **`quilt-content/`** — *removed 2026-10-20.* Generated Quilt test pictures (500 Daily, 300 Classic, 100 Patchwork Run); recover with `git checkout deaffe8 -- docs/quilt-content`.
-- **`Images/`** — raw source images: the Quilt logo and the 18 full-size Quilt achievement badges (renamed to their achievement ids; the site uses processed 240×240 copies). Not referenced by any page; kept as source material.
+- **`Images/`** — raw source images: the Pounce logo and the 18 full-size Pounce achievement badges (transparent, named by achievement id; the site uses processed 240×240 copies). The Quilt originals were removed 2026-10-20 (recover with `git checkout 63db3be^ -- docs/Images`). Not referenced by any page; kept as source material.

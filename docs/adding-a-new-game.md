@@ -16,6 +16,21 @@
 > - `admin.html` needs both the game's admin section *and* its ad-slot subsection; a tournament
 >   settings form goes in `CONFIG_FORMS` + `gameSectionConfigIds` and is rendered into the game's section.
 
+> Pounce (the sixth game) followed it as well -- see `docs/pounce-backlog.md` (per-sprint notes) and
+> `src/js/games/pounce/CLAUDE.md`. What it added to the lessons:
+> - **Keep the test scripts in `tools/`** from the start (soak, browser, e2e vs. emulators, admin) --
+>   Quilt's were lost with the session. The e2e tests need Java for the Firestore emulator.
+> - **Generated content** beats authored content when the format allows it: the admin "Generate"
+>   button took content off the launch critical path entirely.
+> - The cookie banner covers a phone's lower screen until answered: e2e tests must decline it
+>   **via the element** (a positional click lands on the sign-in modal's backdrop and closes it),
+>   and accepting it loads ad/analytics scripts that freeze headless Chrome on localhost.
+> - On the emulators, pages after the home page load ~25 s slowly and a restored session can come
+>   back signed out -- a known emulator quirk (Quilt too), not a game bug.
+> - Launch order matters once the game is in `GAMES`: Perfect Day / "every Daily" need its Daily,
+>   so deploy → add content straight away → announce.
+> - Board/theme colours go in `base.css` tokens (`--color-<game>-*`), not hard-coded in the page CSS.
+
 A checklist of everything that needs to be built or updated to add a new game (originally written
 for the fourth), based on how
 Wordle, Sudoku, and Word Search are each actually wired into the app.

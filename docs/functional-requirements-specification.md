@@ -3,8 +3,8 @@
 
 | | |
 |---|---|
-| **Document status** | Reflects the system as implemented, as of 2026-10-17. Supersedes the 2026-09-20 FRS baseline — adds Connections (the fourth game) and Quilt (the fifth, 2026-10-18), the retuned XP/Rank curve, the Meta Pixel integration, the cookie-consent reliability fixes, and the Google/Bing Search Console setup. |
-| **Product** | Daily Mind Challenge — a free, browser-based daily puzzle site (Wordle, Sudoku, Word Search, Connections, Quilt) |
+| **Document status** | Reflects the system as implemented, as of 2026-10-17. Supersedes the 2026-09-20 FRS baseline — adds Connections (the fourth game), Quilt (the fifth, 2026-10-18) and Pounce (the sixth, 2026-10-20), the retuned XP/Rank curve, the Meta Pixel integration, the cookie-consent reliability fixes, and the Google/Bing Search Console setup. |
+| **Product** | Daily Mind Challenge — a free, browser-based daily puzzle site (Wordle, Sudoku, Word Search, Connections, Quilt, Pounce) |
 | **Live domain** | `dailymindchallenge.com` |
 | **Related docs** | `docs/solution-architecture-document.md` (formerly architecture.md), `docs/database-design-document.md`, `docs/api-documentation.md`, `docs/technical-design-document.md`, `docs/data-flow.md`, `docs/deployment-and-release-document.md`, and the `CLAUDE.md` file colocated with almost every source directory |
 
@@ -26,7 +26,7 @@ every rule that governs it, and the constraints the system operates under — in
 each requirement happens to be implemented.
 
 ### 1.2 Scope
-Covers the public site (five games, leaderboard, accounts, legal/informational pages), the admin
+Covers the public site (six games, leaderboard, accounts, legal/informational pages), the admin
 panel used to operate it, and the third-party integrations that affect user-visible behavior
 (analytics, advertising, Meta Pixel, cookie consent). Does not cover deployment mechanics (see
 `docs/deployment-and-release-document.md`) or line-level code structure (see the various
@@ -38,9 +38,9 @@ panel used to operate it, and the third-party integrations that affect user-visi
 | Guest | A player using the site via Firebase Anonymous Auth, no email/password |
 | Registered user | A player with a username + password (Firebase Email/Password Auth under a synthetic or real email) |
 | Admin | A registered user with `isAdmin: true` on their profile doc |
-| Daily Challenge | The mode common to all five games: one puzzle per day, identical for every player, scored once |
-| Classic | Unlimited-replay mode (Sudoku, Word Search, Connections, Quilt) at a chosen difficulty |
-| Tournament | A timed, multi-puzzle/word run with a completion bonus (all five games; Quilt's is called Patchwork Run) |
+| Daily Challenge | The mode common to all six games: one puzzle per day, identical for every player, scored once |
+| Classic | Unlimited-replay mode (Sudoku, Word Search, Connections, Quilt, Pounce) at a chosen difficulty; Pounce also has Zen (Classic without clock or score) |
+| Tournament | A timed, multi-puzzle/word run with a completion bonus (all six games; Quilt's is called Patchwork Run, Pounce's Nine Lives Run) |
 | `gameScores` | The single Firestore collection holding every scored result, across every game/mode |
 | Points | A per-game, per-player currency earned by playing; drives the leaderboard and per-game Level |
 | XP | A separate, site-wide, registered-only currency; drives Overall Level and Rank |
@@ -67,7 +67,7 @@ not a backend API.
 ### 2.2 User classes
 | Class | Can do | Cannot do |
 |---|---|---|
-| **Anonymous visitor** (no session) | View the home page, the five game pages' static content and FAQs, the public Leaderboard (and open player profile popups), Privacy Policy, Terms of Service, Cookie Consent Notice, About & Contact | Play any game, appear on the leaderboard, view Profile/Settings/Admin |
+| **Anonymous visitor** (no session) | View the home page, the six game pages' static content and FAQs, the public Leaderboard (and open player profile popups), Privacy Policy, Terms of Service, Cookie Consent Notice, About & Contact | Play any game, appear on the leaderboard, view Profile/Settings/Admin |
 | **Guest** | Play all games/modes, appear on the leaderboard, earn points | Claim the daily login bonus, create a Wordle Challenge, change their display name, access Settings, earn XP/Rank/Achievements |
 | **Registered user** | Everything a Guest can, plus: daily login bonus, create/browse Wordle Challenges, change display name/password/recovery email via Settings, earn XP/Rank/Streak/Achievements | Access the Admin panel |
 | **Admin** | Everything a Registered user can except *play* games (blocked deliberately), plus the full Admin panel | — |
@@ -180,6 +180,24 @@ Numbered 3.5a so existing requirement ids don't shift. Plan and decisions: `docs
 | FR-5a.9 | After any Quilt round the system shall offer the same two independent share bonuses as FR-2.11; Classic and Patchwork Run share text include the picture as an emoji mosaic. |
 | FR-5a.10 | Admins shall add Quilt content as pictures (PNG at 1 pixel per cell, or text), preview every generated puzzle with errors and warnings before saving, and build Patchwork Runs from one picture with a tile-cut preview. |
 
+### 3.5b Pounce
+
+Numbered 3.5b so existing requirement ids don't shift. Plan, brand and decisions: `docs/pounce-development-plan.md`; tickets: `docs/pounce-backlog.md`.
+
+| ID | Requirement |
+|---|---|
+| FR-5b.1 | The system shall present an N×N board split into N coloured regions; the player places cats so every row, column and region holds exactly one cat and no two cats touch, even diagonally. Tap cycles empty → ✕ → cat; long-press or a "Tap places 🐱" toggle places a cat; dragging paints or erases ✕; keyboard play (arrows, Space, Enter, X) and Undo / Clear ✕ are available. An optional Auto-✕ crosses out the cells a new cat rules out. |
+| FR-5b.2 | A cat shall be checked against the stored solution as it lands: a correct cat locks in place; a wrong one is removed, leaves a ✕ and counts as a hiss (a mistake). |
+| FR-5b.3 | Every stored board shall have exactly one solution and be solvable step by step by logic alone, proven when the board is generated or imported. |
+| FR-5b.4 | **Whisker Tips**: on request the system shall clear a ✕ the player put on a real cat spot, or otherwise show the easiest next deduction — highlighting its cells and explaining it in a sentence — and apply it. It shall never reveal a cat outright except as a last resort. |
+| FR-5b.5 | **Daily Challenge**: one shared Medium 8×8 board per calendar day, one scored solve, no loss condition. Points: 10 + speed bonus (≤2 min 10, ≤4 min 8, ≤8 min 6, else 5) − 2 per hiss − 3 per tip (never below 5) + 5 Purrfect (no hisses, no tips). The share text shall never show the board. |
+| FR-5b.6 | **Classic**: Easy 6×6 / Medium 8×8 (sleeping dogs: blocked cells) / Hard 9×9 (dogs + pawprint clues: how many cats touch that cell), unlimited replays, unsolved boards first. Points: the Daily formula × 0.8 / 1.0 / 1.3. |
+| FR-5b.7 | **Zen**: the Classic boards with no clock, no score, free tips and nothing recorded. |
+| FR-5b.8 | **Nine Lives Run** (Tournament): five boards (5×5 → 9×9) under a global per-board time limit with one shared set of lives (default 9). A wrong cat costs a life and is saved immediately; a board that runs out of time costs a life and banks 10 (30 if solved); at 0 lives the run ends with banked points. A run that reaches the end adds its completion bonus + 5 per life left. |
+| FR-5b.9 | **Cat Café**: every Daily solved shall adopt that date's cat (name, coat, eyes, accessory — the same cat for everyone that day), shown in the summary and collected on the profile. |
+| FR-5b.10 | After any scored round the system shall offer the same two independent share bonuses as FR-2.11. |
+| FR-5b.11 | Admins shall generate Daily and Classic boards in the browser (count, difficulty, start date for #1), preview the grade spread and sample boards, and add them all-or-nothing; regenerate or delete single boards; import/export hand-made boards as validated JSON; and create Nine Lives Runs singly or in bulk. |
+
 ### 3.6 Points, Scoring, and Anti-Duplication
 
 | ID | Requirement |
@@ -193,7 +211,7 @@ Numbered 3.5a so existing requirement ids don't shift. Plan and decisions: `docs
 
 | ID | Requirement |
 |---|---|
-| FR-7.1 | The system shall show a ranked leaderboard of total points, filterable by game (Overall/Wordle/Sudoku/Word Search/Connections/Quilt) and by period (Today/Week/Month/Year/All-time), presented as two dropdown selectors (Game, Period) rather than a row of tab buttons, so the control set scales past the current five games without crowding. |
+| FR-7.1 | The system shall show a ranked leaderboard of total points, filterable by game (Overall/Wordle/Sudoku/Word Search/Connections/Quilt/Pounce) and by period (Today/Week/Month/Year/All-time), presented as two dropdown selectors (Game, Period) rather than a row of tab buttons, so the control set scales past the current five games without crowding. |
 | FR-7.2 | The system shall show each player's display name, guest/registered status, and rank; guest identities shall be distinguishable from registered ones. |
 | FR-7.3 | The system shall load the leaderboard incrementally (a configurable page size, "Load More" to reveal further rows) rather than one unbounded query. |
 | FR-7.4 | The home page shall show a compact preview of the current top players, linking to the full leaderboard. |
@@ -221,7 +239,7 @@ Numbered 3.5a so existing requirement ids don't shift. Plan and decisions: `docs
 | FR-9.8 | The system shall present a large Daily-content pool grouped by year and then month (both independently collapsible), collapsed by default, rather than one long flat list. |
 | FR-9.9 | **Classic content management** (Sudoku, Word Search, Connections): the system shall let an admin add, edit, bulk-import, and export Classic puzzles for each of the three difficulties, sharing one content pool per game across all difficulties. Duplicate detection (FR-9.6) shall be scoped per difficulty — the same content may legitimately exist in two different difficulties' pools. |
 | FR-9.10 | The system shall display a game's Classic content grouped by difficulty (Easy/Medium/Hard). |
-| FR-9.11 | **Tournament management** (all five games; Quilt's Patchwork Runs can also be bulk-imported, one run per picture): the system shall let an admin create a named tournament (a sequence of puzzles/words plus a completion bonus), activate/deactivate it without deleting its data or players' history, and delete it. |
+| FR-9.11 | **Tournament management** (all six games; Quilt's Patchwork Runs can also be bulk-imported, one run per picture): the system shall let an admin create a named tournament (a sequence of puzzles/words plus a completion bonus), activate/deactivate it without deleting its data or players' history, and delete it. |
 | FR-9.12 | **Moderation**: the system shall let an admin look up a user by username and toggle their banned/admin status. |
 | FR-9.13 | **Advertising configuration**: the system shall let an admin enable/disable, and optionally replace with a custom image+link, each of the site's defined ad placement slots (home page and per-game top/bottom slots, across all five games), without a code deploy. |
 | FR-9.14 | The system shall let an admin turn the visitor-facing cookie-consent banner on or off sitewide (see FR-11.5). |
@@ -233,7 +251,7 @@ Numbered 3.5a so existing requirement ids don't shift. Plan and decisions: `docs
 | FR-10.1 | Registered players shall earn global XP (login = 5, Daily Challenge completion = 10, perfect-day bonus = 20, a share action = 5, and +250 per unlocked achievement). Guests earn Points but no XP/Rank/Achievements/Streak. |
 | FR-10.2 | Overall Level shall equal `floor(XP / 1,000)`, displayed starting at Level 1 (0 XP = "Level 1"), always derived from XP at display time, never stored independently. |
 | FR-10.3 | Rank shall have 10 main tiers (Novice through Legend), each split into 10 sub-ranks (Roman numerals I–X). Each tier's sub-rank XP width shall grow by a fixed amount per tier (500 XP for Novice, increasing by 500 per tier up to 5,000 XP for Legend), for a total of 275,000 XP across the full climb. Rank shall cap permanently at Legend X once 275,000 XP is reached; there is no 11th tier. A player holds a sub-rank as soon as its band is entered — Novice I is free at 0 XP, with no "unranked" state below it. |
-| FR-10.4 | "Perfect Day" (completed and won every Daily Challenge in one calendar day) and "Daily Mind Champion" (completed every Daily Challenge, any outcome) shall require all five games, not a fixed count — these requirements track `checkPlayedTodayAll()`'s actual game set and shall be updated whenever a game is added or removed. |
+| FR-10.4 | "Perfect Day" (completed and won every Daily Challenge in one calendar day) and "Daily Mind Champion" (completed every Daily Challenge, any outcome) shall require all six games, not a fixed count — these requirements track `checkPlayedTodayAll()`'s actual game set and shall be updated whenever a game is added or removed. |
 | FR-10.5 | The system shall define a set of achievements (85 as of this document's writing) spanning per-game Level tiers, Daily/Weekly/Monthly Championship win-count tiers, streak milestones, and global milestones, each with custom badge art. Only the next unearned tier of a tiered family shall show as In Progress; later tiers show Not Started. |
 | FR-10.6 | Daily/Weekly/Monthly Championships (top scorer per game per period) shall be finalized by an admin action and claimed by the winner on their next profile visit. |
 | FR-10.7 | One Daily Mission ("Play 3 Different Games") shall require only 3 of the 4 available games, not all of them — a deliberately lower bar than "Daily Mind Champion," unaffected by adding further games. |
@@ -246,7 +264,7 @@ Numbered 3.5a so existing requirement ids don't shift. Plan and decisions: `docs
 | FR-11.2 | The system shall publish a Cookie Consent Notice page describing the categories of cookies/similar technologies used (essential, analytics, advertising, Meta Pixel) and how a visitor can manage or change their choice. |
 | FR-11.3 | The system shall publish an About & Contact page identifying the product (without disclosing the operator's personal identity) and a way to reach the site operator that does not expose a personal email address. |
 | FR-11.4 | The system shall publish a Terms of Service page (eligibility, accounts, acceptable use, virtual points with no cash value, no purchases, advertising, disclaimers), linked from the footer. |
-| FR-11.5 | These pages, and the five game pages' own static descriptive content, shall be viewable by a visitor with no session at all (not gated behind login), so that search engines and ad-network reviewers can index real content. |
+| FR-11.5 | These pages, and the six game pages' own static descriptive content, shall be viewable by a visitor with no session at all (not gated behind login), so that search engines and ad-network reviewers can index real content. |
 | FR-11.6 | The system shall present an Accept/Decline cookie-consent banner to a first-time visitor (when enabled, see FR-9.14). The banner shall not depend on a database read completing before it can show: it shall default to showing (enabled) if the admin-configured setting hasn't loaded within 1.5 seconds. |
 | FR-11.7 | The banner shall render at most once per page load regardless of how many times the page's own startup code requests it, so a visitor is never asked to accept/decline more than once for a single page view. |
 | FR-11.8 | Declining consent shall signal restricted use of Google Analytics/advertising data via Google Consent Mode, and shall prevent the Meta Pixel from loading at all. Accepting shall load the Meta Pixel and record a PageView. This signal/choice shall be re-applied automatically on every subsequent page the visitor loads, without re-showing the banner, until/unless the stored choice is cleared (e.g. by clearing browser storage). |
@@ -264,7 +282,7 @@ Numbered 3.5a so existing requirement ids don't shift. Plan and decisions: `docs
 
 | ID | Requirement |
 |---|---|
-| FR-13.1 | The system shall reserve defined ad placement slots on the home page (3) and each game page (2: top and bottom of the game), across all five games (13 slots). |
+| FR-13.1 | The system shall reserve defined ad placement slots on the home page (3) and each game page (2: top and bottom of the game), across all six games (15 slots). |
 | FR-13.2 | Each slot's visibility and content shall be controllable per-slot by an admin (FR-9.13) without a code deploy. |
 
 ### 3.14 SEO & Discoverability
@@ -297,7 +315,7 @@ Numbered 3.5a so existing requirement ids don't shift. Plan and decisions: `docs
 **Main flow:**
 1. Player logs in, triggering the daily login bonus (if not already claimed today) and 5 XP.
 2. Player completes one or more Daily Challenges, each awarding 10 XP.
-3. If this is the last of all five Daily Challenges completed today, the player receives a one-time 20 XP "Perfect Day" bonus.
+3. If this is the last of all six Daily Challenges completed today, the player receives a one-time 20 XP "Perfect Day" bonus.
 4. Player visits their Profile page; Overall Level and Rank are recomputed from the player's current total XP and displayed.
 **Postconditions:** `registeredUsers/{uid}.xp` reflects all awarded XP; the profile shows the correct Rank/sub-rank for that total.
 
@@ -425,7 +443,7 @@ functional requirements above:
   a deterministic, collision-proof document ID per scoring event (see FR-6.2).
 - **Per-game content collections**: Daily pools (date-keyed), Classic pools (numeric-id-keyed,
   shared across difficulties), Tournament definitions, and Tournament attempt-progress documents —
-  one collection family per game, structurally parallel across all five games.
+  one collection family per game, structurally parallel across all six games.
 - **Progression data**: `playerAchievements`, `championshipWinTallies`, `periodResults`,
   `playerMissions`, and `wordleDailyAttempts`/`connectionsDailyAttempts`, plus
   `xp`/`currentStreak`/`perfectDayCount` on `registeredUsers`.

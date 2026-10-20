@@ -3,7 +3,7 @@
 
 | | |
 |---|---|
-| **Document status** | New as of 2026-10-17; Quilt rows added 2026-10-20. Module designs, data schemas, and business-logic implementation for the pieces of the system most worth understanding before changing them. Not exhaustive — each source directory's own `CLAUDE.md` is the line-level reference; this document is the entry point into *why* those modules are shaped the way they are. |
+| **Document status** | New as of 2026-10-17; Quilt and Pounce rows added 2026-10-20. Module designs, data schemas, and business-logic implementation for the pieces of the system most worth understanding before changing them. Not exhaustive — each source directory's own `CLAUDE.md` is the line-level reference; this document is the entry point into *why* those modules are shaped the way they are. |
 | **Related docs** | `docs/solution-architecture-document.md` (SAD), `docs/database-design-document.md`, `docs/api-documentation.md` |
 
 ---
@@ -15,6 +15,7 @@
 | Game registry | `src/js/progression/game-registry.js` | Nothing — the single source of truth for "which `gameType`s belong to which game," read by the leaderboard, progression, and admin layers |
 | Per-game engine | `src/js/games/*/​*-engine.js` | Nothing Firebase-related — pure DOM + callback, mode-agnostic |
 | Quilt puzzle core | `src/js/games/quilt/quilt-{solver,generator,picture}.js` | `utils/helpers.js` only (seeded RNG) — no DOM, no Firebase, so the same code runs in the engine (board check), the admin page (picture → puzzle, uniqueness proof) and plain Node |
+| Pounce puzzle core | `src/js/games/pounce/pounce-{solver,logic,generator,cats}.js` | `utils/helpers.js` only (seeded RNG) — no DOM, no Firebase. `pounce-logic.js` finds the easiest human deduction (7 techniques, tiers 1–5); the same steps power Whisker Tips and grade each generated board. The generator repairs a random layout until the backtracking solver proves one solution, then keeps it only if logic solves it inside the difficulty's grade band. Tested by `tools/pounce-soak-test.mjs` (1000 boards per difficulty). |
 | Per-game data layer | `src/js/games/*/​*-{daily,classic,tournament}-data.js` | Firestore SDK, the engine's `onComplete` payload shape |
 | Per-game page glue | `src/js/games/*/​*-page.js` | `app.js` (session), the engine, the data layer, the game's own summary-modal |
 | Progression | `src/js/progression/{rank,xp,progression,streak}-service.js`, `achievement-registry.js`, `achievement-engine.js`, `championship-service.js`, `mission-service.js` | `game-registry.js`; otherwise mutually independent, read-only/derived except where noted |
@@ -64,6 +65,10 @@ Player               connections-page.js         connections-daily-data.js      
   rectangles against the rules (`quilt-solver.js#checkBoard`), not by comparing with a stored answer.
 - The actual **"can't be scored twice" guarantee is the Firestore rule**, not the client-side
   `checkPlayedToday()` call — that check is purely a UX optimization to avoid a doomed write.
+- **Pounce** checks each cat against the stored `solution` as it lands (so a cat on the board is
+  always right), has no loss condition in Daily/Classic, and keeps Zen entirely client-side (no
+  writes). The Nine Lives Run saves each lost life immediately (`spendLife()`), and the rules only
+  let `livesLeft` go down, so leaving mid-board can't refund lives.
 
 ## 3. Business Logic: The Rank/XP Curve
 
