@@ -3,7 +3,7 @@
 
 | | |
 |---|---|
-| **Document status** | New as of 2026-10-17. |
+| **Document status** | New as of 2026-10-17; Quilt added 2026-10-20. |
 | **Related docs** | `docs/database-design-document.md`, `docs/solution-architecture-document.md`, `firebase/firestore.rules` |
 
 ---
@@ -56,6 +56,12 @@ operation throws a `FirebaseError` with code `permission-denied` on the client.
 | `periodResults` | Public | Admin only | Admin only (finalize), or the winner only (claim `claimed: false → true`) | Admin only |
 | `playerMissions` | Public | Owner only | Never | Admin only |
 | `config` | Public | Admin only | Admin only | Admin only |
+
+Quilt (`quiltDailyPuzzles`, `quiltClassicPuzzles`, `quiltTournaments`, `quiltTournamentAttempts`)
+follows the `{game}…` rows above; its Tournament attempts never reset (Sudoku's shape). `gameScores`
+caps for its types: `quilt` 30, `quilt-classic` 40, `quilt-tournament` 30, `quilt-tournament-bonus`
+2000. The two share-bonus updates read `sharedToFacebook` / `sharedWithFriends` with a `false`
+default, so score docs created without one of those fields can still claim it once.
 
 ## 4. Representative Request/Response Shapes
 

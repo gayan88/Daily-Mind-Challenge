@@ -21,6 +21,17 @@
 2. If not yet played, mounts the game engine with the day's content (deterministic by date, same for every player).
 3. On completion, `recordGameScore()` writes the `gameScores` doc. The real "can't replay for points" guarantee is enforced by Firestore rules (only `create`, never `update`, is allowed on that path), not just the client-side pre-check.
 
+## Quilt content (admin) → play
+
+Quilt's content is pictures, not puzzles. Admin → Quilt reads each picture (PNG at 1 pixel per
+cell via a canvas, or the text format), `quilt-generator.js#generatePuzzle()` splits it into
+single-colour rectangles, places one number per rectangle and keeps it only once
+`quilt-solver.js#solve()` proves exactly one solution; the full puzzle (picture + rectangles +
+numbers) is then written to `quiltDailyPuzzles` / `quiltClassicPuzzles`, or cut into tiles by
+`buildPatchwork()` for `quiltTournaments`. At play time the engine checks the player's rectangles
+against the rules (`checkBoard()`), not against the stored answer, and only colours the pieces once
+the board is solved.
+
 ## Leaderboard
 
 `src/js/leaderboard/leaderboard-data.js` queries `gameScores where gameDate == today` (optionally `+ gameType`), sums per user client-side, and filters out banned users (a separately-cached `registeredUsers where isBanned == true` query). **Login points are excluded** from this ranking — see `src/js/leaderboard/CLAUDE.md` for why.

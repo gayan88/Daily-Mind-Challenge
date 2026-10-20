@@ -16,13 +16,13 @@ externally with no access to the rest of the codebase needed.
 
 ## 1. What it is
 
-Daily Mind Challenge is a free, browser-based puzzle site built around a daily habit: four
-well-known puzzle formats — Wordle, Sudoku, Word Search, and Connections — each refreshed with a
-new challenge once a day. No app download, no install, and no signup wall: anyone can start
+Daily Mind Challenge is a free, browser-based puzzle site built around a daily habit: five
+puzzle formats — four well-known ones (Wordle, Sudoku, Word Search, Connections) plus Quilt, our own
+picture-reveal logic puzzle — each refreshed with a new challenge once a day. No app download, no install, and no signup wall: anyone can start
 playing in one tap as a **guest**. An optional free account adds streak tracking, a daily login
 bonus, and the ability to create and share custom challenges.
 
-## 2. The four games, mode by mode
+## 2. The five games, mode by mode
 
 Every game shares the same three-mode shape (**Daily Challenge**, a replay mode, and
 **Tournament**), which is itself a useful, repeatable creative hook — "pick your game, then pick
@@ -72,12 +72,28 @@ out of guesses.
 | **Classic** | Pick a difficulty — Easy, Medium, or Hard — and get a random puzzle from that pool. Unlimited replays, any time, no daily limit. |
 | **Tournament** | A curated run of puzzles under a per-puzzle time limit. Failing a puzzle resets the whole run back to puzzle 1 — no partial credit, same high-stakes shape as Wordle Tournaments. Full completion pays out a lump-sum bonus. |
 
+### Quilt 🧵
+
+![Quilt](assets/campaign/tile-quilt.png)
+
+The newest game, and the first original one: a Shikaku-style logic puzzle with a twist. Players
+drag rectangles over a grid of numbers so each rectangle holds exactly one number equal to its area.
+While they play the pieces are plain fabric; the moment the board is finished, every piece is dyed
+its real colour and **a hidden pixel-art picture appears**. Strong visual hook for creative — the
+"before" (a grid of numbers) and the "after" (a picture) make a natural two-frame ad or carousel.
+
+| Mode | What it is |
+|---|---|
+| **Daily Challenge** | One picture a day, identical for every player, no way to fail — just a speed bonus and a "Perfect Stitch" bonus for solving without a single undo. The daily share text deliberately hides the picture ("Can you reveal today's picture?"), so friends have to play to see it. |
+| **Classic** | Easy 7×7, Medium 10×10 or Hard 14×14 (Hard adds "knots" and shape clues). Unlimited replays, pictures you haven't solved come first. |
+| **Patchwork Run** (Tournament) | One big picture cut into timed tiles; the full picture builds up tile by tile as a mosaic. A tile that runs out of time stays grey, so a "perfect patchwork" is a visible, shareable achievement. |
+
 ## 2b. Progress, rewards and competition
 
 Beyond the puzzles themselves, the product has a full progression layer -- a strong source of
 creative angles ("collect them all", "climb the ranks"):
 
-- **85 illustrated achievement badges** -- per-game Expert/Master/Grand Master tiers, Daily/Weekly/Monthly Champion titles (repeat-win tiers up to 100 wins), streak badges (7 to 365 days), and all-games milestones (Perfect Day, Triple Threat, Mind Master, Mind Athlete...). Each unlock also grants bonus XP.
+- **103 illustrated achievement badges** -- per-game Expert/Master/Grand Master tiers, Daily/Weekly/Monthly Champion titles (repeat-win tiers up to 100 wins), streak badges (7 to 365 days), and all-games milestones (Perfect Day, Triple Threat, Mind Master, Mind Athlete...). Each unlock also grants bonus XP.
 - **XP, Levels and Ranks** -- 1,000 XP per Level; 10 rank tiers from Novice to Legend, each with 10 sub-ranks and its own badge and color.
 - **Streaks and Daily Missions** -- play on consecutive days; short daily goals with XP rewards.
 - **Public leaderboard** -- Today/Week/Month/Year/All-time, per game or overall; click any player to see their rank card and badges. No login needed to view it.
@@ -89,7 +105,7 @@ creative angles ("collect them all", "climb the ranks"):
   detour, no account wall. A much shorter path from click to "aha" than most game/app ads get.
 - **Built to be shared already.** Wordle's Challenge a Friend is a real, live player-to-player
   share mechanic — a campaign can lean on and amplify it, not build it from scratch.
-- **A daily-habit product.** All four games reset every 24 hours with a streak mechanic — exactly
+- **A daily-habit product.** All five games reset every 24 hours with a streak mechanic — exactly
   the kind of hook that rewards a sustained, always-on campaign over a one-off burst.
 - **Proven category.** Daily word/number puzzles are an established, high-engagement habit (see
   Wordle's own rise, and the broader daily-puzzle category). The audience already understands the
@@ -107,8 +123,9 @@ Wordle, NYT Games, or a Sudoku app daily. Worth designing creative around:
   global rank.
 - **Value variety without switching apps.** A meaningful share of this audience already plays more
   than one puzzle type across separate apps (Wordle *and* a number puzzle *and* a word search
-  *and*, increasingly, a NYT Connections-style word-grouping game) — "four in one" is a genuine,
-  differentiated pitch to them.
+  *and*, increasingly, a NYT Connections-style word-grouping game) — "five in one" is a genuine,
+  differentiated pitch to them. Quilt adds something none of those apps have: a puzzle that
+  rewards you with a picture.
 - **Price- and friction-sensitive.** Free and no-signup-required are real decision factors for
   this audience, not just nice-to-haves — worth stating plainly in copy rather than implying.
 
@@ -120,12 +137,13 @@ Wordle, NYT Games, or a Sudoku app daily. Worth designing creative around:
 
 In rough priority order — lead with whichever tests best, but don't dilute all of these into one ad:
 
-- **"4-in-1"** — one site, four daily puzzles, stop switching between apps.
+- **"5-in-1"** — one site, five daily puzzles, stop switching between apps.
+- **"Solve it, reveal the picture"** — Quilt's hook; works especially well as a before/after visual.
 - **"Free, always"** — completely free, no download, no account required to start.
 - **"One tap to play"** — from ad click to playing, no signup wall in the way.
 
 The site's own existing tagline, used consistently in its share copy today: *"Play daily Wordle,
-Sudoku, Word Search, and Connections puzzles, earn points, and climb the leaderboard."*
+Sudoku, Word Search, Connections, and Quilt puzzles, earn points, and climb the leaderboard."*
 
 ## 6. Voice & tone
 
@@ -152,6 +170,7 @@ requires codebase access.
 | ![Sudoku logo](assets/campaign/tile-sudoku.png) | **Sudoku logo** — full-color game tile art, square format. `tile-sudoku.png` |
 | ![Word Search logo](assets/campaign/tile-wordsearch.png) | **Word Search logo** — full-color game tile art, square format. `tile-wordsearch.png` |
 | ![Connections logo](assets/campaign/tile-connections.png) | **Connections logo** — full-color game tile art, square format. `tile-connections.png` |
+| ![Quilt logo](assets/campaign/tile-quilt.png) | **Quilt logo** — full-color game tile art, square format. `tile-quilt.png` |
 
 ### Pre-built share images
 
@@ -165,13 +184,17 @@ Ready-made link-preview images (roughly 1730-1760 × 900-910, exact size varies 
 | ![Word Search share image](assets/campaign/fb-share-word-search.png) | `fb-share-word-search.png` |
 | ![Connections share image](assets/campaign/fb-share-connections.png) | `fb-share-connections.png` |
 
+Quilt doesn't have a purpose-made share image yet (its link preview currently reuses the logo) —
+wide (~1.91:1) Quilt creative is an open item.
+
 ### Achievement badge samples
 
-Illustrated badge art (240x240, transparent PNG) -- a small sample; all 85 exist in the codebase and can be provided on request:
+Illustrated badge art (240x240, transparent PNG) -- a small sample; all 103 exist in the codebase and can be provided on request:
 
 | | | | |
 |---|---|---|---|
 | ![Wordle Grand Master](assets/campaign/badge-wordle-grandmaster.png) | ![Sudoku Monthly Champion x12](assets/campaign/badge-sudoku-monthly-champion-12.png) | ![Word Search Daily Champion x100](assets/campaign/badge-wordsearch-daily-champion-100.png) | ![Connections Grand Master](assets/campaign/badge-connections-grandmaster.png) |
+| ![Quilt Grand Master](assets/campaign/badge-quilt-grandmaster.png) | | | |
 | ![Mind Master](assets/campaign/badge-mind-master.png) | ![Perfect Day](assets/campaign/badge-perfect-day.png) | ![365 Day Streak](assets/campaign/badge-streak-365.png) | |
 
 ### Brand palette
@@ -186,10 +209,11 @@ Illustrated badge art (240x240, transparent PNG) -- a small sample; all 85 exist
 Connections doesn't have a single accent color the way the other three games do — in-game, its
 puzzle groups are color-coded by difficulty (yellow → green → blue → purple, matching the NYT
 Connections convention), so its own tile/branding uses that same four-color set rather than one
-representative hex.
+representative hex. Quilt's tile uses the same multi-colour block set as its puzzle pieces, on
+the brand purple.
 
 In-app screenshots aren't pre-captured but can be taken directly from the live site on request —
-all four games are fully playable at `dailymindchallenge.com`. No video/motion assets exist yet.
+all five games are fully playable at `dailymindchallenge.com`. No video/motion assets exist yet.
 
 The site's existing Facebook Page and Facebook Group are live community channels worth
 linking/cross-promoting rather than treating the campaign as the site's only presence.
@@ -198,11 +222,12 @@ linking/cross-promoting rather than treating the campaign as the site's only pre
 
 No app-install step — every destination below is the live site itself, playable immediately:
 
-- `dailymindchallenge.com` — home page, all four games
+- `dailymindchallenge.com` — home page, all five games
 - `dailymindchallenge.com/wordle`
 - `dailymindchallenge.com/sudoku`
 - `dailymindchallenge.com/wordsearch`
 - `dailymindchallenge.com/connections`
+- `dailymindchallenge.com/quilt`
 - `dailymindchallenge.com/leaderboard` -- public rankings; good for "can you beat this score?" creative
 
 ## 8b. Tracking and measurement
@@ -227,8 +252,10 @@ are genuine open decisions, not omissions — resolve them on the kickoff call:
 
 ---
 
-*Last refreshed 2026-10-18 to add the Pixel's conversion events (CompleteRegistration/GuestStarted/
-GameCompleted, Section 8b) and update the Pixel ID. Earlier: 2026-10-03 added the Meta Pixel
+*Last refreshed 2026-10-20 to add the fifth game, Quilt (Section 2's "Quilt" subsection, tagline,
+5-in-1 messaging, badge count, logo/badge assets and its landing URL). Earlier: 2026-10-18 added
+the Pixel's conversion events (CompleteRegistration/GuestStarted/GameCompleted, Section 8b) and
+updated the Pixel ID; 2026-10-03 added the Meta Pixel
 tracking note; 2026-09-25 added the fourth game, Connections (modes, assets, updated tagline,
 badge/leaderboard counts, and its own landing URL) -- see Section 2's "Connections" subsection.
 This markdown file is the maintained source of truth -- a print-ready PDF export for the agency

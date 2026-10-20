@@ -10,7 +10,7 @@
 
 ## 1. Testing Scope
 
-**In scope:** functional correctness of all four games (Daily/Classic/Tournament modes),
+**In scope:** functional correctness of all five games (Daily/Classic/Tournament modes),
 authentication flows, the progression system (Points/XP/Rank/Streaks/Achievements/Championships),
 the admin panel, Firestore security rules, and third-party integration behavior (cookie consent,
 Meta Pixel, SEO verification files).
@@ -77,15 +77,23 @@ Environment Configuration section.
 | TC-11 | Meta Pixel loads after Accept | Click Accept on the cookie banner | `fbevents.js` and a `PageView` request are sent; `window.fbq` is defined |
 | TC-12 | Meta Pixel declines to load after Decline | Click Decline on the cookie banner | `window.fbq` remains `undefined`; no Meta network requests at any point in the session |
 | TC-13 | Rank display at the Legend X boundary | Set a test account's `xp` to 274,999, then to 275,000+ | At 274,999: "Legend X," 4,999/5,000 progress. At 275,000 or beyond: "Legend X," 100%, "Max rank reached!" |
-| TC-14 | "Perfect Day" requires all four games | Complete 3 of 4 Daily Challenges (not Connections), then check Perfect Day status; then complete the 4th | Not awarded after 3; awarded after the 4th, same calendar day |
+| TC-14 | "Perfect Day" requires every game | Complete 4 of 5 Daily Challenges (not Quilt), then check Perfect Day status; then complete the 5th | Not awarded after 4; awarded after the 5th, same calendar day |
 | TC-15 | Admin cannot play a game | Log in as an admin, navigate to any game page | Game mount shows an "admins don't play games" state, not a playable board |
 | TC-16 | Search-engine verification files serve correctly | `curl` the exact verification URLs for Google and Bing | Both return HTTP 200 directly (no redirect), with content byte-for-byte matching what each service issued |
 | TC-17 | Tournament failure resets progress (Wordle/Connections) | Fail one puzzle/word partway through a multi-puzzle Tournament run | `currentWordIndex`/`currentPuzzleIndex` resets to 0; no points banked for that run |
-| TC-18 | Tournament failure banks partial credit (Sudoku/Word Search) | Fail one puzzle partway through a multi-puzzle Tournament run | A lower point value is banked immediately for that puzzle; the run advances to the next puzzle rather than resetting |
+| TC-18 | Tournament failure banks partial credit (Sudoku/Word Search/Quilt) | Fail one puzzle partway through a multi-puzzle Tournament run | A lower point value is banked immediately for that puzzle; the run advances to the next puzzle rather than resetting |
+| TC-19 | Quilt rule errors shown immediately | Draw a rectangle with no number, two numbers, or the wrong area | It's outlined red at once; the Pieces counter doesn't count it; the board isn't solved |
+| TC-20 | Quilt picture stays hidden until solved | Place several correct rectangles, then finish the board | Pieces show neutral tints while playing; only on the final valid rectangle do they all take the picture's colours |
+| TC-21 | Quilt Perfect Stitch | Solve once with no undo/removal, once after one undo | +5 Perfect Stitch only on the first; the score doc's `perfect` matches |
+| TC-22 | Quilt Daily share text never contains the picture | Solve the Daily, use "Copy Result & Share with Community" | Clipboard has stats only (no emoji squares); Classic/Patchwork Run share text does include the emoji mosaic |
+| TC-23 | Quilt admin import is all-or-nothing | Preview a batch where one picture is invalid or already in the pool | No Add button / batch rejected, nothing written, the bad picture named with its reason |
+| TC-24 | Patchwork Run bulk import | Upload `docs/quilt-content/test-patchwork-runs-100.txt`, 2×2, Inactive, Create; activate one | 100 inactive runs in file order; players see only the activated run; re-importing the same file is rejected |
 
 ## 5. Test Data
 
-No synthetic/fixture data files are maintained in the repository. Test accounts and content are
+No synthetic/fixture data files are maintained in the repository, except Quilt's:
+`docs/quilt-content/` holds generated test pictures (500 Daily, 300 Classic, 100 Patchwork Run), each
+verified to make a uniquely solvable puzzle — see its README. Test accounts and content are
 created ad hoc per test session against the emulator (a registered test user, manually promoted to
 `isAdmin: true` via a direct emulator REST write, plus admin-panel-seeded puzzle content for each
 game). `docs/content-creation-guide.md` documents the exact file formats accepted by each game's

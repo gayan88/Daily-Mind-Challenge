@@ -16,7 +16,8 @@
 > - `admin.html` needs both the game's admin section *and* its ad-slot subsection; a tournament
 >   settings form goes in `CONFIG_FORMS` + `gameSectionConfigIds` and is rendered into the game's section.
 
-A checklist of everything that needs to be built or updated to add a fourth game, based on how
+A checklist of everything that needs to be built or updated to add a new game (originally written
+for the fourth), based on how
 Wordle, Sudoku, and Word Search are each actually wired into the app.
 
 **The main thing to know upfront: there is no central "list of games" registry in this codebase.**

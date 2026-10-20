@@ -74,11 +74,12 @@ Full data-flow write-up: `docs/data-flow.md`.
 - **Wordle Daily Challenge words**: add words from `admin.html`'s Wordle section (append-only — the same "don't reorder, it shifts which day gets which word" rule applies, now enforced by the admin UI itself rather than by editing a source file). There's no source file to edit anymore — the old static `words-wordle.js` list was removed along with the generic Challenges feature that was its last consumer.
 - **Wordle Tournaments** and **Challenge a Friend** links: also created from `admin.html` (Tournaments) or in-page from `wordle.html` itself (Challenge a Friend) — no source file to edit for either.
 - **Sudoku puzzles**: add `{ puzzle, solution }` pairs (81-character strings, `0` = blank) to `src/js/games/sudoku/sudoku-puzzles.js`.
+- **Quilt pictures**: add from `admin.html`'s Quilt section — PNG files at 1 pixel per cell or the text format; each picture is turned into a puzzle and proven to have exactly one solution before it's saved. Patchwork Runs can be bulk-imported from one file. Formats in `docs/content-creation-guide.md`; ready-made test pictures in `docs/quilt-content/`.
 - **Word Search themes**: add a day's word list to `src/js/games/wordsearch/wordsearch-words.js`; the grid itself is generated at runtime from a date-seeded random layout, so you only supply words.
 
 ## Known v1 scope limitations
 
-- 9 ad slots across the site (3 on the home page, 2 each on Wordle/Sudoku/Word Search) are admin-configurable via `admin.html` — each can be turned off, left as a static "Google AdSense" placeholder (still no real AdSense integration), or swapped for a manual image ad with a click-through URL.
+- 13 ad slots across the site (3 on the home page, 2 on each of the five game pages) are admin-configurable via `admin.html` — each can be turned off, left as a static "Google AdSense" placeholder (still no real AdSense integration), or swapped for a manual image ad with a click-through URL.
 - "Share on Facebook" links to the plain `sharer.php` share dialog, no App ID/rich cards.
 - Challenge a Friend is a shareable link, not a real friends graph.
 - Points are protected by Firestore security rules capping per-write deltas, not full server-authoritative scoring (no Cloud Functions in v1).

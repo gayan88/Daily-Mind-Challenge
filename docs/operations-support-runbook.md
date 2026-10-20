@@ -55,6 +55,8 @@ often correlates with a traffic or bug spike worth investigating.
 | Symptom | Likely cause | First thing to check |
 |---|---|---|
 | A page shows "Couldn't load — check Firestore rules are deployed" | `firebase/firestore.rules` wasn't deployed alongside new client code that depends on it, or a required composite index isn't built yet | `firebase deploy --only firestore:rules,firestore:indexes`; check the Firestore Console's Indexes tab for "Building" vs. "Enabled" |
+| Quilt page says "Today's Quilt isn't ready yet" (or a Classic size says "not ready yet") | The Daily pool is empty or has run past its last date, or that Classic difficulty has no pictures | Admin → Quilt → Daily / Classic: add pictures (Preview, then Add). Check the Daily table's last date; test pictures are in `docs/quilt-content/` |
+| Admin → Quilt Preview rejects a picture | It can't become a uniquely solvable puzzle (too much single-pixel detail), has more than 8 colours (usually an anti-aliased PNG), or a bad size/row length | The card shows the exact reason; redraw blockier, export at 1 pixel per cell with smoothing off, or fix the text rows |
 | A player reports they can't replay a Daily Challenge they believe they lost | Working as designed for Wordle/Connections (a loss doesn't allow immediate retry — see the 1-hour cooldown, FR-2.4/FR-5.5) | Confirm which game; check `wordleDailyAttempts`/`connectionsDailyAttempts/{uid}_{date}` for `lastAttemptAt` |
 | Cookie banner never appears for a visitor | `config/cookieConsent.enabled` is `false` (admin-disabled), or (pre-fix) a slow Firestore read — see `docs/technical-design-document.md` §4 | Admin panel → General → Cookie Consent toggle; confirm the fix (1.5s timeout) is deployed |
 | Meta Pixel shows no events in Events Manager | Most likely: the visitor declined cookies (by design, no pixel loads); otherwise a domain-verification or Business Settings connection issue on Meta's side | Check with Meta Pixel Helper/Validator in a normal (non-private) browser window with cookies accepted; confirm the domain is verified and connected to the pixel in Business Settings |
@@ -69,6 +71,7 @@ run after every deploy, is:
 ```bash
 curl -s -o /dev/null -w "%{http_code}\n" https://dailymindchallenge.com/
 curl -s -o /dev/null -w "%{http_code}\n" https://dailymindchallenge.com/connections
+curl -s -o /dev/null -w "%{http_code}\n" https://dailymindchallenge.com/quilt
 curl -s -o /dev/null -w "%{http_code}\n" https://dailymindchallenge.com/sitemap.xml
 curl -s -o /dev/null -w "%{http_code}\n" https://dailymindchallenge.com/google9a4fa05185ef4666.html
 curl -s -o /dev/null -w "%{http_code}\n" https://dailymindchallenge.com/BingSiteAuth.xml

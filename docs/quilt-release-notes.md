@@ -1,7 +1,9 @@
 # Quilt — Release Notes & Deploy Steps
 
 > Release: Quilt, the fifth game (commits `1999e20` → `895e0c5`, plus this doc). Built and
-> release-tested locally on 2026-10-18. **Not deployed yet** — the owner runs the deploy below.
+> release-tested locally on 2026-10-18. **Deployed to production 2026-10-18** (commit `20418b9`);
+> since then: achievement badge art (`290d09e`) and bulk Patchwork Run import + test data
+> (`10293de`), both deployed. The steps below are kept as the reference procedure.
 > Plan, decisions and backlogs: `docs/quilt-development-plan.md`.
 
 ## What's in this release

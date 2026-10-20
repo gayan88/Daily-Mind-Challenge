@@ -3,7 +3,7 @@
 
 | | |
 |---|---|
-| **Document status** | New as of 2026-10-17, describing the Cloud Firestore schema as enforced by `firebase/firestore.rules` and implemented by the per-collection data-layer files under `src/js/games/*` and `src/js/progression/`. |
+| **Document status** | New as of 2026-10-17 (Quilt collections added 2026-10-20), describing the Cloud Firestore schema as enforced by `firebase/firestore.rules` and implemented by the per-collection data-layer files under `src/js/games/*` and `src/js/progression/`. |
 | **Database** | Cloud Firestore, native mode, single database, project `playdailymindchallenge` |
 | **Related docs** | `docs/solution-architecture-document.md`, `docs/api-documentation.md`, `docs/data-flow.md`, `firebase/firestore.rules`, `firebase/firestore.indexes.json` |
 
@@ -23,7 +23,7 @@ Every collection falls into one of five groups:
 |---|---|
 | Accounts | `guests`, `registeredUsers`, `usernames` |
 | Scoring | `gameScores` |
-| Per-game content (×4 games) | `{game}DailyWords\|Puzzles`, `{game}ClassicPuzzles`, `{game}Tournaments`, `{game}TournamentAttempts`, plus Wordle's `wordleChallenges` + `completions` subcollection and `wordleDailyAttempts`/`connectionsDailyAttempts` |
+| Per-game content (×5 games) | `{game}DailyWords\|Puzzles`, `{game}ClassicPuzzles`, `{game}Tournaments`, `{game}TournamentAttempts`, plus Wordle's `wordleChallenges` + `completions` subcollection and `wordleDailyAttempts`/`connectionsDailyAttempts` |
 | Progression | `playerAchievements`, `championshipWinTallies`, `periodResults`, `playerMissions` |
 | Platform | `config` |
 
@@ -80,7 +80,7 @@ The single collection every scored result across every game/mode writes into.
 as an `update` (Firestore rules only allow `create` on this path) rather than quietly double-
 scoring.
 
-## 4. Per-Game Content (one family per game, structurally parallel across all four)
+## 4. Per-Game Content (one family per game, structurally parallel across all five)
 
 | Collection | Doc ID | Shape |
 |---|---|---|
@@ -88,8 +88,9 @@ scoring.
 | `sudokuDailyPuzzles` | `{YYYY-MM-DD}` + `_meta` | `{ challengeNumber, puzzle, solution }` (81-char digit strings) |
 | `wordsearchDailyPuzzles` | `{YYYY-MM-DD}` + `_meta` | `{ challengeNumber, theme, words[] }` |
 | `connectionsDailyPuzzles` | `{YYYY-MM-DD}` + `_meta` | `{ challengeNumber, groups: [{ name, words[4] }] × 4 }` |
+| `quiltDailyPuzzles` | `{YYYY-MM-DD}` + `_meta` | `{ challengeNumber, title, difficulty, width, height, palette[], pixels[], rects[{x,y,w,h}], clues[{x,y,n,shape?}], blockers[{x,y}] }` — objects, not nested arrays (Firestore can't store arrays of arrays); `rects` is the proven-unique answer |
 | `{game}ClassicPuzzles` | numeric string, one shared counter per game across difficulties | `{ difficulty, ...puzzle fields }` |
-| `{game}Tournaments` | auto-ID | `{ name, active, bonusPoints, timePer*Seconds, puzzles[]/words[] }` |
+| `{game}Tournaments` | auto-ID | `{ name, active, bonusPoints, timePer*Seconds, puzzles[]/words[] }`. Quilt's `quiltTournaments` (Patchwork Runs) instead hold one big picture plus `cols`, `rows`, `tiles[]` (each a full puzzle + `tileX`/`tileY`), `completionBonus` and, when bulk-imported, `importOrder` |
 | `{game}TournamentAttempts` | `{tournamentId}_{uid}` | Progress-only (current index, puzzles/words won, completed flag); points are granted separately via the guarded `gameScores` create |
 | `wordleDailyAttempts` / `connectionsDailyAttempts` | `{uid}_{date}` | `{ uid, date, attemptsCount, won, lastAttemptAt }` — tracks the hourly-retry state for games whose Daily Challenge allows retries after a loss |
 | `wordleChallenges` | auto-ID, + `_meta` (global counter) | `{ creatorUid, word, visibility, challengeNumber, createdAt, expiresAt }` |
@@ -114,7 +115,7 @@ existing puzzle's date.
 ### `config/{docId}`
 One document per admin-editable setting group (`dailyLoginReward`, `challengeExpiration`,
 `myChallengesPageSize`, `browseChallengesPageSize`, `leaderboardPageSize`,
-`challengeAttemptsPageSize`, `sudokuTournamentSettings`, `wordsearchTournamentSettings`,
+`challengeAttemptsPageSize`, `sudokuTournamentSettings`, `wordsearchTournamentSettings`, `quiltTournamentSettings`,
 `cookieConsent`, `wordValidationAPI`, `profanityList`, `ads`). Publicly readable, admin-write-only.
 Each doc's shape is specific to its setting (see `src/js/utils/config.js#CONFIG_DEFAULTS`).
 

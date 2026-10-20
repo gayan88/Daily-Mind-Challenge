@@ -1,6 +1,6 @@
 # Quilt — Development Plan & Backlogs
 
-> Status: **in development** — **all 8 build phases done** 2026-10-18 — ready to deploy (see `docs/quilt-release-notes.md`); owner artwork and content remain; all §2 decisions accepted
+> Status: **live** — all 8 build phases done and deployed 2026-10-18 (see `docs/quilt-release-notes.md`); badge art and bulk run import added 2026-10-19; content live 2026-10-20 (Daily from 1 Nov 2026); the share image and indexing remain; all §2 decisions accepted
 > with the recommended defaults; content deferred until the build is done. Logo: `docs/Images/QUILT Logo.png`.
 > Follows `docs/adding-a-new-game.md` — that checklist is the source of truth for *every*
 > touchpoint; this doc orders the work and splits it between **Claude (implementation)** and
@@ -153,7 +153,7 @@ copy already counts `GAMES` dynamically ("all 5 games"); note for players: addin
 
 ### Before / during Phase 1–3
 - [x] **O1** Answer the decisions in §2 — all defaults accepted.
-- [ ] **O2** Trademark check for "Quilt" in USPTO, WIPO Global Brand Database and J-PlatPat (~10 min).
+- [x] **O2** Trademark check for "Quilt" in USPTO, WIPO Global Brand Database and J-PlatPat (~10 min). — done (owner confirmed 2026-10-20).
 - [ ] **O3** Create **5–10 test pictures** for development (any size from 7×7 to 14×14, ≤ 8 colours, blocky shapes). PNG where 1 pixel = 1 cell (Piskel / Aseprite / Lospec), or ask an AI for text grids.
 
 ### Artwork (needed by Phase 3 / 7)
@@ -163,17 +163,26 @@ copy already counts `GAMES` dynamically ("all 5 games"); note for players: addin
 - [x] **O7** 18 achievement badges (done 2026-10-19, wired in `CUSTOM_IMAGES`): `quilt-expert`, `-master`, `-grandmaster`, and the Daily / Weekly / Monthly champion tiers (same set as the other games). The game ships with emoji fallbacks if these come later.
 
 ### Content (needed by Phase 8)
-- [ ] **O8** 30 Daily pictures (Medium, 10×10).
-- [ ] **O9** 20 pictures per Classic difficulty (7×7 / 10×10 / 14×14).
-- [ ] **O10** 2 Tournament pictures (e.g. 20×20 for 4 tiles), themed (e.g. Halloween, Christmas).
-- [ ] **O11** Import all content through **Admin → Quilt** and fix any pictures the validator rejects.
+- [x] **O8** 30 Daily pictures (Medium, 10×10). — done: 500 Daily live (1 Nov 2026 → 14 Mar 2028).
+- [x] **O9** 20 pictures per Classic difficulty (7×7 / 10×10 / 14×14). — done: 100 per difficulty live.
+- [x] **O10** 2 Tournament pictures (e.g. 20×20 for 4 tiles), themed (e.g. Halloween, Christmas). — done: 100 Patchwork Runs live (bulk import), 2 active.
+- [x] **O11** Import all content through **Admin → Quilt** and fix any pictures the validator rejects. — done 2026-10-20.
 
 ### Testing & launch
 - [ ] **O12** Play-test on your phone(s) and desktop: drag feel, 14×14 readability, share text pasting into the FB group.
 - [ ] **O13** Deploy: `firebase login:use lazyprogrammer88@gmail.com` then `firebase deploy --only hosting,firestore:rules,firestore:indexes --project playdailymindchallenge`.
 - [ ] **O14** Create the first Tournament in Admin and activate it.
-- [ ] **O15** Request indexing for `https://dailymindchallenge.com/quilt` in Google Search Console and Bing Webmaster Tools.
+- [x] **O15** Request indexing for `https://dailymindchallenge.com/quilt` in Google Search Console and Bing Webmaster Tools. — Google done (owner, 2026-10-20); Bing still pending.
 - [ ] **O16** Launch post in the Facebook group / campaign update (Meta Pixel events will already include Quilt).
+
+---
+
+### Pending — revisit with the next game (owner's call, 2026-10-20)
+
+- [ ] **O5** How to Play banner (the page uses the logo for now).
+- [ ] **O6** Purpose-made 1.91:1 share image (~1200×630); `og:image` reuses `tile-quilt-wide.png` until then.
+- [ ] **O15 (Bing)** Request indexing for `/quilt` in Bing Webmaster Tools.
+- [ ] **O16** Launch post in the Facebook group (mention that the "every game" achievements now include Quilt).
 
 ---
 

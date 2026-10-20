@@ -23,7 +23,7 @@ in.
 
 | Document | Covers |
 |---|---|
-| [adding-a-new-game.md](adding-a-new-game.md) | Checklist for adding a 5th game, built from the real Connections experience |
+| [adding-a-new-game.md](adding-a-new-game.md) | Checklist for adding a new game, built from the real Connections and Quilt experience |
 | [quilt-development-plan.md](quilt-development-plan.md) | Plan and split backlogs (Claude / owner) for Quilt, the 5th game |
 | [quilt-release-notes.md](quilt-release-notes.md) | Quilt release notes, test results, deploy and rollback steps |
 | [content-creation-guide.md](content-creation-guide.md) | Exact file formats for AI-assisted puzzle content generation, per game/mode |
@@ -36,4 +36,5 @@ in.
 
 - **`assets/campaign/`** — processed images referenced by `facebook-campaign-brief.md` (badges, tiles, share images, logo).
 - **`connections-content/`** — reviewed starter puzzle content for the Connections game (see `adding-a-new-game.md`/`content-creation-guide.md`).
-- **`Images/`** — raw source images (not currently referenced by any doc or page); kept as source material for future campaign asset edits.
+- **`quilt-content/`** — generated test pictures for Quilt (500 Daily, 300 Classic, 100 Patchwork Run), each verified importable; see its README.
+- **`Images/`** — raw source images: the Quilt logo and the 18 full-size Quilt achievement badges (renamed to their achievement ids; the site uses processed 240×240 copies). Not referenced by any page; kept as source material.

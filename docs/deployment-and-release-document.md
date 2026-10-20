@@ -30,6 +30,7 @@ Covered in full in the root `README.md` — summary: create a Firebase project, 
       { "source": "/sudoku", "destination": "/html/sudoku.html" },
       { "source": "/wordsearch", "destination": "/html/wordsearch.html" },
       { "source": "/connections", "destination": "/html/connections.html" },
+      { "source": "/quilt", "destination": "/html/quilt.html" },
       { "source": "/privacy-policy", "destination": "/html/privacy-policy.html" },
       { "source": "/terms-of-service", "destination": "/html/terms-of-service.html" },
       { "source": "/cookie-consent", "destination": "/html/cookie-consent.html" },
@@ -157,7 +158,7 @@ project has instead happened through:
   `firestore.rules` and client code, so a document written before a field existed doesn't need a
   backfill (e.g. `registeredUsers.xp`, added well after the collection itself).
 - **New collections** for genuinely new data shapes (e.g. `connectionsDailyAttempts` when
-  Connections was added), rather than overloading an existing collection's shape.
+  Connections was added, or the four `quilt*` collections for Quilt), rather than overloading an existing collection's shape.
 - **One-shot admin scripts**, run manually when a true backfill was needed (none currently
   required in production).
 

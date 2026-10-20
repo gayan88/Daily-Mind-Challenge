@@ -3,7 +3,7 @@
 
 | | |
 |---|---|
-| **Document status** | New as of 2026-10-17. Module designs, data schemas, and business-logic implementation for the pieces of the system most worth understanding before changing them. Not exhaustive — each source directory's own `CLAUDE.md` is the line-level reference; this document is the entry point into *why* those modules are shaped the way they are. |
+| **Document status** | New as of 2026-10-17; Quilt rows added 2026-10-20. Module designs, data schemas, and business-logic implementation for the pieces of the system most worth understanding before changing them. Not exhaustive — each source directory's own `CLAUDE.md` is the line-level reference; this document is the entry point into *why* those modules are shaped the way they are. |
 | **Related docs** | `docs/solution-architecture-document.md` (SAD), `docs/database-design-document.md`, `docs/api-documentation.md` |
 
 ---
@@ -14,6 +14,7 @@
 |---|---|---|
 | Game registry | `src/js/progression/game-registry.js` | Nothing — the single source of truth for "which `gameType`s belong to which game," read by the leaderboard, progression, and admin layers |
 | Per-game engine | `src/js/games/*/​*-engine.js` | Nothing Firebase-related — pure DOM + callback, mode-agnostic |
+| Quilt puzzle core | `src/js/games/quilt/quilt-{solver,generator,picture}.js` | `utils/helpers.js` only (seeded RNG) — no DOM, no Firebase, so the same code runs in the engine (board check), the admin page (picture → puzzle, uniqueness proof) and plain Node |
 | Per-game data layer | `src/js/games/*/​*-{daily,classic,tournament}-data.js` | Firestore SDK, the engine's `onComplete` payload shape |
 | Per-game page glue | `src/js/games/*/​*-page.js` | `app.js` (session), the engine, the data layer, the game's own summary-modal |
 | Progression | `src/js/progression/{rank,xp,progression,streak}-service.js`, `achievement-registry.js`, `achievement-engine.js`, `championship-service.js`, `mission-service.js` | `game-registry.js`; otherwise mutually independent, read-only/derived except where noted |
@@ -58,6 +59,9 @@ Player               connections-page.js         connections-daily-data.js      
 - A **loss on a retry-eligible Daily Challenge** (Wordle, Connections) writes only the attempt-
   tracking doc, never `gameScores` — so a `gameScores` document existing for today is itself the
   signal "already solved," with no separate flag needed.
+- **Quilt** has no loss condition in Daily or Classic (unlimited undo, no time limit), so its Daily
+  is a single scored solve per day like Sudoku's; a win is decided by checking the player's
+  rectangles against the rules (`quilt-solver.js#checkBoard`), not by comparing with a stored answer.
 - The actual **"can't be scored twice" guarantee is the Firestore rule**, not the client-side
   `checkPlayedToday()` call — that check is purely a UX optimization to avoid a doomed write.
 

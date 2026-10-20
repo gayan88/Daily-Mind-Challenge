@@ -3,7 +3,7 @@
 
 | | |
 |---|---|
-| **Document status** | New as of 2026-10-17. Written retrospectively from the shipped product, the marketing brief, and product decisions already made — not a pre-development planning document. Several fields below are marked **TBD** because they're genuine business decisions the project owner hasn't recorded anywhere I have access to; fill these in rather than treat the placeholders as answers. |
+| **Document status** | New as of 2026-10-17; updated 2026-10-20 for Quilt, the fifth game. Written retrospectively from the shipped product, the marketing brief, and product decisions already made — not a pre-development planning document. Several fields below are marked **TBD** because they're genuine business decisions the project owner hasn't recorded anywhere I have access to; fill these in rather than treat the placeholders as answers. |
 | **Related docs** | `docs/functional-requirements-specification.md` (SRS), `docs/facebook-campaign-brief.md`, `docs/progression-gamification-roadmap.md` |
 
 ---
@@ -14,8 +14,8 @@ Inferred from the product's actual design decisions and the marketing brief alre
 it (`docs/facebook-campaign-brief.md`):
 
 - Build a daily-habit puzzle product that competes for the same audience as Wordle, NYT Games, and
-  similar daily-puzzle sites, by offering multiple puzzle formats (currently four: Wordle, Sudoku,
-  Word Search, Connections) in one free, no-signup-required site.
+  similar daily-puzzle sites, by offering multiple puzzle formats (currently five: Wordle, Sudoku,
+  Word Search, Connections, Quilt) in one free, no-signup-required site.
 - Generate advertising revenue via Google AdSense (pending/approval-stage as of this writing) and,
   separately, drive paid-acquisition value via Meta ads (Meta Pixel installed and active).
 - Build a registered, retained user base via account-gated progression (XP, Rank, Streaks,
@@ -33,7 +33,7 @@ decision only the project owner can supply.
 
 | Problem | How the product addresses it |
 |---|---|
-| Players juggle multiple separate apps for different daily puzzle types (a Wordle app, a separate Sudoku app, a separate word-search app) | One site, four games, one account, one leaderboard, one streak — the "4-in-1" pitch in the marketing brief |
+| Players juggle multiple separate apps for different daily puzzle types (a Wordle app, a separate Sudoku app, a separate word-search app) | One site, five games, one account, one leaderboard, one streak — the "5-in-1" pitch in the marketing brief |
 | Most daily-puzzle products require an app install or an account before playing | Guest play with zero friction — a visitor is playing within one tap, no signup wall |
 | Free puzzle sites often look low-effort / thin, hurting both player trust and ad-network approval (this product was specifically rejected once by AdSense for "Low value content") | Each game page carries real explanatory content (How to Play, Tips & Strategy, a ~20-question FAQ), and the progression system (XP/Rank/Achievements/Championships) gives the product genuine depth beyond "one puzzle a day" |
 | New site, not yet discoverable via search | Google Search Console and Bing Webmaster Tools are both set up and verified; sitemap submitted; indexing explicitly requested for key pages (see `docs/operations-support-runbook.md`) |
@@ -41,10 +41,10 @@ decision only the project owner can supply.
 ## 3. Scope
 
 **In scope (built and live):**
-- Four playable games, each with Daily Challenge, Classic (where applicable), and Tournament modes.
+- Five playable games, each with Daily Challenge, Classic (where applicable), and Tournament modes. Quilt (added 2026-10-18) is the first original format rather than a well-known one: a Shikaku-style logic puzzle whose solved board reveals a pixel-art picture.
 - Guest and registered account types.
 - A full progression layer: Points, per-game Level, site-wide XP, Rank (10 tiers × 10 sub-ranks),
-  Streaks, 85 Achievements, and Daily/Weekly/Monthly Championships.
+  Streaks, 103 Achievements, and Daily/Weekly/Monthly Championships.
 - A public leaderboard.
 - An admin panel for content seeding, moderation, platform configuration, and Championship
   finalization.

@@ -1,13 +1,14 @@
 # src/js/games/quilt
 
-Quilt — a Shikaku-style picture-reveal puzzle (the planned fifth game). Drag rectangles so each
+Quilt — a Shikaku-style picture-reveal puzzle (the fifth game, live since 2026-10-18). Drag rectangles so each
 holds exactly one number equal to its area; every solved rectangle fills with colour and the
 finished board is a pixel-art picture. Plan, decisions and backlogs: `docs/quilt-development-plan.md`.
 
-**Status: Phases 1–3 — Daily mode is live in code** (`/quilt`, registered in `GAMES`, home tile,
-leaderboard option, profile labels, `checkPlayedTodayAll()` — so Perfect Day now needs all five
-Dailies — ad slots, rules, sitemap). Classic (Phase 4) and Patchwork Run (Phase 5) are live too. Content is
-managed in Admin → Quilt (`src/js/admin/quilt-admin*.js`, Phase 6).
+**Status: live in production** — all three modes (Daily, Classic, Patchwork Run) registered in
+`GAMES`, home tile, leaderboard option, profile labels, `checkPlayedTodayAll()` (so Perfect Day needs
+all five Dailies), ad slots, rules, sitemap, achievement badge art. Content is managed in
+Admin → Quilt (`src/js/admin/quilt-admin*.js`), including bulk Patchwork Run import; test pictures
+in `docs/quilt-content/`.
 
 ## Files
 
