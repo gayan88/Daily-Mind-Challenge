@@ -282,6 +282,36 @@ same length; each side 5–20 cells.
   quarter of the pieces are single cells. Smooth gradients / photos can't work (>8 colours).
 - **Download** exports the text format, and re-importing it is a no-op (duplicates are rejected).
 
+## Pounce
+
+Admin → Pounce **generates its own content** — there's nothing to write or draw. Every board is
+made in the browser, checked to have exactly one solution and to be solvable by logic alone, and
+graded by the hardest step it needs.
+
+- **Daily:** set the start date for Challenge #1 (only asked while the pool is empty), choose how
+  many (365 = a year), press **Generate**, check the preview, press **Add**. Later batches continue
+  from the last date. A Daily is always Medium 8×8 with sleeping dogs. **Regenerate** on a row swaps
+  that day's board without moving its date or number.
+- **Classic:** pick Easy (6×6), Medium (8×8 + dogs) or Hard (9×9 + dogs + pawprints), choose how
+  many, Generate, Add. Zen plays this same pool.
+- **Nine Lives Runs:** "Create one run" (Generate & Preview, then Create) or "Create many runs"
+  (N runs at once; create them Inactive and activate a few at a time).
+- **Hand-made boards (optional):** each pool has an "Import hand-made boards (JSON)" box. Format, one
+  object per board (Download produces exactly this):
+
+  ```json
+  [{ "difficulty": "medium", "size": 8,
+     "regions": ["00011122", "…8 rows, one digit per region…"],
+     "solution": [3, 0, 6, 1, 4, 7, 5, 2],
+     "dogs": [{ "x": 2, "y": 4 }],
+     "pawprints": [{ "x": 5, "y": 1, "n": 2 }] }]
+  ```
+
+  `regions` digits are 0…size−1 (each region one connected piece); `solution[row]` is the cat's
+  column; a pawprint's `n` counts cats in its 8 neighbours. Anything that isn't uniquely solvable
+  by logic is rejected with the reason, and the whole batch is refused if any board fails or is
+  already in the pool.
+
 ## Quick copy-paste prompts
 
 Fill in the puzzle count and hand the whole block to any AI.

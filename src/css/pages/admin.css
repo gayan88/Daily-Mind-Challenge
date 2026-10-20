@@ -774,3 +774,74 @@
     color: var(--color-text);
     margin-bottom: 4px;
 }
+
+/* ---------- Pounce admin (pounce-admin-page.js) ----------
+   Board thumbnails are drawn by the admin module itself (pounce.css isn't loaded on this page):
+   region colours, the solution's cats as ginger dots, dogs as dark squares, pawprint numbers. */
+.pa-thumb {
+    display: grid;
+    grid-template-columns: repeat(var(--pa-n), 1fr);
+    grid-template-rows: repeat(var(--pa-n), 1fr);
+    width: 120px;
+    aspect-ratio: 1;
+    margin: 0 auto;
+    border: 1.5px solid var(--color-pounce-ink);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.pa-thumb span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-right: 0.5px solid rgba(58, 51, 64, 0.12);
+    border-bottom: 0.5px solid rgba(58, 51, 64, 0.12);
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    font-size: 8px;
+    line-height: 1;
+    font-weight: 800;
+    color: var(--color-pounce-ink);
+}
+
+.pa-cat,
+.pa-dog {
+    display: block;
+    width: 60%;
+    max-height: 60%;
+    aspect-ratio: 1;
+}
+
+.pa-cat {
+    border-radius: 50%;
+    background: var(--color-pounce);
+    box-shadow: 0 0 0 1px var(--color-pounce-dark);
+}
+
+.pa-dog {
+    border-radius: 2px;
+    background: var(--color-pounce-ink);
+    opacity: 0.7;
+}
+
+.cx-admin-editor .pa-thumb {
+    width: 200px;
+    margin: 8px 0;
+}
+
+.pa-run-boards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 8px 0 12px;
+}
+
+.pa-run-boards .pa-thumb {
+    width: 96px;
+    margin: 0;
+}
+
+.pa-import {
+    margin: 12px 0;
+}

@@ -32,6 +32,9 @@ const ACTIVITY_ROWS = [
     { game: 'Quilt', label: 'Daily Challenge Completed', gameType: 'quilt' },
     { game: 'Quilt', label: 'Classic Quilt Completed', gameType: 'quilt-classic' },
     { game: 'Quilt', label: 'Patchwork Run Completed', gameType: 'quilt-tournament-bonus' },
+    { game: 'Pounce', label: 'Daily Challenge Completed', gameType: 'pounce' },
+    { game: 'Pounce', label: 'Classic Pounce Completed', gameType: 'pounce-classic' },
+    { game: 'Pounce', label: 'Nine Lives Run Completed', gameType: 'pounce-tournament-bonus' },
 ];
 
 /**

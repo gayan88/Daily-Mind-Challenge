@@ -20,8 +20,8 @@
 | E3 Daily end-to-end | P-301 – P-305 | 4 | ✅ 2026-10-20 |
 | E4 Classic + Zen | P-401 – P-402 | 1.5 | ✅ 2026-10-20 |
 | E5 Nine Lives Run | P-501 – P-502 | 3 | ✅ 2026-10-20 |
-| E6 Admin | P-601 – P-604 | 5 | ⬜ |
-| E7 Progression, Cat Café, SEO, docs | P-701 – P-708 | 4 | 🔄 (P-702–P-704 done) |
+| E6 Admin | P-601 – P-604 | 5 | ✅ 2026-10-20 |
+| E7 Progression, Cat Café, SEO, docs | P-701 – P-708 | 4 | 🔄 (P-702–P-704, P-707 done) |
 | E8 Test & release | P-801 – P-802 | 1.5 | ⬜ |
 | **Total** | **33 tickets** | **~30 working days** by ticket size | |
 | Owner (you) | O-01 – O-12 | — | 3 of 12 done |
@@ -226,24 +226,46 @@ Sudoku).
 
 ## E6 — Admin
 
-**P-601 · Admin section + tables** · L · 🤖 · ⬜ · needs E3
+**P-601 · Admin section + tables** · L · 🤖 · ✅ · needs E3
 `pounce-admin.js` + `pounce-admin-page.js` and an `admin.html` section:
 - Daily (year → month) and Classic (by difficulty) tables using the `admin-table-grouping.js`
   helpers from the first draft.
 - Edit / delete / export.
 
-**P-602 · Generate in the browser** · M · 🤖 · ⬜ · needs P-104, P-601
+**P-602 · Generate in the browser** · M · 🤖 · ✅ · needs P-104, P-601
 - Choose a mode, difficulty and count (+ a start date for Daily).
 - Preview cards with grade and warnings; regenerate any single board; save all or nothing.
 - Import / export JSON for hand-made boards.
 
-**P-603 · Run builder** · M · 🤖 · ⬜ · needs P-501, P-601
+**P-603 · Run builder** · M · 🤖 · ✅ · needs P-501, P-601
 Generate a run (one board per size) or bulk-generate N runs; activate / deactivate / delete.
 
-**P-604 · Admin plumbing** · S · 🤖 · ⬜ · needs P-601
+**P-604 · Admin plumbing** · S · 🤖 · ✅ · needs P-601
 - `ACTIVITY_ROWS` (count only the run completion doc).
 - `CONFIG_FORMS` / `CONFIG_DEFAULTS` for the run settings (time per board, lives).
 - The Pounce ad-slot forms.
+
+**Sprint 5 notes (2026-10-20):** `src/js/admin/pounce-admin.js` + `pounce-admin-page.js`, rendered
+into Admin → Pounce (`#pounce-admin-root`), plus the `pounceTournamentSettings` form inside it,
+Pounce rows in the Daily Activity Summary, and thumbnail styles in `admin.css` (`.pa-thumb`, since
+`pounce.css` isn't loaded there).
+- **Daily:** a start date for #1 (only while empty) + how many → **Generate** (365 boards take ~1 s in
+  Chrome) → a preview with the grade spread, warnings and 12 sample boards → **Add**. It is add-only
+  and continues from `_meta.lastDate`; **Regenerate** swaps one board and keeps its date and number.
+- **Classic:** difficulty + count → Generate → Add; Regenerate / Delete per board.
+- **Both:** a "hand-made boards (JSON)" import, fully validated (unique + logic-solvable), plus a
+  JSON Download in the same format. Every add is all-or-nothing, and duplicates (same regions,
+  dogs and pawprints) are refused within the batch and against the pool.
+- **Runs:** "Create one run" (Generate & Preview the 5 boards → Create, active) and "Create many
+  runs" (N runs named "<name> 1…N", Active or Inactive); View / Activate / Delete per run.
+
+`tools/pounce-e2e-admin-test.mjs` (wipes the local emulator DB, signs up, gets admin through the
+emulator) passes 23/23 on two runs in a row. Fixed while testing: Classic difficulty groups open by
+default, and 9×9 thumbnails no longer squash. Checked afterwards as a player: today previews Daily #1
+(first date 1 Nov), Classic Hard serves 9×9, and only active runs are listed.
+**O-08 order:** the content can only be generated through the deployed admin page, so the code goes
+live first (Pounce shows "isn't ready yet" until content exists). Deploy, Generate and Add straight
+away, then announce. Mind the Perfect Day note from sprint 3.
 
 ---
 
@@ -276,7 +298,7 @@ achievements get harder.
   lists (as done for Quilt).
 - `adding-a-new-game.md` lessons.
 
-**P-707 · Meta Pixel** · S · 🤖 · ⬜ · needs P-302
+**P-707 · Meta Pixel** · S · 🤖 · ✅ (wired in sprints 3–4) · needs P-302
 `GameCompleted` for `pounce` / `pounce-classic` / `pounce-tournament`.
 
 **P-708 · Badge tool in the repo** · S · 🤖 · ⬜ · optional
@@ -308,7 +330,7 @@ every game.
 | O-05 | **Share image** 1200×630 for Pounce **and Quilt** (deferred Quilt O6) | P-704 | ⬜ |
 | O-06 | **How to Play banner** for Pounce **and Quilt** (deferred Quilt O5) | P-301 | ⬜ |
 | O-07 | Decide about the Quilt originals deleted from `docs/Images/` (restore from git or leave) | any time | ⬜ |
-| O-08 | Generate content in Admin → Pounce: 365 Daily, 100 per Classic difficulty, 10 Runs | after P-602 | ⬜ |
+| O-08 | Generate content in Admin → Pounce (after deploying the code, see below): 365 Daily, 100 per Classic difficulty, 10 Runs | after P-602 ✅ — ready | ⬜ |
 | O-09 | Play-test on phone + desktop (tap feel, 9×9 readability, hint wording, share text) | P-801 | ⬜ |
 | O-10 | Deploy and activate the first Run | after P-802 | ⬜ |
 | O-11 | Indexing: Google + Bing for `/pounce`, **plus Bing for `/quilt`** | after O-10 | ⬜ |

@@ -6,9 +6,10 @@ column and coloured region; no two cats may touch, not even diagonally. Hard add
 Plan, brand and decisions: `docs/pounce-development-plan.md`. Tickets: `docs/pounce-backlog.md`.
 Never call it "Meowdoku" or "Queens" in the product.
 
-**Status: sprints 1–4 done, not deployed.** `/pounce` has all four modes working (Daily, Classic,
-Zen, Nine Lives Run), wired into the site (`GAMES`, rules, home tile, leaderboard, profile, badges).
-There's no admin section yet (sprint 5), so content can only be seeded on the emulators for now.
+**Status: sprints 1–5 done, not deployed.** `/pounce` has all four modes working (Daily, Classic,
+Zen, Nine Lives Run), wired into the site (`GAMES`, rules, home tile, leaderboard, profile, badges),
+and Admin → Pounce generates all content (`src/js/admin/pounce-admin*.js`). Left: sprint 6 (Cat
+Café panel, copy review, docs, final test, release notes).
 
 ## Files
 

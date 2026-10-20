@@ -18,6 +18,7 @@ import {
 } from './wordsearch-admin.js';
 import { initConnectionsAdmin } from './connections-admin-page.js';
 import { initQuiltAdmin } from './quilt-admin-page.js';
+import { initPounceAdmin } from './pounce-admin-page.js';
 import { getDailyActivitySummary } from './activity-summary-data.js';
 import { escapeHtml, showToast, getTodayDateString } from '../utils/helpers.js';
 import { GAMES } from '../progression/game-registry.js';
@@ -85,6 +86,14 @@ const CONFIG_FORMS = [
         title: 'Quilt Patchwork Run Settings',
         fields: [
             { key: 'timeLimitSeconds', type: 'number', label: 'Seconds allowed per tile' },
+        ],
+    },
+    {
+        id: 'pounceTournamentSettings',
+        title: 'Pounce Nine Lives Run Settings',
+        fields: [
+            { key: 'timeLimitSeconds', type: 'number', label: 'Seconds allowed per board' },
+            { key: 'lives', type: 'number', label: 'Lives for the whole run (1-9)' },
         ],
     },
     {
@@ -1808,7 +1817,7 @@ async function init() {
     populateTop10ScopeSelect();
     wireTop10PeriodTypeToggle();
     wireTop10Run();
-    const gameSectionConfigIds = ['challengeExpiration', 'sudokuTournamentSettings', 'wordsearchTournamentSettings', 'quiltTournamentSettings'];
+    const gameSectionConfigIds = ['challengeExpiration', 'sudokuTournamentSettings', 'wordsearchTournamentSettings', 'quiltTournamentSettings', 'pounceTournamentSettings'];
     const generalConfigIds = CONFIG_FORMS
         .map((form) => form.id)
         .filter((id) => !gameSectionConfigIds.includes(id));
@@ -1844,6 +1853,9 @@ async function init() {
     // CONFIG_FORMS entry rendered into a container inside that section (like Sudoku/Word Search).
     await initQuiltAdmin();
     await renderConfigForms('quilt-tournament-settings-form', ['quiltTournamentSettings']);
+    // Pounce: same pattern as Quilt (own module + its settings form rendered inside its section).
+    await initPounceAdmin();
+    await renderConfigForms('pounce-tournament-settings-form', ['pounceTournamentSettings']);
 }
 
 init();
