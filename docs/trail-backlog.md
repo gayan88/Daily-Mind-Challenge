@@ -27,7 +27,7 @@ family as LinkedIn's Zip; never use "Zip" in the product.
 |---|---|---|
 | **Walls** | Thin walls between some cells that the line can't cross. They let the generator use fewer numbers, which makes boards harder. | Hard, Summit Climb |
 | **Trail Tips** | A hint draws the next correct stretch of the line (to the next number) and says why it's forced, e.g. *"The corner at row 1, column 7 has only one way in."* It never draws the whole path. | All modes (costs points) |
-| **Hiking theme** | The line is a footpath, numbers are map pins, and the last pin is a summit flag. On solve, the trail draws itself along the route and the flag goes up. | Everywhere |
+| **Map-route theme** (follows the owner's logo, 2026-11-10) | Numbers are coloured map pins, the line is a golden path on a tiled board. On solve, the path glows along the route and the last pin drops in. | Everywhere |
 | **Summit Climb** | The tournament: five boards from 5×5 to 8×8 against the clock, with the summit getting higher as you go. | Tournament |
 
 | Mode | Shape |
@@ -93,7 +93,7 @@ gameTypes: `trail` · `trail-classic` · `trail-tournament` · `trail-tournament
 | E7 Progression, SEO, docs | T-701 – T-706 | 3 | ⬜ |
 | E8 Test & release | T-801 – T-802 | 1.5 | ⬜ |
 | **Total** | **30 tickets** | **~26 working days** by ticket size (less than Pounce's ~30: the admin, page and test patterns are reused) | |
-| Owner (you) | O-01 – O-12 | — | 0 of 12 done |
+| Owner (you) | O-01 – O-12 | — | 1 of 12 done |
 
 ---
 
@@ -268,7 +268,7 @@ emulators, site smoke over all 7 games.
 |---|---|---|---|
 | O-01 | Accept or change decisions D1–D10 (especially **D10**) | before E1 | ⬜ |
 | O-02 | Trademark check for "Trail" (or pick another name) | before T-301 | ⬜ |
-| O-03 | Logo (hiking theme: a footpath through a grid of map pins, a summit flag) | T-702 | ⬜ |
+| O-03 | Logo | T-702 | ✅ 2026-11-10 — `docs/Images/Trail - Logo.png` (1756×895): a tiled board, numbered map pins 1–4, golden path, pin as the "I"; a test home tile matches the other six |
 | O-04 | 18 achievement badges (same set as other games) | T-701 | ⬜ |
 | O-05 | Share image 1200×630 (also still open for Quilt and Pounce) | T-703 | ⬜ |
 | O-06 | How to Play banner (also still open for Quilt and Pounce) | T-301 | ⬜ |
