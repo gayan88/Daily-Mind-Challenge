@@ -29,6 +29,7 @@ in.
 | [pounce-development-plan.md](pounce-development-plan.md) | Plan, brand and decisions for Pounce, the 6th game (a Star Battle-style cat puzzle) |
 | [pounce-backlog.md](pounce-backlog.md) | Pounce tickets (Claude + owner) with per-sprint notes and test results |
 | [pounce-release-notes.md](pounce-release-notes.md) | Pounce release notes, test results, deploy order and rollback steps |
+| [trail-backlog.md](trail-backlog.md) | Trail (proposed 7th game, path-drawing puzzle): what it is, decisions to confirm, and the full ticket backlog |
 | [content-creation-guide.md](content-creation-guide.md) | Exact file formats for AI-assisted puzzle content generation, per game/mode |
 | [progression-gamification-roadmap.md](progression-gamification-roadmap.md) | The phased plan behind Points/XP/Rank/Achievements/Streaks/Championships |
 | [data-flow.md](data-flow.md) | Sequence-level reference for session bootstrap, auth, and scoring flows |
