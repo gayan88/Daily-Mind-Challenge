@@ -276,8 +276,8 @@
     margin-bottom: 16px;
 }
 
-/* Same pattern as pages/challenges.css's .share-box -- duplicated here rather than shared since
-   only one page's CSS loads at a time and this page must not depend on challenges.css. */
+/* Originally the same pattern as the old Challenges page's .share-box (that page and its CSS are
+   gone); kept here since only one page's CSS loads at a time. */
 .share-box {
     display: flex;
     gap: 8px;

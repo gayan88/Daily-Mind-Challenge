@@ -73,10 +73,10 @@ Full data-flow write-up: `docs/data-flow.md`.
 
 - **Wordle Daily Challenge words**: add words from `admin.html`'s Wordle section (append-only — the same "don't reorder, it shifts which day gets which word" rule applies, now enforced by the admin UI itself rather than by editing a source file). There's no source file to edit anymore — the old static `words-wordle.js` list was removed along with the generic Challenges feature that was its last consumer.
 - **Wordle Tournaments** and **Challenge a Friend** links: also created from `admin.html` (Tournaments) or in-page from `wordle.html` itself (Challenge a Friend) — no source file to edit for either.
-- **Sudoku puzzles**: add `{ puzzle, solution }` pairs (81-character strings, `0` = blank) to `src/js/games/sudoku/sudoku-puzzles.js`.
+- **Sudoku puzzles**: add from `admin.html`'s Sudoku section (Daily, Classic, Tournaments; paste or import CSV). Formats in `docs/content-creation-guide.md`.
 - **Quilt pictures**: add from `admin.html`'s Quilt section — PNG files at 1 pixel per cell or the text format; each picture is turned into a puzzle and proven to have exactly one solution before it's saved. Patchwork Runs can be bulk-imported from one file. Formats in `docs/content-creation-guide.md`; the test pictures that used to be in `docs/quilt-content/` were removed 2026-10-20 (recover with `git checkout deaffe8 -- docs/quilt-content`).
 - **Pounce boards**: nothing to write — `admin.html`'s Pounce section **generates** Daily and Classic boards in the browser (a year of Dailies in about a second, each proven uniquely solvable by logic), previews them, and adds them in one click; Nine Lives Runs are generated the same way, one or many at a time. Hand-made boards can be imported as JSON. See `docs/content-creation-guide.md`.
-- **Word Search themes**: add a day's word list to `src/js/games/wordsearch/wordsearch-words.js`; the grid itself is generated at runtime from a date-seeded random layout, so you only supply words.
+- **Word Search themes**: add from `admin.html`'s Word Search section (theme + word list; the grid itself is generated at runtime from a date-seeded random layout, so you only supply words). Formats in `docs/content-creation-guide.md`.
 
 ## Known v1 scope limitations
 
@@ -88,3 +88,7 @@ Full data-flow write-up: `docs/data-flow.md`.
 - Password reset only works for accounts that supplied a real email at signup (relies on Firebase Auth's built-in reset email, which needs a real address to send to).
 - Changing your password requires a recent login (a Firebase Auth security requirement) — if it fails, log out and back in first.
 - Deployed on Firebase Hosting — see `docs/deployment-and-release-document.md` for the URL scheme and how `firebase.json`'s rewrites map clean URLs to the physical pages.
+
+## Source art and backups
+
+Original logos, full-size badge art, share images, banners and marketing files are **not in this repo**; they live in the owner's OneDrive reference folder (`Drive B/Development/Daily Mind Challenge`), together with a copy of the docs and dated source zips (newest 3 kept, updated on request). The site only uses the processed copies in `src/assets/images`.

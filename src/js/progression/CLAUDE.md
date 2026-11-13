@@ -196,8 +196,9 @@ read-only/derived-only follow-up to Phase 3, picked back up after being deferred
   `src/assets/images/achievements/` (moved there from a flat `src/assets/images/` alongside the
   site's other, unrelated image assets, once the badge count made a dedicated subfolder worth it,
   mirroring the existing `sub-ranks/` precedent) -- the originals as first uploaded (full
-  resolution, before crop/resize/transparency-fix processing) are kept separately under
-  `src/assets/images/New/`, renamed to the same clean per-achievement ids, not deleted.
+  resolution, before crop/resize/transparency-fix processing) are kept outside the repo, in the
+  owner's OneDrive reference folder (`badges/<game>/`, `badges/site/`; see the root README),
+  renamed to the same clean per-achievement ids.
 - **`achievement-engine.js`** — the Phase 5 engine. `getPlayerAchievements(uid)` (reads a player's
   own `playerAchievements` docs) and `syncPlayerAchievements(uid, context)` (evaluates every
   `ACHIEVEMENTS` entry that has an `evaluate()` against `context`, create-only-writes a doc for

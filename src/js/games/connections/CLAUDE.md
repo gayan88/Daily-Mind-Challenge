@@ -31,4 +31,4 @@
 
 ## Known gap: social-share image
 
-`fb-share-connections.png` (the `og:image`/`twitter:image` in `connections.html`) is currently just a wide crop of the same artwork already used for the home-tile (`tile-connections-wide.png`) and the How to Play banner (`tile-connections.png`) -- not a dedicated image designed for a small social-feed thumbnail. See `docs/adding-a-new-game.md`'s "7b. SEO / AdSense" for the split: needs a separate source image (project owner to supply) before this can be fixed properly.
+`fb-share-connections.png` (the `og:image`/`twitter:image` in `connections.html`) is currently just a wide crop of the same artwork already used for the old wide home tile (`tile-connections-wide.png`, removed 2026-11-13; the home grid uses `home-tile-connections.png`) and the How to Play banner (`tile-connections.png`) -- not a dedicated image designed for a small social-feed thumbnail. See `docs/adding-a-new-game.md`'s "7b. SEO / AdSense" for the split: needs a separate source image (project owner to supply) before this can be fixed properly.

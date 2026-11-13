@@ -41,4 +41,4 @@ in.
 - **`assets/campaign/`** — processed images referenced by `facebook-campaign-brief.md` (badges, tiles, share images, logo).
 - **`connections-content/`** — reviewed starter puzzle content for the Connections game (see `adding-a-new-game.md`/`content-creation-guide.md`).
 - **`quilt-content/`** — *removed 2026-10-20.* Generated Quilt test pictures (500 Daily, 300 Classic, 100 Patchwork Run); recover with `git checkout deaffe8 -- docs/quilt-content`.
-- **`Images/`** — raw source images: the Pounce logo and the 18 full-size Pounce achievement badges (transparent, named by achievement id; the site uses processed 240×240 copies). The Quilt originals were removed 2026-10-20 (recover with `git checkout 63db3be^ -- docs/Images`). Not referenced by any page; kept as source material.
+- **Source images are no longer kept here.** Since 2026-11-13 all original logos and badge art (every game) live in the owner's OneDrive reference folder (`Drive B/Development/Daily Mind Challenge`) (`logos/`, `badges/<game>/`, `share-images/`, …). The old `docs/Images/` is in git history (`git checkout 1956d27 -- docs/Images` for the Pounce set, `63db3be^` for Quilt's).

@@ -277,12 +277,12 @@ away, then announce. Mind the Perfect Day note from sprint 3.
   collection, no new rules.
 
 **P-702 · Badges** · S · 🤖 · ✅ · needs P-304 · **art ready ✅**
-- 240×240 copies of the 18 transparent badges in `docs/Images/` → `src/assets/images/achievements/`.
+- 240×240 copies of the 18 transparent badges in `docs/Images/` (originals now in the OneDrive reference folder `badges/pounce/`) → `src/assets/images/achievements/`.
 - `CUSTOM_IMAGES` entries; checked on dark + light.
 
 **P-703 · Home tile** · S · 🤖 · ✅ · **logo ready ✅**
 Cut `tile-pounce.png` (400×400) and `tile-pounce-wide.png` from
-`docs/Images/Playful Pounce Cat Puzzle Logo.png`.
+`docs/Images/Playful Pounce Cat Puzzle Logo.png` (now the OneDrive reference folder `logos/pounce.png`; the wide tile was removed 2026-11-13 in favour of `home-tile-pounce.png`).
 
 **P-704 · SEO content** · M · 🤖 · ✅ · needs P-301
 - Tips & Strategy, a ~20-question FAQ, `sitemap.xml`.

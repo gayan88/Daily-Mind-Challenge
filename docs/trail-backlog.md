@@ -268,7 +268,7 @@ emulators, site smoke over all 7 games.
 |---|---|---|---|
 | O-01 | Accept or change decisions D1–D10 (especially **D10**) | before E1 | ⬜ |
 | O-02 | Trademark check for "Trail" (or pick another name) | before T-301 | ⬜ |
-| O-03 | Logo | T-702 | ✅ 2026-11-10 — `docs/Images/Trail - Logo.png` (1756×895): a tiled board, numbered map pins 1–4, golden path, pin as the "I"; a test home tile matches the other six |
+| O-03 | Logo | T-702 | ✅ 2026-11-10 — `logos/trail.png` in the OneDrive reference folder (1756×895; was `docs/Images/Trail - Logo.png`): a tiled board, numbered map pins 1–4, golden path, pin as the "I"; a test home tile matches the other six |
 | O-04 | 18 achievement badges (same set as other games) | T-701 | ⬜ |
 | O-05 | Share image 1200×630 (also still open for Quilt and Pounce) | T-703 | ⬜ |
 | O-06 | How to Play banner (also still open for Quilt and Pounce) | T-301 | ⬜ |
