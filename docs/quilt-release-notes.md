@@ -87,16 +87,15 @@ production serves without a composite index).
 
 - [ ] Play today's Daily on your phone and desktop; check the summary, share text, home ✓.
 - [ ] Check Sudoku "Share with Friends" now adds +10 (the fix).
-- [ ] Request indexing for `https://dailymindchallenge.com/quilt` in Google Search Console and
-      Bing Webmaster Tools (plan item O15).
+- [x] Request indexing for `https://dailymindchallenge.com/quilt` (plan item O15) — Google 2026-10-20,
+      Bing 2026-11-13 via IndexNow.
 - [ ] Launch post in the Facebook group, mentioning the harder all-games achievements.
 
 ## Still open (owner backlog)
 
-- Artwork: How to Play banner (O5; currently uses the tile/logo), 1.91:1 share image (O6, the page uses a
-  logo stand-in for now). The 18 achievement badges (O7) are done (2026-10-19, needs a hosting deploy).
+- Artwork: 1.91:1 share image (O6) done 2026-11-13; How to Play banner (O5) dropped — not needed. The 18 achievement badges (O7) are done (2026-10-19, needs a hosting deploy).
 - Content: 30 Daily, 20 per Classic difficulty, 2 Patchwork Runs (O8–O11).
-- Trademark check for "Quilt" (O2).
+- Trademark check for "Quilt" (O2) — done 2026-10-20.
 
 ## Rollback
 

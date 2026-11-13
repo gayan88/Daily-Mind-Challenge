@@ -60,7 +60,7 @@ Hosting-only changes (HTML/CSS/JS/images) need just `--only hosting`. Any change
 
 ## Search engine verification files
 
-Two static verification files live at the site root and **must never be deleted, renamed, or
+Three static files live at the site root (two verification files and the IndexNow key) and **must never be deleted, renamed, or
 moved** -- removing either can revoke that search engine's verified-ownership status:
 
 - **`src/google9a4fa05185ef4666.html`** -- Google Search Console's HTML-file domain-ownership
@@ -73,7 +73,21 @@ moved** -- removing either can revoke that search engine's verified-ownership st
   verified manually instead). Must return 200 with its original exact XML content at
   `https://dailymindchallenge.com/BingSiteAuth.xml`.
 
-If `firebase.json`'s hosting config is ever revisited, re-check both URLs still return 200 with
+- **`src/76105d476f3c43dd8224a3e89b9e3648.txt`** -- the IndexNow key (added 2026-11-13). Its content
+  is exactly the key. It lets a new or changed page be submitted to Bing (and the other IndexNow
+  engines, e.g. Yandex) without logging in to Bing Webmaster Tools:
+
+  ```bash
+  K=76105d476f3c43dd8224a3e89b9e3648; B=https://dailymindchallenge.com
+  curl -s -w "\nHTTP %{http_code}\n" -X POST https://api.indexnow.org/indexnow \
+    -H "Content-Type: application/json; charset=utf-8" \
+    -d "{\"host\":\"dailymindchallenge.com\",\"key\":\"$K\",\"keyLocation\":\"$B/$K.txt\",\"urlList\":[\"$B/<game>\"]}"
+  ```
+
+  `200`/`202` = accepted. Used for `/pounce` and `/quilt` on 2026-11-13. Google has no equivalent
+  for ordinary pages -- a new page there still needs Search Console → URL inspection → Request indexing.
+
+If `firebase.json`'s hosting config is ever revisited, re-check all three URLs still return 200 with
 their original exact content afterward.
 
 ## Custom domain

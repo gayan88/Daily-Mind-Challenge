@@ -79,8 +79,9 @@ curl -s -o /dev/null -w "%{http_code}\n" https://dailymindchallenge.com/pounce
 curl -s -o /dev/null -w "%{http_code}\n" https://dailymindchallenge.com/sitemap.xml
 curl -s -o /dev/null -w "%{http_code}\n" https://dailymindchallenge.com/google9a4fa05185ef4666.html
 curl -s -o /dev/null -w "%{http_code}\n" https://dailymindchallenge.com/BingSiteAuth.xml
+curl -s -o /dev/null -w "%{http_code}\n" https://dailymindchallenge.com/76105d476f3c43dd8224a3e89b9e3648.txt
 ```
-All should return `200`. The last two must return `200` directly, never a `3xx` redirect — see
+All should return `200`. The last three must return `200` directly, never a `3xx` redirect — see
 `docs/deployment-and-release-document.md`'s "Search engine verification files" section for why a
 redirect there is a real regression, not a cosmetic one.
 

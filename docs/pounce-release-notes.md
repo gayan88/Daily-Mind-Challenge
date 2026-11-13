@@ -108,19 +108,19 @@ So: deploy → add content straight away → then announce.
 
 ## After deploying
 
-- [ ] Play today's Daily on your phone and desktop: tap feel, 9×9 readability (try a Hard
+- [x] Play today's Daily on your phone and desktop: tap feel, 9×9 readability (try a Hard
       Classic), hint wording, the summary and share text, home ✓, the Cat Café on your profile (O-09).
-- [ ] Play part of a Nine Lives Run.
-- [ ] Request indexing for `https://dailymindchallenge.com/pounce` in Google Search Console and
-      Bing Webmaster Tools, plus Bing for `/quilt` (O-11).
+- [x] Play part of a Nine Lives Run. (Runs created and play-test done, 2026-11-13.)
+- [ ] Request indexing for `https://dailymindchallenge.com/pounce` in Google Search Console (O-11).
+      Bing (`/pounce` + `/quilt`) was done 2026-11-13 via IndexNow.
 - [ ] One Facebook-group launch post for Quilt + Pounce, mentioning the harder all-games
       achievements (O-12).
 
 ## Still open (owner backlog)
 
-- Trademark check for "Pounce" (O-02).
-- Artwork: the 1.91:1 share image (O-05, done 2026-11-13) and a
-  How to Play banner (O-06; the page uses the tile) — both also wanted for Quilt.
+- Google indexing for `/pounce` (O-11) and the Facebook post (O-12) — see the checklist above.
+- Done / dropped 2026-11-13: share image (O-05, done), Runs created and play-test (O-08, O-09, done);
+  trademark check (O-02) and How to Play banner (O-06) dropped.
 
 ## Rollback
 

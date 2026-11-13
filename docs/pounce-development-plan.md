@@ -2,7 +2,7 @@
 
 > Status: **built and release-tested, not deployed** (2026-10-20) — all six sprints done; deploy steps in
 > `docs/pounce-release-notes.md`. All §2 decisions accepted with the
-> recommended defaults (2026-10-20). Name chosen 2026-10-20: **Pounce** (trademark check still to do, D1).
+> recommended defaults (2026-10-20). Name chosen 2026-10-20: **Pounce** (trademark item later dropped: Claude's basic name screening is enough, owner 2026-11-13).
 > Follows `docs/adding-a-new-game.md`, which stays the source of truth for *every* touchpoint.
 > This doc orders the work and splits it between **Claude (implementation)** and **Owner (you)**,
 > the same way `docs/quilt-development-plan.md` did for Quilt.
@@ -172,7 +172,7 @@ Phase 1 core (generator + logic solver) ──► Phase 2 engine ──► Phase
 
 Rough total for Claude's backlog: **~30 working days** by ticket size (see the backlog). The riskiest piece is P-103 (the
 technique solver): hints, grading and the generator's quality all depend on it, so it comes first.
-Because content is generated, the critical path is **the trademark check + share image and banner (O-02, O-05, O-06)**, not content.
+Because content is generated, the critical path was artwork, not content. (2026-11-13: share image generated from the logo; trademark and banner items dropped.)
 
 **Out of scope for v1** (candidates for later): Expert mode with 2 cats per row/column/region on
 10×10 (v1.1), a Learn / Academy mode of technique lessons (v1.1), a full Cat Café (rarities,

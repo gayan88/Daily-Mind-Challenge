@@ -149,6 +149,13 @@ faster than re-deriving the pattern from the existing six games' code. Quilt's o
 documented phase by phase in `docs/quilt-development-plan.md` and `docs/quilt-release-notes.md`; Pounce's
 sprint by sprint in `docs/pounce-backlog.md` and `docs/pounce-release-notes.md`.
 
+**Source art, share images and backups:** original logos, badge art, share images, marketing
+files, starter content and dated source zips are **not in the repo** -- they live in the owner's
+OneDrive reference folder (`Drive B/Development/Daily Mind Challenge`, layout in its own
+`README.md` and the root `README.md` → "Source art and backups"). Its `documents/` folder holds a
+copy of these docs, refreshed on request (not automatically). Share images are generated from
+each logo with `tools/make-share-image.py`.
+
 **Generating puzzle content with an AI:** `docs/content-creation-guide.md` has the exact file
 format and validation rules per game/mode, written specifically so a prompt like "generate 100
 Wordle Daily Challenge words" produces something the admin import will actually accept. Quilt takes

@@ -91,4 +91,9 @@ Full data-flow write-up: `docs/data-flow.md`.
 
 ## Source art and backups
 
-Original logos, full-size badge art, share images, banners and marketing files are **not in this repo**; they live in the owner's OneDrive reference folder (`Drive B/Development/Daily Mind Challenge`), together with a copy of the docs and dated source zips (newest 3 kept, updated on request). The site only uses the processed copies in `src/assets/images`.
+Original logos, full-size badge art, share images, marketing files and starter content are **not in this repo**; they live in the owner's OneDrive reference folder (`~/Library/CloudStorage/OneDrive-Personal/Drive B/Development/Daily Mind Challenge`), together with a copy of the docs (`documents/`) and dated source zips (`source-backup/`, newest 3 kept). The site only uses the processed copies in `src/assets/images`.
+
+- **Updated on request only** -- usually after each new game: refresh `documents/`, add a dated source zip, drop the oldest beyond 3, note it in `source-backup/backup-log.txt`.
+- **New art goes there first** (logo → `logos/<game>.png`, badges → `badges/<game>/`), then gets processed into the repo (`tools/process-badges.py` for badges).
+- **Share images are generated, not drawn:** `tools/make-share-image.py` builds each game's 1200×630 `fb-share-<game>.png` from its logo; copies go to `share-images/`.
+- The folder's own `README.md` describes every subfolder.

@@ -344,16 +344,16 @@ every game.
 | ID | Task | Needed by | Status |
 |---|---|---|---|
 | O-01 | Accept or change decisions D2–D10 in the plan | before E1 | ✅ 2026-10-20 (accepted all) |
-| O-02 | Trademark check for "Pounce" (USPTO, WIPO, J-PlatPat) | before P-301 | ⬜ |
+| O-02 | ~~Trademark check for "Pounce"~~ | before P-301 | ➖ dropped 2026-11-13 — the owner decided Claude's basic name screening (done when a name is suggested) is enough |
 | O-03 | Logo | P-703 | ✅ 2026-10-20 |
 | O-04 | 18 achievement badges | P-702 | ✅ 2026-10-20 (made transparent) |
 | O-05 | **Share image** 1200×630 for Pounce **and Quilt** (deferred Quilt O6) — done 2026-11-13 with `tools/make-share-image.py` (all six games now share one template) | P-704 | ✅ |
-| O-06 | **How to Play banner** for Pounce **and Quilt** (deferred Quilt O5) | P-301 | ⬜ |
+| O-06 | ~~How to Play banner~~ for Pounce and Quilt | P-301 | ➖ dropped 2026-11-13 — not needed: no game uses a How to Play banner image (the card shows the logo/tile) |
 | O-07 | Decide about the Quilt originals deleted from `docs/Images/` (restore from git or leave) | any time | ✅ removed on purpose (committed) |
-| O-08 | Generate content in Admin → Pounce (after deploying the code, see below): 365 Daily, 100 per Classic difficulty, 10 Runs | after P-602 ✅ — ready | 🔄 1,000 Daily + 300 Classic live; **Runs still to create** |
-| O-09 | Play-test on phone + desktop (tap feel, 9×9 readability, hint wording, share text) | P-801 | ⬜ |
+| O-08 | Generate content in Admin → Pounce (after deploying the code, see below): 365 Daily, 100 per Classic difficulty, 10 Runs | after P-602 ✅ — ready | ✅ 1,000 Daily + 300 Classic live; Runs created by the owner (2026-11-13) |
+| O-09 | Play-test on phone + desktop (tap feel, 9×9 readability, hint wording, share text) | P-801 | ✅ 2026-11-13 (incl. Safari) |
 | O-10 | Deploy, then straight away Generate + Add content (O-08) and activate a Run — steps in `docs/pounce-release-notes.md` | after P-802 ✅ — ready | ✅ deployed 2026-10-21 |
-| O-11 | Indexing: Google + Bing for `/pounce`, **plus Bing for `/quilt`** | after O-10 | ⬜ |
+| O-11 | Indexing: Google + Bing for `/pounce`, **plus Bing for `/quilt`** | after O-10 | 🔄 Bing done 2026-11-13 by Claude via IndexNow (`/pounce` + `/quilt`, HTTP 202); **Google `/pounce` still to request** (owner, Search Console) |
 | O-12 | One Facebook-group launch post for **Quilt + Pounce** | after O-10 | ⬜ |
 
 ---

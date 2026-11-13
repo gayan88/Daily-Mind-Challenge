@@ -13,7 +13,7 @@ Check every result on a dark AND a light background before wiring CUSTOM_IMAGES 
 option writes such a contact sheet).
 
 Usage (needs Pillow, numpy, scipy -- e.g. in a throwaway venv):
-  python3 tools/process-badges.py docs/Images/pounce-*.png --in-place --sheet /tmp/badges.png
+  python3 tools/process-badges.py "<OneDrive ref>/badges/pounce/"*.png --in-place --sheet /tmp/badges.png
 """
 import argparse
 import os

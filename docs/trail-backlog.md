@@ -67,7 +67,7 @@ gameTypes: `trail` · `trail-classic` · `trail-tournament` · `trail-tournament
 
 | # | Decision | Recommended default | Affects |
 |---|---|---|---|
-| D1 | Name | "Trail" (owner trademark check: O-02) | T-301 onwards |
+| D1 | Name | "Trail" — **conflicts with an existing game; to be renamed** (Claude suggests screened names) | T-301 onwards |
 | D2 | Sizes | Daily 7×7 · Easy 5×5 · Medium 6×6 · Hard 8×8 · Climb 5→8 | T-101, T-401 |
 | D3 | Unique solution required? | **Yes**, every board proven to have exactly one path | T-102, T-104 |
 | D4 | Daily scoring | 10 + time bonus (≤1 min 10 / ≤2 min 8 / ≤4 min 6 / else 5) − 3 per Trail Tip (never below 5) + 5 **Trailblazer** (no tips, no "Clear line"); cap 30 | T-302 |
@@ -267,20 +267,20 @@ emulators, site smoke over all 7 games.
 | ID | Task | Needed by | Status |
 |---|---|---|---|
 | O-01 | Accept or change decisions D1–D10 (especially **D10**) | before E1 | ⬜ |
-| O-02 | Trademark check for "Trail" (or pick another name) | before T-301 | ⬜ |
+| O-02 | Pick the final name from Claude's screened suggestions ("Trail" conflicts) — no separate trademark task | before T-301 | ⬜ |
 | O-03 | Logo | T-702 | ✅ 2026-11-10 — `logos/trail.png` in the OneDrive reference folder (1756×895; was `docs/Images/Trail - Logo.png`): a tiled board, numbered map pins 1–4, golden path, pin as the "I"; a test home tile matches the other six |
 | O-04 | 18 achievement badges (same set as other games) | T-701 | ⬜ |
 | O-05 | Share image 1200×630 — no art needed: Claude generates it from the logo with `tools/make-share-image.py` (needs one tagline) | T-703 | ⬜ |
-| O-06 | How to Play banner (also still open for Quilt and Pounce) | T-301 | ⬜ |
+| O-06 | ~~How to Play banner~~ | T-301 | ➖ dropped 2026-11-13 — not needed: no game uses a How to Play banner image (the card shows the logo/tile) |
 | O-07 | Play-test the engine sample on your phone and in Safari | after E2 | ⬜ |
 | O-08 | Generate content in Admin → Trail (365 Daily, 100 per Classic level, 10 Climbs) | after deploy | ⬜ |
 | O-09 | Final play-test (phone, desktop, Safari) | after T-801 | ⬜ |
 | O-10 | Approve deploy | after T-802 | ⬜ |
-| O-11 | Google + Bing indexing for `/trail` | after deploy | ⬜ |
+| O-11 | Indexing for `/trail`: Bing — Claude submits via IndexNow after deploy; Google — owner requests in Search Console | after deploy | ⬜ |
 | O-12 | Launch post in the Facebook group | after deploy | ⬜ |
 
-**Carried over from Pounce (still open):** create and activate the first Nine Lives Runs, the
-Pounce trademark check, and one Facebook post for Quilt + Pounce.
+**Carried over from Pounce (still open, 2026-11-13):** request Google indexing for `/pounce`, and one
+Facebook post for Quilt + Pounce. (Runs and play-test done; trademark and banner items dropped.)
 
 ---
 
