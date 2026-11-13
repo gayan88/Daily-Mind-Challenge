@@ -119,7 +119,7 @@ So: deploy → add content straight away → then announce.
 ## Still open (owner backlog)
 
 - Trademark check for "Pounce" (O-02).
-- Artwork: the 1.91:1 share image (O-05; `fb-share-pounce.png` is the logo on white for now) and a
+- Artwork: the 1.91:1 share image (O-05, done 2026-11-13) and a
   How to Play banner (O-06; the page uses the tile) — both also wanted for Quilt.
 
 ## Rollback

@@ -169,7 +169,7 @@ championship `gameId` lists. Wired into `GAMES`, `checkPlayedTodayAll()`, `GAME_
 and every page that lists the games. P-702: 18 badges at 240×240 in `CUSTOM_IMAGES`, checked on dark
 and light. P-703: `tile-pounce.png` / `tile-pounce-wide.png` cut from the logo. P-704 was done early:
 the How to Play card has a generated example board, Tips & Strategy and a 20-question FAQ; og:image is
-the logo on white as `fb-share-pounce.png` until O-05.
+`fb-share-pounce.png` (1200×630, from `tools/make-share-image.py`; O-05 done).
 `tools/pounce-e2e-test.mjs` + `tools/pounce-emulator-seed.mjs`: 24/24 against the emulators. The run
 covers sign-in, a Daily solve with 1 hiss + 1 tip = 15 points, the gameScores doc, the +20 share
 allowed by the rules (35), the already-played view, leaderboard, profile and home tile. Found while testing, and true of
@@ -347,7 +347,7 @@ every game.
 | O-02 | Trademark check for "Pounce" (USPTO, WIPO, J-PlatPat) | before P-301 | ⬜ |
 | O-03 | Logo | P-703 | ✅ 2026-10-20 |
 | O-04 | 18 achievement badges | P-702 | ✅ 2026-10-20 (made transparent) |
-| O-05 | **Share image** 1200×630 for Pounce **and Quilt** (deferred Quilt O6) | P-704 | ⬜ |
+| O-05 | **Share image** 1200×630 for Pounce **and Quilt** (deferred Quilt O6) — done 2026-11-13 with `tools/make-share-image.py` (all six games now share one template) | P-704 | ✅ |
 | O-06 | **How to Play banner** for Pounce **and Quilt** (deferred Quilt O5) | P-301 | ⬜ |
 | O-07 | Decide about the Quilt originals deleted from `docs/Images/` (restore from git or leave) | any time | ✅ removed on purpose (committed) |
 | O-08 | Generate content in Admin → Pounce (after deploying the code, see below): 365 Daily, 100 per Classic difficulty, 10 Runs | after P-602 ✅ — ready | 🔄 1,000 Daily + 300 Classic live; **Runs still to create** |

@@ -270,7 +270,7 @@ emulators, site smoke over all 7 games.
 | O-02 | Trademark check for "Trail" (or pick another name) | before T-301 | ⬜ |
 | O-03 | Logo | T-702 | ✅ 2026-11-10 — `logos/trail.png` in the OneDrive reference folder (1756×895; was `docs/Images/Trail - Logo.png`): a tiled board, numbered map pins 1–4, golden path, pin as the "I"; a test home tile matches the other six |
 | O-04 | 18 achievement badges (same set as other games) | T-701 | ⬜ |
-| O-05 | Share image 1200×630 (also still open for Quilt and Pounce) | T-703 | ⬜ |
+| O-05 | Share image 1200×630 — no art needed: Claude generates it from the logo with `tools/make-share-image.py` (needs one tagline) | T-703 | ⬜ |
 | O-06 | How to Play banner (also still open for Quilt and Pounce) | T-301 | ⬜ |
 | O-07 | Play-test the engine sample on your phone and in Safari | after E2 | ⬜ |
 | O-08 | Generate content in Admin → Trail (365 Daily, 100 per Classic level, 10 Climbs) | after deploy | ⬜ |

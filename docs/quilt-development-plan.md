@@ -90,7 +90,7 @@ ids (needed as soon as `quilt` is in `GAMES`, since championship/achievement cod
 C7.1's rules half is done. The share rules now read the flags with `get(..., false)`, which also
 fixed a live bug: Sudoku/Word Search Daily + Classic "Share with Friends" +10 was always rejected
 (those docs never set `sharedWithFriends`). Home tile and HTP banner use tiles cut from the owner's
-logo (`tile-quilt.png`, `tile-quilt-wide.png`; O4 done); og:image reuses the wide tile until O6. Tips & Strategy + 20-question
+logo (`tile-quilt.png`, `tile-quilt-wide.png`; O4 done); og:image is `fb-share-quilt.png` (O6 done). Tips & Strategy + 20-question
 FAQ are in `quilt.html` already (C7.2 content done; sitemap added too).
 
 ### Phase 4 — Classic
@@ -136,7 +136,7 @@ rows. `docs/content-creation-guide.md` has the Quilt format + an AI prompt (C7.4
 
 Phase 7 notes: achievement ids in the rules match what `achievement-registry.js` generates from
 `GAMES`; the 18 Quilt badges use the category emoji until art arrives (O7 → add to `CUSTOM_IMAGES`).
-og/twitter tags point at the stand-in `tile-quilt-wide.png` until O6. Every page/README/footer-share
+og/twitter tags point at `fb-share-quilt.png` (O6 done; the stand-in `tile-quilt-wide.png` was removed). Every page/README/footer-share
 text that listed the games now lists all five (several had still listed only three). Achievement
 copy already counts `GAMES` dynamically ("all 5 games"); note for players: adding Quilt makes the
 "every game" / "every Daily" achievements harder for anyone who hasn't earned them yet. FRS got a
@@ -180,7 +180,7 @@ copy already counts `GAMES` dynamically ("all 5 games"); note for players: addin
 ### Pending — revisit with the next game (owner's call, 2026-10-20)
 
 - [ ] **O5** How to Play banner (the page uses the logo for now).
-- [ ] **O6** Purpose-made 1.91:1 share image (~1200×630); `og:image` reuses `tile-quilt-wide.png` until then.
+- [x] **O6** 1.91:1 share image — done 2026-11-13: `fb-share-quilt.png` (1200×630), generated from the logo by `tools/make-share-image.py`.
 - [ ] **O15 (Bing)** Request indexing for `/quilt` in Bing Webmaster Tools.
 - [ ] **O16** Launch post in the Facebook group (mention that the "every game" achievements now include Quilt).
 
