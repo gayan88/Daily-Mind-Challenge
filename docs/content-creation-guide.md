@@ -231,8 +231,8 @@ Silent letters: Knight, Gnome, Wrist, Psalm
 Palindromes: Level, Radar, Civic, Kayak
 ```
 
-Ready-made starter sets already exist in `docs/connections-content/` (`daily.txt`, `classic.txt`,
-`tournament.txt`) if you just need real content now rather than generating more.
+Ready-made starter sets exist in the reference folder's `content/Connections/` (`daily.txt`, `classic.txt`,
+`tournament.txt`; moved out of `docs/` on 2026-11-13) if you just need real content now rather than generating more.
 
 ---
 

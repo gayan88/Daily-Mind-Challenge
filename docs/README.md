@@ -38,7 +38,6 @@ in.
 
 ## Supporting assets
 
-- **`assets/campaign/`** — processed images referenced by `facebook-campaign-brief.md` (badges, tiles, share images, logo).
-- **`connections-content/`** — reviewed starter puzzle content for the Connections game (see `adding-a-new-game.md`/`content-creation-guide.md`).
+- **Content files and campaign images are no longer kept here** (since 2026-11-13): starter content for every game is in the reference folder's `content/` (Connections' reviewed starter set is `content/Connections/`), and the campaign brief's images are in `marketing/campaign-brief-assets/`. `docs/` holds text documents only.
 - **`quilt-content/`** — *removed 2026-10-20.* Generated Quilt test pictures (500 Daily, 300 Classic, 100 Patchwork Run); recover with `git checkout deaffe8 -- docs/quilt-content`.
 - **Source images are no longer kept here.** Since 2026-11-13 all original logos and badge art (every game) live in the owner's OneDrive reference folder (`Drive B/Development/Daily Mind Challenge`) (`logos/`, `badges/<game>/`, `share-images/`, …). The old `docs/Images/` is in git history (`git checkout 1956d27 -- docs/Images` for the Pounce set, `63db3be^` for Quilt's).

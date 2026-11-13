@@ -1,11 +1,8 @@
 # Facebook / Instagram Campaign Brief — Daily Mind Challenge
 
-![Daily Mind Challenge](assets/campaign/logo-header.png)
-
 A brief written to hand to an external marketing agency for a paid social (Facebook/Instagram)
-campaign. Self-contained — every image referenced here lives in `docs/assets/campaign/` alongside
-this file, so the whole `docs/` folder (or just this file plus that one subfolder) can be shared
-externally with no access to the rest of the codebase needed.
+campaign. Every image it names (logos, share images, badge samples) is kept in the project's reference folder (`marketing/campaign-brief-assets/`)
+and is sent along with this brief when it's shared; no access to the codebase is needed.
 
 - **Site**: `dailymindchallenge.com`
 - **Contact**: `support@dailymindchallenge.com`
@@ -30,7 +27,6 @@ how you want to play it."
 
 ### Wordle 🟩
 
-![Wordle](assets/campaign/tile-wordle.png)
 
 | Mode | What it is |
 |---|---|
@@ -40,7 +36,6 @@ how you want to play it."
 
 ### Sudoku 🔢
 
-![Sudoku](assets/campaign/tile-sudoku.png)
 
 | Mode | What it is |
 |---|---|
@@ -50,7 +45,6 @@ how you want to play it."
 
 ### Word Search 🔍
 
-![Word Search](assets/campaign/tile-wordsearch.png)
 
 | Mode | What it is |
 |---|---|
@@ -60,7 +54,6 @@ how you want to play it."
 
 ### Connections 🟪
 
-![Connections](assets/campaign/tile-connections.png)
 
 The newest addition to the lineup — a word-grouping puzzle in the style of the NYT's own
 Connections: find four hidden groups of four related words, from a 16-word grid, before running
@@ -74,7 +67,6 @@ out of guesses.
 
 ### Quilt 🧵
 
-![Quilt](assets/campaign/tile-quilt.png)
 
 The newest game, and the first original one: a Shikaku-style logic puzzle with a twist. Players
 drag rectangles over a grid of numbers so each rectangle holds exactly one number equal to its area.
@@ -90,7 +82,6 @@ its real colour and **a hidden pixel-art picture appears**. Strong visual hook f
 
 ### Pounce 🐾
 
-![Pounce](assets/campaign/tile-pounce.png)
 
 The newest game: a cosy cat logic puzzle with attitude. Each board is a grid of coloured patches,
 like cushions on a floor, and the player finds every cat its own nap spot — one cat per row, per
@@ -179,32 +170,32 @@ this is a website, and that friction-free distinction is part of the pitch.
 
 ## 7. Brand assets
 
-All images below are included alongside this document (`docs/assets/campaign/`) — nothing here
-requires codebase access.
+The files below are in the project's reference folder (`marketing/campaign-brief-assets/`) and come with this brief — nothing here requires
+codebase access.
 
 ### Logos
 
-| | |
+| File | What it is |
 |---|---|
-| ![Daily Mind Challenge logo](assets/campaign/logo-header.png) | **Main site logo** — the general "Daily Mind Challenge" mark, not tied to any one game. `logo-header.png` |
-| ![Wordle logo](assets/campaign/tile-wordle.png) | **Wordle logo** — full-color game tile art, square format. `tile-wordle.png` |
-| ![Sudoku logo](assets/campaign/tile-sudoku.png) | **Sudoku logo** — full-color game tile art, square format. `tile-sudoku.png` |
-| ![Word Search logo](assets/campaign/tile-wordsearch.png) | **Word Search logo** — full-color game tile art, square format. `tile-wordsearch.png` |
-| ![Connections logo](assets/campaign/tile-connections.png) | **Connections logo** — full-color game tile art, square format. `tile-connections.png` |
-| ![Quilt logo](assets/campaign/tile-quilt.png) | **Quilt logo** — full-color game tile art, square format. `tile-quilt.png` |
-| ![Pounce logo](assets/campaign/tile-pounce.png) | **Pounce logo** — full-color game tile art (the ginger mascot pouncing onto a board), square format. `tile-pounce.png` |
+| `logo-header.png` | **Main site logo** — the general "Daily Mind Challenge" mark, not tied to any one game. |
+| `tile-wordle.png` | **Wordle logo** — full-color game tile art, square format. |
+| `tile-sudoku.png` | **Sudoku logo** — full-color game tile art, square format. |
+| `tile-wordsearch.png` | **Word Search logo** — full-color game tile art, square format. |
+| `tile-connections.png` | **Connections logo** — full-color game tile art, square format. |
+| `tile-quilt.png` | **Quilt logo** — full-color game tile art, square format. |
+| `tile-pounce.png` | **Pounce logo** — full-color game tile art (the ginger mascot pouncing onto a board), square format. |
 
 ### Pre-built share images
 
 Ready-made link-preview images (roughly 1730-1760 × 900-910, exact size varies slightly per game), one general and one per game:
 
-| | |
+| File | What it is |
 |---|---|
-| ![General share image](assets/campaign/fb-share-general.png) | `fb-share-general.png` |
-| ![Wordle share image](assets/campaign/fb-share-wordle.png) | `fb-share-wordle.png` |
-| ![Sudoku share image](assets/campaign/fb-share-sudoku.png) | `fb-share-sudoku.png` |
-| ![Word Search share image](assets/campaign/fb-share-word-search.png) | `fb-share-word-search.png` |
-| ![Connections share image](assets/campaign/fb-share-connections.png) | `fb-share-connections.png` |
+| `fb-share-general.png` | General share image |
+| `fb-share-wordle.png` | Wordle share image |
+| `fb-share-sudoku.png` | Sudoku share image |
+| `fb-share-word-search.png` | Word Search share image |
+| `fb-share-connections.png` | Connections share image |
 
 Quilt and Pounce don't have purpose-made share images yet (their link previews currently reuse the
 logos) — wide (~1.91:1) creative for both is an open item.
@@ -213,11 +204,15 @@ logos) — wide (~1.91:1) creative for both is an open item.
 
 Illustrated badge art (240x240, transparent PNG) -- a small sample; all 121 exist in the codebase and can be provided on request:
 
-| | | | |
-|---|---|---|---|
-| ![Wordle Grand Master](assets/campaign/badge-wordle-grandmaster.png) | ![Sudoku Monthly Champion x12](assets/campaign/badge-sudoku-monthly-champion-12.png) | ![Word Search Daily Champion x100](assets/campaign/badge-wordsearch-daily-champion-100.png) | ![Connections Grand Master](assets/campaign/badge-connections-grandmaster.png) |
-| ![Quilt Grand Master](assets/campaign/badge-quilt-grandmaster.png) | ![Pounce Grand Master](assets/campaign/badge-pounce-grandmaster.png) | | |
-| ![Mind Master](assets/campaign/badge-mind-master.png) | ![Perfect Day](assets/campaign/badge-perfect-day.png) | ![365 Day Streak](assets/campaign/badge-streak-365.png) | |
+- `badge-wordle-grandmaster.png` — Wordle Grand Master
+- `badge-sudoku-monthly-champion-12.png` — Sudoku Monthly Champion x12
+- `badge-wordsearch-daily-champion-100.png` — Word Search Daily Champion x100
+- `badge-connections-grandmaster.png` — Connections Grand Master
+- `badge-quilt-grandmaster.png` — Quilt Grand Master
+- `badge-pounce-grandmaster.png` — Pounce Grand Master
+- `badge-mind-master.png` — Mind Master
+- `badge-perfect-day.png` — Perfect Day
+- `badge-streak-365.png` — 365 Day Streak
 
 ### Brand palette
 

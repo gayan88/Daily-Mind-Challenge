@@ -23,11 +23,11 @@
 
 ## Testing locally
 
-`localhost`/`127.0.0.1` auto-connects to the Firebase emulators (see `api/firebase-init.js`). Needs a JDK for the Firestore emulator (`brew install openjdk`, then `PATH="/opt/homebrew/opt/openjdk/bin:$PATH" firebase emulators:start --project playdailymindchallenge`), site at http://127.0.0.1:5002/connections. Seed puzzles through Admin → Connections using `docs/connections-content/*.txt`.
+`localhost`/`127.0.0.1` auto-connects to the Firebase emulators (see `api/firebase-init.js`). Needs a JDK for the Firestore emulator (`brew install openjdk`, then `PATH="/opt/homebrew/opt/openjdk/bin:$PATH" firebase emulators:start --project playdailymindchallenge`), site at http://127.0.0.1:5002/connections. Seed puzzles through Admin → Connections using the reference folder's `content/Connections/*.txt`.
 
 ## Content
 
-`docs/connections-content/` has a reviewed starter set (32 Daily, 24 Classic across all tiers, 1 five-puzzle Tournament). Puzzles are meant to be edited by a human before launch -- especially the hard tier's wordplay groups.
+The reference folder's `content/Connections/` (moved out of `docs/connections-content/` on 2026-11-13) has a reviewed starter set (32 Daily, 24 Classic across all tiers, 1 five-puzzle Tournament). Puzzles are meant to be edited by a human before launch -- especially the hard tier's wordplay groups.
 
 ## Known gap: social-share image
 
