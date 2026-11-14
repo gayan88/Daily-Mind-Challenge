@@ -1,8 +1,8 @@
 import {
-    doc,
     runTransaction,
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 import { db } from '../api/firebase-init.js';
+import { profileDocRef } from '../auth/profile-ref.js';
 import { getTodayDateString, isConsecutiveDay } from '../utils/helpers.js';
 
 // Streak "badges" at these counts aren't real yet (the Achievement Engine is Phase 5) -- for
@@ -37,13 +37,14 @@ export function getStreakMilestoneTier(streak) {
  * "yesterday was fine," continuing their existing count by +1 rather than restarting at 1; see the
  * product decision recorded in docs/progression-gamification-roadmap.md's Phase 4 section.
  *
- * Registered-only: silently no-ops for a uid with no `registeredUsers` doc (guests). Idempotent
+ * Members and (since 2026-11-14) guests alike -- writes to auth/profile-ref.js#profileDocRef(uid);
+ * silently no-ops if that profile doc doesn't exist. Idempotent
  * per day -- completing a second, different game's Daily Challenge the same day doesn't advance
  * the streak again.
  */
 export async function advanceStreakForDailyCompletion(uid) {
     const today = getTodayDateString();
-    const ref = doc(db, 'registeredUsers', uid);
+    const ref = profileDocRef(uid);
 
     await runTransaction(db, async (tx) => {
         const snap = await tx.get(ref);

@@ -26,6 +26,15 @@
     <div class="content">
         <div class="section">
             <div class="section-title">Your Profile</div>
+            <!-- Guests only (profile.js): their progress lives on this browser for 30 days after
+                 their last visit; signing up keeps everything (same account). -->
+            <div class="profile-save-banner" id="profile-save-banner" hidden>
+                <div>
+                    <div class="profile-save-title">Your progress isn't saved yet</div>
+                    <div class="profile-save-text">As a guest, your points, rank, streak and badges are kept on this browser for 30 days after your last visit. Save them for good to play on any device and to win weekly and monthly championships.</div>
+                </div>
+                <a class="btn primary" href="/?save=1">Save my progress</a>
+            </div>
             <div class="card profile-card">
                 <button class="edit-profile-icon-btn" id="edit-profile-btn" type="button" title="Edit Profile" aria-label="Edit Profile">✏️</button>
 

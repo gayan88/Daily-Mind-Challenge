@@ -27,6 +27,7 @@ in.
 | [quilt-development-plan.md](quilt-development-plan.md) | Plan and split backlogs (Claude / owner) for Quilt, the 5th game |
 | [quilt-release-notes.md](quilt-release-notes.md) | Quilt release notes, test results, deploy and rollback steps |
 | [pounce-development-plan.md](pounce-development-plan.md) | Plan, brand and decisions for Pounce, the 6th game (a Star Battle-style cat puzzle) |
+| [guest-play.md](guest-play.md) | Instant guest play, guest progression, saving progress (guest → member) and Admin's guest clean-up (2026-11-14) |
 | [pounce-backlog.md](pounce-backlog.md) | Pounce tickets (Claude + owner) with per-sprint notes and test results |
 | [pounce-release-notes.md](pounce-release-notes.md) | Pounce release notes, test results, deploy order and rollback steps |
 | [trail-backlog.md](trail-backlog.md) | Trail (proposed 7th game, path-drawing puzzle): what it is, decisions to confirm, and the full ticket backlog |

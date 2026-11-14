@@ -5,26 +5,39 @@ import { checkPlayedTodayAll, getUserLifetimeStats } from '../utils/points.js';
 import { getConfig } from '../utils/config.js';
 import { escapeHtml, getQueryParam, getTodayDateString } from '../utils/helpers.js';
 import { calculateOverallProgress, XP_PER_LEVEL } from '../progression/xp-service.js';
-import { calculateRankProgress, GUEST_RANK_IMAGE } from '../progression/rank-service.js';
+import { calculateRankProgress } from '../progression/rank-service.js';
 import { showPlayerProfileModal } from '../leaderboard/player-profile-modal.js';
 import { syncDailyMissions, DAILY_MISSIONS } from '../progression/mission-service.js';
 import { getPlayerAchievements } from '../progression/achievement-engine.js';
 import {
-    signInAsGuest,
     signUpWithUsername,
+    linkGuestToPassword,
     loginWithUsername,
     requestPasswordReset,
     friendlyAuthErrorMessage,
 } from '../auth/auth.js';
 import {
-    createGuestProfile,
     createRegisteredProfile,
+    convertGuestToMember,
+    rememberPendingConversion,
+    getGuestProgressSummary,
     isUsernameTaken,
     loadSessionProfile,
     BannedError,
 } from '../auth/user-profile.js';
 import { containsBlockedWord } from '../utils/profanity.js';
-import { trackCompleteRegistration, trackGuestStarted } from '../utils/meta-pixel.js';
+import { trackCompleteRegistration } from '../utils/meta-pixel.js';
+import { startGuestSession } from '../utils/guest-start.js';
+import { looksLikeGuestName, usernameSuggestionFor } from '../utils/guest-names.js';
+
+// The resolved session (or null), set in init() -- the sign-in box behaves differently for a
+// signed-in guest: Sign Up becomes "save my progress" (same account, nothing lost), and Log In
+// first warns that guest progress can't be merged into a different, existing account.
+let activeSession = null;
+
+function isGuestSession() {
+    return activeSession?.profile.kind === 'guest';
+}
 
 /* ---------- Sign-in modal ---------- */
 
@@ -33,6 +46,26 @@ let pendingRedirect = null;
 function openAuthModal(redirectTarget) {
     pendingRedirect = redirectTarget || null;
     document.getElementById('auth-modal').hidden = false;
+}
+
+/** A signed-in guest choosing "Log in to an account" from the header menu: Log In tab, no Guest
+ * tab. The login handler warns first if the guest has progress that would be left behind. */
+function openGuestLoginModal() {
+    document.getElementById('tab-guest').hidden = true;
+    document.getElementById('tab-login').click();
+    openAuthModal('/');
+}
+
+/** "Save your progress" mode, for a signed-in guest (header menu / profile / nudge link to
+ * `/?save=1`): opens straight on Sign Up with an intro, no Guest tab, and a suggested username. */
+function openSaveProgressModal() {
+    document.getElementById('auth-save-intro').hidden = false;
+    document.getElementById('tab-guest').hidden = true;
+    document.getElementById('tab-signup').click();
+    const usernameInput = document.getElementById('signup-username');
+    if (!usernameInput.value) usernameInput.value = usernameSuggestionFor(activeSession.profile.displayName);
+    document.getElementById('signup-submit').textContent = 'Save My Progress';
+    openAuthModal('/profile');
 }
 
 function closeAuthModal() {
@@ -108,13 +141,8 @@ function wireAuthForms() {
     }
 
     onFormSubmit('guest-form', async () => {
-        const name = document.getElementById('guest-name').value.trim();
-        if (!name) throw new Error('Please enter a display name.');
-        if (await containsBlockedWord(name)) throw new Error('That display name isn\'t allowed. Please choose another.');
-
-        const user = await signInAsGuest();
-        await createGuestProfile(user.uid, name);
-        trackGuestStarted();
+        if (activeSession) { goToApp(); return; } // already playing (as a guest or member)
+        await startGuestSession();
         goToApp();
     });
 
@@ -122,6 +150,20 @@ function wireAuthForms() {
         const username = document.getElementById('login-username').value.trim();
         const password = document.getElementById('login-password').value;
         if (!username || !password) throw new Error('Please enter your username and password.');
+
+        // A guest logging in to a member account: the guest's progress can't be merged into it, so
+        // say so (only when there's something to lose) and let them choose.
+        if (isGuestSession()) {
+            const summary = await getGuestProgressSummary(activeSession.uid);
+            if (summary.scoreCount > 0 || summary.xp > 0) {
+                const ok = window.confirm(`You're playing as ${summary.displayName} with ${summary.points.toLocaleString()} points and ${summary.xp.toLocaleString()} XP. `
+                    + 'That guest progress can\'t be moved into an existing account, and it will be left behind. '
+                    + 'To keep it instead, use Sign Up to save this guest as a new account.\n\nLog in anyway?');
+                if (!ok) return;
+            }
+            // No sign-out first: logging in replaces the guest session only if it succeeds, so a
+            // mistyped password leaves the guest still signed in.
+        }
 
         const user = await loginWithUsername(username, password);
         await loadSessionProfile(user); // throws BannedError and signs out if banned
@@ -150,9 +192,24 @@ function wireAuthForms() {
         if (!/^[a-zA-Z0-9_]{3,24}$/.test(username)) throw new Error('Username must be 3-24 characters: letters, numbers, underscores.');
         if (!PASSWORD_RULE.test(password)) throw new Error('Password needs at least 8 characters, 1 uppercase letter, and 1 number.');
         if (await containsBlockedWord(displayName)) throw new Error('That display name isn\'t allowed. Please choose another.');
+        if (looksLikeGuestName(displayName)) throw new Error('That display name looks like a guest name. Please choose another.');
 
         const usernameLower = username.toLowerCase();
-        if (await isUsernameTaken(usernameLower)) throw new Error('That username is already taken.');
+        if (await isUsernameTaken(usernameLower)) {
+            throw new Error('That username is already taken. If it\'s yours, use the Log In tab instead.');
+        }
+
+        if (isGuestSession()) {
+            // Save the guest as a member: same login, same uid, so every point, badge, streak and
+            // score carries over (auth.js#linkGuestToPassword + user-profile.js#convertGuestToMember).
+            const authEmail = email || null;
+            rememberPendingConversion({ usernameLower, displayName, email: authEmail, authEmail: email || `${usernameLower}@dmc.local` });
+            const linked = await linkGuestToPassword(username, password, email);
+            await convertGuestToMember(linked.user.uid, { usernameLower, displayName, email: authEmail, authEmail: linked.authEmail });
+            trackCompleteRegistration();
+            goToApp();
+            return;
+        }
 
         const { user, authEmail } = await signUpWithUsername(username, password, email);
         await createRegisteredProfile(user.uid, { usernameLower, displayName, email: email || null, authEmail });
@@ -196,7 +253,7 @@ function renderStatusCardLoggedOut() {
     const card = document.getElementById('status-card');
     card.innerHTML = `
         <div class="status-welcome">Welcome to Daily Mind Challenge!</div>
-        <div class="status-row"><span class="status-icon" data-icon="STAR"></span>Log in or continue as a guest to play and start earning points.</div>
+        <div class="status-row"><span class="status-icon" data-icon="STAR"></span>Pick any game below and start playing. No sign-up needed.</div>
     `;
     applyIcons(card);
 }
@@ -207,37 +264,32 @@ function renderStatusCard(profile, todayRank, todayPoints, bonusApplied, totalPo
     const bonusRow = bonusApplied
         ? `<div class="status-row"><span class="status-icon" data-icon="CHECK"></span>You visited today! <strong>+login points</strong></div>`
         : profile.kind === 'guest'
-            ? `<div class="status-row"><span class="status-icon" data-icon="CHECK"></span>Welcome, guest! Sign up to earn daily login points.</div>`
+            ? `<div class="status-row status-row-save"><span class="status-icon" data-icon="LOCK"></span><span>Your progress is saved on this browser only, for 30 days after your last visit. <a href="/?save=1">Save it for good</a> to keep your rank and streak and to win championships.</span></div>`
             : '';
 
     const highlight = highlightForTodayRank(todayRank);
 
     // Same avatar/rank-label treatment as the leaderboard row/player-profile popup -- sub-rank
-    // badge + "{Rank} {Numeral}" for a registered player, the fixed Guest badge otherwise (guests
-    // don't earn XP/Rank, Section 4 of the progression spec).
-    const rankInfo = profile.kind === 'registered'
-        ? calculateRankProgress(profile.xp || 0)
-        : null;
-    const avatarImage = rankInfo ? rankInfo.subRankImage : GUEST_RANK_IMAGE;
-    const rankLabel = rankInfo ? rankInfo.label : 'Guest';
+    // badge + "{Rank} {Numeral}". Guests earn XP/Rank too since 2026-11-14, so this is the same for
+    // everyone.
+    const rankInfo = calculateRankProgress(profile.xp || 0);
+    const avatarImage = rankInfo.subRankImage;
+    const rankLabel = rankInfo.label;
 
-    // Same Level/XP card as the player-profile popup (leaderboard/player-profile-modal.js) --
-    // guests don't earn XP/Level either, so this is omitted entirely for them rather than showing
-    // a meaningless "Level 1 (0 XP)". +1 display shift, same convention as Game Level's own cards
-    // -- see xp-service.js's own doc comment on calculateOverallLevel().
-    const levelProgress = profile.kind === 'registered' ? calculateOverallProgress(profile.xp || 0) : null;
+    // Same Level/XP card as the player-profile popup (leaderboard/player-profile-modal.js). +1
+    // display shift, same convention as Game Level's own cards -- see xp-service.js's own doc
+    // comment on calculateOverallLevel().
+    const levelProgress = calculateOverallProgress(profile.xp || 0);
 
-    // Streak + Total XP, right under the rank label -- registered players only (Section 4). Total
-    // XP (not the full Level breakdown -- that's already shown in the card beside the header) so
-    // the compact identity block still surfaces the one number that's a running lifetime total.
-    const streakLabel = profile.kind === 'registered'
-        ? `
-            <div class="status-streak-label">
-                <span>${icon('FLAME')} ${profile.raw.currentStreak || 0} day streak</span>
-                <span>${icon('STAR')} ${levelProgress.xp.toLocaleString()} Total XP</span>
-            </div>
-        `
-        : '';
+    // Streak + Total XP, right under the rank label. Total XP (not the full Level breakdown --
+    // that's already shown in the card beside the header) so the compact identity block still
+    // surfaces the one number that's a running lifetime total.
+    const streakLabel = `
+        <div class="status-streak-label">
+            <span>${icon('FLAME')} ${profile.raw.currentStreak || 0} day streak</span>
+            <span>${icon('STAR')} ${levelProgress.xp.toLocaleString()} Total XP</span>
+        </div>
+    `;
 
     const levelCard = levelProgress ? `
         <div class="status-level-card">
@@ -282,17 +334,13 @@ function renderStatusCard(profile, todayRank, todayPoints, bonusApplied, totalPo
 }
 
 /** Compact "Daily Missions" / "Achievements" summary (Phase 8's "compact summary" scope decision
- * -- full detail stays on /profile, this is just a teaser). Registered players only; the whole
- * section stays hidden for guests. `missionResult` is whatever `syncDailyMissions()` returned in
+ * -- full detail stays on /profile, this is just a teaser). Members and guests alike (guests earn
+ * missions and achievements too since 2026-11-14). `missionResult` is whatever `syncDailyMissions()` returned in
  * renderLoggedInDashboard() below -- this function does no evaluation/awarding of its own, purely
  * display. `achievementsCount` is a plain count read (achievement-engine.js#getPlayerAchievements),
  * not a re-evaluation -- keeps this page's Firestore work light, per the same scope decision. */
 function renderWorkoutExtras(profile, missionResult, achievementsCount) {
     const section = document.getElementById('workout-extras-section');
-    if (profile.kind !== 'registered') {
-        section.hidden = true;
-        return;
-    }
     section.hidden = false;
 
     const doneCount = DAILY_MISSIONS.filter((m) => missionResult.completedMissionIds.has(m.id)).length;
@@ -346,12 +394,9 @@ function badgeHtml(row, uid) {
 /** Sub-rank avatars for just these 5 rows -- see leaderboard-data.js#getXpForUids()'s own doc
  * comment for why this stays scoped to what's actually rendered rather than every leaderboard row. */
 async function avatarsForRows(rows) {
-    const uids = [...new Set(rows.filter((r) => !r.isGuest).map((r) => r.uid))];
+    const uids = [...new Set(rows.map((r) => r.uid))];
     const xpByUid = uids.length > 0 ? await getXpForUids(uids) : new Map();
-    return new Map(rows.map((r) => [
-        r.uid,
-        r.isGuest ? GUEST_RANK_IMAGE : calculateRankProgress(xpByUid.get(r.uid) || 0).subRankImage,
-    ]));
+    return new Map(rows.map((r) => [r.uid, calculateRankProgress(xpByUid.get(r.uid) || 0).subRankImage]));
 }
 
 // Current top-5 preview rows, keyed by uid -- updated on every renderLeaderboardPreview() call so
@@ -426,11 +471,11 @@ async function renderLoggedInDashboard(uid, profile, bonusApplied) {
         // page is the actual "daily habit" destination (Section 24 of the progression spec), so
         // this is the more natural place for "did I finish today's workout" to actually resolve.
         // Safe to also run again on a later /profile visit -- syncDailyMissions() is idempotent.
-        isRegistered ? syncDailyMissions(uid) : Promise.resolve(null),
+        syncDailyMissions(uid),
         // Achievements are only *read* here (a plain count), not re-evaluated -- that heavier
         // context-assembly stays exclusive to profile.js, per Phase 8's "compact summary" scope
         // decision (keep the home page's Firestore work light).
-        isRegistered ? getPlayerAchievements(uid) : Promise.resolve([]),
+        getPlayerAchievements(uid),
     ]);
 
     const userRow = findUserInLeaderboard(leaderboardRows, uid);
@@ -480,6 +525,7 @@ async function init() {
     wireAuthForms();
 
     const session = await trySession();
+    activeSession = session;
 
     if (!session) {
         setLoggedOutHeaderState();
@@ -491,6 +537,8 @@ async function init() {
     }
 
     const { uid, profile, bonusApplied } = session;
+    if (profile.kind === 'guest' && getQueryParam('save')) openSaveProgressModal();
+    else if (profile.kind === 'guest' && getQueryParam('login')) openGuestLoginModal();
     await renderLoggedInDashboard(uid, profile, bonusApplied);
 }
 

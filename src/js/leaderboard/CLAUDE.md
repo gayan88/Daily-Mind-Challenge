@@ -1,5 +1,12 @@
 # src/js/leaderboard
 
+> **Since 2026-11-14 (guest play, `docs/guest-play.md`):** guests earn XP/Rank, so
+> `getXpForUids()` reads both `registeredUsers` and `guests`, every row (guest or member) shows its real
+> sub-rank avatar, and `player-profile-modal.js` shows the same popup for guests
+> (`getRegisteredUserSummary()` falls back to the guest doc). The "Guest" badge on rows stays.
+> `aggregateScores()` prefers a player's member-labelled scores, so a guest who signed up shows under
+> their member name.
+
 ## Files
 
 - **`leaderboard-data.js`** — `getOverallLeaderboard(period, limitCount)` (sums a period's `gameScores` per user across every game in `GAMES`) and `getGameLeaderboard(game, period, limitCount)` (single-game ranking for that period, `game` being `'wordle' | 'sudoku' | 'wordsearch'`). `period` is one of `'today' | 'week' | 'month' | 'year' | 'all'` — `'today'` and `'all'` are exact-date-equality and no-filter respectively, `'week'/'month'/'year'` are **rolling** windows (last 7/30/365 days including today, via `getDateDaysAgo()` in `src/js/utils/helpers.js`), not calendar-aligned periods — simpler and avoids timezone/calendar-boundary edge cases (these are unrelated to Championships' *calendar-aligned* days/weeks/months, see below). Both functions filter out banned users via a `getBannedUids()` query that's cached in-memory for the page's lifetime (so switching tabs on the leaderboard page doesn't re-fetch the banned list every time). Both are now thin wrappers around a shared `aggregateScores(snap, bannedUids)` helper. `findUserInLeaderboard(rows, uid)` is a plain array helper, no Firestore call. `getGameScoresForDateRange(game, startDate, endDate)` reuses that same `aggregateScores()` helper for an explicit `[startDate, endDate]` range instead of a named rolling period -- used by `progression/championship-service.js` to determine a *closed calendar* day/week/month's winner; unranked/unlimited, since its callers there just want the top entry. `getOverallScoresForDateRange(startDate, endDate)` is the same idea with no `gameType` filter at all -- the "Overall" counterpart, used only by `admin-page.js`'s marketing Top 10 viewer (see `admin/CLAUDE.md`) to pull a combined-games ranking for an arbitrary past day/week/month, not just the named rolling periods the two functions above support.

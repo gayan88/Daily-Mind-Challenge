@@ -1,4 +1,5 @@
 import { trySession, showLoggedOutHeader } from '../../app.js';
+import { renderPlayGate } from '../../utils/guest-start.js';
 import { icon } from '../../utils/icons.js';
 import { getTodayDateString, showToast, getQueryParam, escapeHtml, formatDuration } from '../../utils/helpers.js';
 import { getConfig } from '../../utils/config.js';
@@ -64,14 +65,7 @@ function renderAdminBlocked(mount) {
 /** Shown instead of the game when there's no session, so `/pounce` stays a real, crawlable page
  * (same reasoning as quilt-page.js#renderSignInPrompt). */
 function renderSignInPrompt(mount) {
-    const redirectTo = encodeURIComponent(window.location.pathname + window.location.search);
-    mount.innerHTML = `
-        <div class="empty-state">
-            Sign in or continue as a guest to play today's Pounce.
-            <br><br>
-            <a class="btn primary" href="/?redirect=${redirectTo}">Sign In to Play</a>
-        </div>
-    `;
+    renderPlayGate(mount, 'Pounce');
 }
 
 function renderNoPuzzlesSeeded(mount) {

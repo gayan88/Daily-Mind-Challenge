@@ -1,0 +1,108 @@
+# Guest play: instant play, guest progression, saving progress
+
+> Built 2026-11-14. **Why:** with six games and no players yet, the biggest barrier was the site
+> itself. Every game page showed "Sign In to Play", and a guest had to open a box and type a name
+> before trying a single puzzle. Guests also earned no Rank, XP, streak or badges, and signing up
+> created a *new* account, so a guest lost everything they had earned. This change removes the
+> barrier, gives guests the full ranking system, and makes "save your progress" the reason to sign up.
+
+## What players see
+
+| Moment | What happens |
+|---|---|
+| A new visitor opens a game | A **"Play now"** card (no form). One tap creates a guest and the puzzle starts. |
+| The account is created | Only on that tap, **never on page load**, so crawlers and one-glance visitors don't create empty accounts. |
+| Guest name | Automatic and unique: **adjective + animal + 3 digits**, e.g. "Clever Fox 482" (4 digits after repeated clashes). Guests can't rename themselves; choosing a name is a member perk. |
+| Guests earn | Points, **XP, Rank, Level, streak, achievements, missions**, Cat Café: everything members earn. |
+| Members only | Weekly/Monthly/Daily **championships** (titles and champion badges), **Challenge a Friend**, the daily login bonus, Settings. |
+| After finishing a Daily | A "Nice one, Clever Fox 482!" card: progress lives on this browser for 30 days after the last visit, so save it. At most once a day per browser. |
+| Profile / home | Real rank, level, streak, missions and badges, plus a "Your progress isn't saved yet" banner / line. |
+| Header menu (guest) | **Save my progress** and **Log in to an account**, instead of Settings. |
+| Save my progress | `/?save=1` opens Sign Up in "Save your progress" mode with a suggested username ("CleverFox482"). The **same account** becomes a member, so every point, badge, streak and score is kept. |
+| A guest logs in to an existing account | If the guest has progress, a warning first: it can't be merged into an existing account and is left behind. Cancel keeps the guest signed in. |
+| A member's browser | Game pages show **"Welcome back! Log In to Play"** first (with "Play as a guest" as the alternative), so returning members don't end up with stray guest accounts. |
+| Taken username | "That username is already taken. If it's yours, use the Log In tab instead." |
+| Display names | Members can't pick a name in the guest pattern (word word digits), so a member never looks like a guest. |
+
+## How it works
+
+- **Starting a guest:** `utils/guest-start.js`:
+  - `renderPlayGate()` is the game pages' no-session view;
+  - `startGuestSession()` does the anonymous sign-in plus the profile.
+- **Unique names:** `utils/guest-names.js` and `auth/user-profile.js#createGuestProfile()`.
+  - The guest doc and `guestNames/{nameKey}` (e.g. `clever-fox-482`) are written in one batch.
+  - The rules let a name be *created* once and never overwritten, so a clash fails the batch and the guest draws again (5 tries, then 4 digits).
+- **Where progression is saved:** `auth/profile-ref.js#profileDocRef(uid)`.
+  - `xp-service`, `streak-service` and `mission-service` write to `guests/{uid}` or `registeredUsers/{uid}`, depending on the session kind recorded by `loadSessionProfile()`.
+  - The rules bound guest changes exactly like member changes: XP +0..300 per write, streak +1 or reset to 1, perfect-day count +1.
+- **Achievements and missions:** the rules now allow any non-banned player, member or guest (`isPlayerNonBanned()`).
+- **Championships:** these were already members-only. `championship-service.js#topRegisteredPlayer` skips guests, so the best member is crowned.
+- **Saving a guest as a member** (same uid):
+  1. `auth.js#linkGuestToPassword()` attaches an email/password login to the anonymous user (`linkWithCredential`) and refreshes the token.
+  2. `user-profile.js#convertGuestToMember()` runs one batch:
+     - creates `registeredUsers/{uid}`, carrying `xp`, `currentStreak`, `lastStreakDate`, `lastPerfectDayDate`, `lastFlawlessDayDate` and `perfectDayCount` over;
+     - reserves the username;
+     - deletes `guests/{uid}` and its `guestNames` doc.
+  3. Past `gameScores` are relabelled with the member's display name and `isGuest: false`. The rule allowing this is `isIdentityRelabel`.
+  4. Achievements, missions and attempts are keyed by uid, so nothing else moves.
+  - **Interrupted save:** if the tab closes between steps 1 and 2, the details are kept in `localStorage` (`dmc_pending_conversion`), and the next page load finishes the save.
+- **Leaderboards:** `leaderboard-data.js`:
+  - looks up XP in both collections, so guests show their real rank badge;
+  - always prefers a player's member-labelled scores for their name and guest flag.
+- **Returning-member hint:** `localStorage` `dmc_member` is set whenever a member session loads, or on sign-up or conversion. It's per browser, holds no personal data, and only decides which button the game page shows first.
+
+## Security rules changed (`firebase/firestore.rules`)
+
+- **`guests/{uid}`:**
+  - **create:** anonymous only; fixed field list; XP and streak start at 0; `nameKey` must match the display name; its `guestNames` reservation must belong to this uid.
+  - **update:** progression fields with the bounded deltas above.
+  - **delete:** the guest themselves (conversion) or an admin (clean-up).
+- **`guestNames/{nameKey}`:** create-only reservation; deleted by its owner or an admin.
+- **`registeredUsers/{uid}` create (security fix):** before this change it checked nothing but the uid, so a new sign-up could create its own profile with `isAdmin: true` or any XP. Now:
+  - the login must be non-anonymous;
+  - `isAdmin` and `isBanned` must be false and login points 0;
+  - XP, streak and perfect-day count must equal the guest doc's values (0 for a brand-new member).
+- **`gameScores` update:** adds `isIdentityRelabel`. The owner, once a member, may change only `displayName` (to their current one) and `isGuest` (to false).
+- **`playerAchievements` / `playerMissions` create:** `isPlayerNonBanned()` instead of members-only.
+
+## Admin: Guest clean-up (manual)
+
+Admin → General → **Guest Clean-up** (`admin/guest-cleanup.js`):
+
+1. **Check** lists guests whose last visit (`lastLoginAt`, refreshed on every page load) is older than N days (default 30). It shows how many there are, their scores and records, and the oldest last-seen date. **It deletes nothing.**
+2. **Delete N guests** asks for confirmation, then removes each guest along with:
+   - their `gameScores`, achievements and missions;
+   - every game's attempt docs;
+   - their name reservation and their guest doc.
+
+   A progress line shows while it runs.
+
+- **Members are never touched.** Only `guests` docs are listed.
+- **Logins aren't deleted.** Guests' Firebase Auth logins can't be deleted from a browser (that needs a server). They hold no data and cost nothing.
+- **Returning guests:** a deleted guest who comes back quietly gets a fresh guest profile on the same login (`loadSessionProfile()`), with no error.
+- **Past leaderboards:** a deleted guest's scores leave past leaderboards too, so the boards only show real players.
+
+## Cost / performance
+
+- **Rank costs nothing to store:** it is derived from XP at display time.
+- **Extra writes:** guest progression adds roughly one small write per finished puzzle, one per achievement or mission, and one name reservation per guest. Cost follows players, not account type.
+- **No crawler accounts:** nothing is created until someone taps Play.
+
+## Testing
+
+`tools/guest-e2e-test.mjs` (emulators; setup as in `pounce-e2e-test.mjs`) covers 36 checks:
+
+- the Play now gate and unique names;
+- guest XP, streak and achievements, plus the rules that refuse:
+  - inflated XP;
+  - an anonymous member doc;
+  - overwriting a taken name;
+- the save card, and the profile banner and rank;
+- conversion: same uid, carried-over XP and streak, guest docs removed, achievement kept, scores relabelled, session kept after reload;
+- the account-creation fix (no self-admin, no free XP);
+- the log-in warning (cancel keeps the guest);
+- the returning-member gate;
+- Admin clean-up (Check changes nothing; Delete removes guest data; members untouched);
+- a cleaned-up guest coming back.
+
+`pounce-e2e-test.mjs`, `pounce-e2e-modes-test.mjs` and `site-smoke-test.mjs` were updated to the one-tap flow.

@@ -4,10 +4,14 @@ import {
     serverTimestamp,
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 import { db } from '../api/firebase-init.js';
+import { profileDocRef, profileKindOf } from '../auth/profile-ref.js';
 import { getTodayDateString } from '../utils/helpers.js';
 
 /**
- * XP is global and registered-player-only (Sections 3.2/4 of the progression spec) -- a separate
+ * XP is global. Originally registered-player-only (Sections 3.2/4 of the progression spec); since
+ * 2026-11-14 guests earn it too -- every write goes to auth/profile-ref.js#profileDocRef(uid), i.e.
+ * `guests/{uid}` or `registeredUsers/{uid}`, and is carried over when a guest becomes a member.
+ * Still -- a separate
  * currency from game-specific Points, never merged with it (Section 32). Amounts here are simple
  * constants for Phase 3, same spirit as the hardcoded 5,000-points Game Level threshold in
  * progression-service.js -- easy to retune later without touching every call site.
@@ -69,7 +73,7 @@ export function calculateOverallProgress(xp) {
  */
 export async function awardDailyCompletionXp(uid, allDailyGamesCompletedToday, allDailyGamesWonToday) {
     const today = getTodayDateString();
-    const ref = doc(db, 'registeredUsers', uid);
+    const ref = profileDocRef(uid);
 
     await runTransaction(db, async (tx) => {
         const snap = await tx.get(ref);
@@ -90,6 +94,13 @@ export async function awardDailyCompletionXp(uid, allDailyGamesCompletedToday, a
 
         tx.update(ref, update);
     });
+
+    // Guests get a gentle "save your progress" card after finishing a Daily (once a day at most,
+    // see utils/save-progress-nudge.js). An event rather than a direct UI call keeps this data
+    // module free of DOM code.
+    if (profileKindOf(uid) === 'guest' && typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('dmc:guest-daily-complete'));
+    }
 }
 
 /**
@@ -102,7 +113,7 @@ export async function awardDailyCompletionXp(uid, allDailyGamesCompletedToday, a
  * exactly this check.
  */
 export async function awardShareXp(uid) {
-    const ref = doc(db, 'registeredUsers', uid);
+    const ref = profileDocRef(uid);
     await runTransaction(db, async (tx) => {
         const snap = await tx.get(ref);
         if (!snap.exists()) return;
@@ -126,7 +137,7 @@ export async function awardShareXp(uid) {
  * this is belt-and-suspenders, not a load-bearing check).
  */
 export async function awardAchievementXp(uid) {
-    const ref = doc(db, 'registeredUsers', uid);
+    const ref = profileDocRef(uid);
     await runTransaction(db, async (tx) => {
         const snap = await tx.get(ref);
         if (!snap.exists()) return;

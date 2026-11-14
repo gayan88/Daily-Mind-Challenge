@@ -1,5 +1,15 @@
 # src/js/pages
 
+> **Since 2026-11-14 (guest play, `docs/guest-play.md`):** wherever the entries below say a section
+> is "for registered players" (status-card rank/level/streak, Daily Missions + Achievements teaser,
+> profile hero/rank card/stats/Your Games/missions/achievements), it now shows for **guests too**,
+> with real values from their `guests` doc. Guests also get a "save your progress" line (home) /
+> banner (profile) linking to `/?save=1`. `home.js` adds: one-tap "Play as Guest" (no name field),
+> `/?save=1` (Sign Up in "Save your progress" mode: the same account becomes a member, via
+> `auth.js#linkGuestToPassword` + `user-profile.js#convertGuestToMember`), `/?login=1` (Log In for a
+> signed-in guest, warning first if their progress would be left behind), and guest-pattern display
+> names are refused (also in `profile.js`/`settings.js`). Championship claiming stays members-only.
+
 Page-glue scripts for pages that don't have a dedicated feature folder of their own (compare `src/js/games/*`, `src/js/leaderboard/`, `src/js/admin/`, which keep their page script colocated with their feature's other files instead of living here).
 
 ## Files

@@ -2008,3 +2008,216 @@
     text-align: center;
     padding: 8px 4px;
 }
+
+/* ---------- Guest play + "save your progress" (2026-11-14) ---------- */
+
+/* Game pages with no session: one-tap "Play now" (utils/guest-start.js#renderPlayGate). */
+.play-gate {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    padding: 28px 20px;
+    text-align: center;
+    max-width: 460px;
+    margin: 0 auto;
+}
+
+.play-gate-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--color-primary-dark);
+    margin-bottom: 8px;
+}
+
+.play-gate-text {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+    margin-bottom: 18px;
+}
+
+.play-gate-btn {
+    margin: 0 auto;
+    width: fit-content;
+    min-width: 180px;
+    font-size: 16px;
+    padding: 12px 24px;
+}
+
+.play-gate-alt {
+    margin-top: 14px;
+    font-size: 13px;
+    color: var(--color-text-muted);
+}
+
+.play-gate-alt a,
+.play-gate-link {
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+.play-gate-link {
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+/* After a guest finishes a Daily (utils/save-progress-nudge.js). Above modals on purpose. */
+.save-nudge {
+    position: fixed;
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    max-width: 420px;
+    margin: 0 auto;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-top: 4px solid var(--color-primary);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 10px 30px rgba(44, 44, 42, 0.25);
+    padding: 16px 18px;
+    z-index: 2000;
+}
+
+.save-nudge-close {
+    position: absolute;
+    top: 6px;
+    right: 10px;
+    background: none;
+    border: none;
+    font-size: 22px;
+    line-height: 1;
+    color: var(--color-text-muted);
+    cursor: pointer;
+}
+
+.save-nudge-title {
+    font-weight: 700;
+    color: var(--color-primary-dark);
+    margin-bottom: 6px;
+    padding-right: 20px;
+}
+
+.save-nudge-text {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+    margin-bottom: 12px;
+}
+
+.save-nudge-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.save-nudge-btn {
+    flex: 1;
+    text-align: center;
+}
+
+/* Sign-in box in "Save your progress" mode (home.js#openSaveProgressModal). */
+.auth-save-intro {
+    background: var(--color-primary-tint);
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+    margin: 4px 0 14px;
+}
+
+.auth-save-title {
+    font-weight: 700;
+    color: var(--color-primary-dark);
+    margin-bottom: 4px;
+}
+
+.auth-save-text {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+}
+
+/* Profile banner for guests (profile.html). */
+.profile-save-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    background: var(--color-primary-tint);
+    border: 1px solid var(--color-primary-light);
+    border-radius: var(--radius-lg);
+    padding: 14px 16px;
+    margin-bottom: 14px;
+}
+
+.profile-save-banner[hidden] {
+    display: none;
+}
+
+.profile-save-title {
+    font-weight: 700;
+    color: var(--color-primary-dark);
+    margin-bottom: 4px;
+}
+
+.profile-save-text {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+}
+
+.profile-save-banner .btn {
+    flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+    .profile-save-banner {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+    }
+}
+
+/* Home status card's guest line. */
+.status-row-save a {
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+/* Header menu item for guests. */
+.user-dropdown-item-save {
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+/* Admin → Guest clean-up. */
+.guest-cleanup-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 10px;
+    margin-top: 12px;
+    font-size: 14px;
+}
+
+.guest-cleanup-row input {
+    width: 5em;
+    padding: 8px 10px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+}
+
+.guest-cleanup-row .btn {
+    flex: 0 0 auto;
+    padding: 8px 18px;
+}
+
+.guest-cleanup-result {
+    margin: 12px 0;
+    font-size: 14px;
+    color: var(--color-text-secondary);
+}

@@ -115,6 +115,21 @@
                         <div id="mod-result"></div>
                     </div>
                 </div>
+
+                <div class="section">
+                    <div class="section-title">Guest Clean-up</div>
+                    <div class="card" id="guest-cleanup-card">
+                        <div class="form-hint">Removes guests who haven't visited for the chosen number of days, with all their scores, badges and records. Members are never touched. Check first: nothing is deleted until you press Delete and confirm.</div>
+                        <div class="guest-cleanup-row">
+                            <label for="guest-cleanup-days">Inactive for at least</label>
+                            <input type="number" id="guest-cleanup-days" min="1" value="30">
+                            <span>days</span>
+                            <button class="btn primary" id="guest-cleanup-check" type="button">Check</button>
+                        </div>
+                        <div id="guest-cleanup-result" class="guest-cleanup-result"></div>
+                        <button class="btn danger" id="guest-cleanup-delete" type="button" hidden>Delete</button>
+                    </div>
+                </div>
             </div>
         </div>
 

@@ -49,14 +49,15 @@ No code path can safely auto-grant admin access. To get your first admin:
 
 Three ways in:
 
-- **Guest** — display name only, no automatic sign-in (you must explicitly choose "Continue as Guest" from the sign-in modal, opened from the header's Login button or automatically when a page needs a session). Can play games and appear on the leaderboard, but can't earn daily login points, create Wordle challenges, or change their name, and has no settings page.
+- **Guest** — one tap, no form: "Play now" on any game page (or "Play as Guest" in the sign-in box) creates an anonymous account with an automatic, unique name ("Clever Fox 482"). Never created on page load. Since 2026-11-14 guests earn everything members do (points, XP, Rank, streak, achievements, missions) except championships, Challenge a Friend, the login bonus and Settings, and **"Save my progress"** turns the guest into a member *keeping everything* (same account). Inactive guests are removed by hand from Admin → Guest Clean-up. Full design: `docs/guest-play.md`.
 - There is no separate login page — the home page (`/`) doubles as the dashboard **and** the sign-in surface, showing the Guest/Log In/Sign Up options in a modal whenever there's no active session. Every other page redirects to `/?redirect=<page>` if it loads with no session; after signing in there, you're sent on to that original page.
 - **Log In / Sign Up** — username + password. Under the hood this uses Firebase Auth's email/password provider: your username maps to a synthetic login email (`username@dmc.local`) unless you supply a real email at signup, in which case that becomes the account's actual Auth email so Firebase's built-in password-reset email works. **There is no `passwordHash` field anywhere in Firestore** — Firebase Auth owns password storage/verification entirely (storing/comparing password hashes client-side isn't securely possible with no backend server — see `src/js/auth/CLAUDE.md`).
 - **Admin** — a flag on a registered account (`registeredUsers/{uid}.isAdmin`), not a separate login type. Admins can access `admin.html` but cannot play games (scores aren't tracked for admin accounts) and are excluded from leaderboards.
 
 ## Firestore schema
 
-- `guests/{uid}` — uid is the Firebase Anonymous Auth uid.
+- `guests/{uid}` — uid is the Firebase Anonymous Auth uid. `displayName` (automatic), `nameKey`, `lastLoginAt`, and the same progression fields as members (`xp`, `currentStreak`, `lastStreakDate`, `lastPerfectDayDate`, …).
+- `guestNames/{nameKey}` — `{ uid }`, the create-only reservation that keeps guest names unique.
 - `registeredUsers/{uid}` — uid is the Firebase Auth uid from email/password signup. Holds `username`, `displayName`, `email` (optional real email, separate from the Auth login email), `isAdmin`, `isBanned`, `bannedReason`, `bannedDate`, `loginPoints`, `lastLoginDate`, `currentStreak`.
 - `usernames/{usernameLower}` — public `{ uid, authEmail }` mapping, written once at signup, used to resolve a username to its Auth email at login time.
 - `gameScores/{uid}_{gameType}_{gameDate}` — one doc per game per day (deterministic ID gives "one attempt per day" for free via Firestore's create-vs-update rules, no extra query needed). `score` is a flat 6 on completion for Sudoku/Word Search; Wordle's three modes (see below) use richer per-mode formulas and repurpose `gameDate` as a generic deterministic key (tournament/challenge id) where the doc isn't tied to a calendar day — see `src/js/games/wordle/CLAUDE.md`.

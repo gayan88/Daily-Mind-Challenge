@@ -10,7 +10,7 @@ import { REGION_COLOURS } from '../src/js/games/pounce/pounce-engine.js';
 const out = process.argv[2] ?? '.';
 const site = `http://127.0.0.1:${process.argv[3] || 5002}`;
 const fsBase = 'http://127.0.0.1:8080/v1/projects/playdailymindchallenge/databases/(default)/documents';
-const NAME = `Modes${Date.now() % 100000}`;
+let NAME = ''; // the automatic guest name, read from the header after Play now
 const log = [];
 const check = (cond, msg) => { const l = `${cond ? 'PASS' : 'FAIL'} ${msg}`; log.push(l); console.log(l); };
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -75,12 +75,10 @@ const closeModal = async () => { await page.click('#pounce-summary-close'); awai
 await page.goto(`${site}/pounce?tab=classic`, { waitUntil: 'domcontentloaded' });
 await page.waitForSelector('#cookie-banner-decline', { visible: true, timeout: 15000 }).then(() => page.click('#cookie-banner-decline')).catch(() => {});
 await settle();
-await page.click('#game-mount a.btn');
-await page.waitForSelector('#guest-name', { visible: true, timeout: 30000 });
-await page.type('#guest-name', NAME);
-await page.click('#guest-submit');
+await page.click('#game-mount [data-play-gate-start]');
 await page.waitForSelector('.pounce-difficulty-btn', { timeout: 60000 });
-check(page.url().endsWith('/pounce?tab=classic'), 'sign-in returns to the Classic tab');
+check(page.url().endsWith('/pounce?tab=classic'), 'Play now keeps the Classic tab');
+NAME = await page.$eval('.user-name-text', (el) => el.textContent.trim());
 
 // ---- Classic: Easy, Purrfect -----------------------------------------------------------------
 check((await mountText()).includes('up to 20 pts'), 'classic picker: Easy shows "up to 20 pts" (8 + 8 + 4)');

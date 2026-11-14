@@ -28,19 +28,82 @@ service cloud.firestore {
                 && get(/databases/$(database)/documents/registeredUsers/$(request.auth.uid)).data.isBanned == false;
         }
 
+        // A player who can earn achievements/missions: a non-banned member, or (since 2026-11-14)
+        // a guest -- guests earn XP, Rank, Streaks, Achievements and Missions like members; only
+        // championships and Challenge a Friend stay members-only.
+        function isPlayerNonBanned() {
+            return isRegisteredNonBanned()
+                || (isSignedIn() && exists(/databases/$(database)/documents/guests/$(request.auth.uid)));
+        }
+
+        // The bounded progression deltas shared by members' and guests' self-service updates
+        // (see registeredUsers' isSelfServiceUpdate() below for the reasoning behind each bound).
+        function isValidProgressionChange() {
+            let xpDelta = request.resource.data.get('xp', 0) - resource.data.get('xp', 0);
+            let streakDelta = request.resource.data.get('currentStreak', 0) - resource.data.get('currentStreak', 0);
+            let perfectDayCountDelta = request.resource.data.get('perfectDayCount', 0) - resource.data.get('perfectDayCount', 0);
+            return xpDelta >= 0 && xpDelta <= 300
+                && (streakDelta == 0 || streakDelta == 1 || request.resource.data.get('currentStreak', 0) == 1)
+                && (perfectDayCountDelta == 0 || perfectDayCountDelta == 1);
+        }
+
+        // Guests (Firebase Anonymous Auth). Created on the first "Play now" tap with an automatic
+        // name ("Clever Fox 482") that must be reserved in guestNames in the same batch, so no two
+        // guests ever share a name. They earn progression on this doc (same bounded fields as a
+        // member), and it is deleted either by the guest's own conversion to a member (the batch
+        // in auth/user-profile.js#convertGuestToMember) or by Admin's guest clean-up.
         match /guests/{uid} {
             allow read: if true;
             allow create: if isSignedIn() && request.auth.uid == uid
-                && request.auth.token.firebase.sign_in_provider == 'anonymous';
+                && request.auth.token.firebase.sign_in_provider == 'anonymous'
+                && request.resource.data.keys().hasOnly(['displayName', 'nameKey', 'xp', 'currentStreak', 'lastStreakDate', 'lastPerfectDayDate', 'createdAt', 'lastLoginAt'])
+                && request.resource.data.get('xp', 0) == 0
+                && request.resource.data.get('currentStreak', 0) == 0
+                && request.resource.data.displayName is string
+                && request.resource.data.displayName.size() <= 24
+                && request.resource.data.nameKey == request.resource.data.displayName.lower().replace(' ', '-')
+                && getAfter(/databases/$(database)/documents/guestNames/$(request.resource.data.nameKey)).data.uid == request.auth.uid;
             allow update: if isSignedIn() && request.auth.uid == uid
-                && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastLoginAt']);
-            allow delete: if false;
+                && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastLoginAt', 'updatedAt', 'xp', 'currentStreak', 'lastStreakDate', 'lastPerfectDayDate', 'lastFlawlessDayDate', 'perfectDayCount'])
+                && isValidProgressionChange();
+            allow delete: if isSignedIn() && (request.auth.uid == uid || isAdmin());
+        }
+
+        // Guest name reservations, id = the name lowercased with hyphens ("clever-fox-482").
+        // Create-only: a second guest drawing the same name gets a denied write and draws again.
+        match /guestNames/{nameKey} {
+            allow read: if true;
+            allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid
+                && request.resource.data.keys().hasOnly(['uid', 'createdAt']);
+            allow update: if false;
+            allow delete: if isSignedIn() && (request.auth.uid == resource.data.uid || isAdmin());
         }
 
         match /registeredUsers/{uid} {
             allow read: if true;
-            allow create: if isSignedIn() && request.auth.uid == uid;
+            // A new member can't give themselves admin, a ban flag, login points, or progression
+            // they didn't earn (before 2026-11-14 this rule checked nothing but the uid). A guest
+            // converting to a member (same uid, now with an email/password login) carries over
+            // exactly the XP, streak and perfect-day count on their guest doc -- nothing more.
+            allow create: if isSignedIn() && request.auth.uid == uid
+                && request.auth.token.firebase.sign_in_provider != 'anonymous'
+                && isValidNewMember(uid);
             allow update: if isSignedIn() && ((request.auth.uid == uid && isSelfServiceUpdate()) || isAdmin());
+
+            function isValidNewMember(uid) {
+                let d = request.resource.data;
+                let guestPath = /databases/$(database)/documents/guests/$(uid);
+                let guest = exists(guestPath) ? get(guestPath).data : {};
+                return d.isAdmin == false
+                    && d.isBanned == false
+                    && d.get('loginPoints', 0) == 0
+                    && d.get('xp', 0) == guest.get('xp', 0)
+                    && d.get('currentStreak', 0) == guest.get('currentStreak', 0)
+                    && d.get('perfectDayCount', 0) == guest.get('perfectDayCount', 0)
+                    && d.username is string
+                    && d.displayName is string
+                    && d.displayName.size() <= 24;
+            }
             allow delete: if false;
 
             function isSelfServiceUpdate() {
@@ -105,8 +168,19 @@ service cloud.firestore {
             // calls. Every other game only ever triggers the +20 path. See
             // wordle-daily-data.js#markSharedToFacebook / #markSharedWithFriends /
             // utils/points.js#markSharedToFacebook.
-            allow update: if isAdmin() || isCommunityShareUpdate() || isFriendsShareUpdate();
+            allow update: if isAdmin() || isCommunityShareUpdate() || isFriendsShareUpdate() || isIdentityRelabel();
             allow delete: if isAdmin();
+
+            // A member relabelling their own past scores with their current display name and
+            // `isGuest: false` -- used right after a guest converts to a member, so leaderboards
+            // show the member rather than the old guest name. Nothing else about a score changes.
+            function isIdentityRelabel() {
+                return isSignedIn() && request.auth.uid == resource.data.userId
+                    && exists(/databases/$(database)/documents/registeredUsers/$(request.auth.uid))
+                    && request.resource.data.isGuest == false
+                    && request.resource.data.displayName == get(/databases/$(database)/documents/registeredUsers/$(request.auth.uid)).data.displayName
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'isGuest']);
+            }
 
             function isCommunityShareUpdate() {
                 return isSignedIn() && request.auth.uid == resource.data.userId
@@ -562,7 +636,7 @@ service cloud.firestore {
         // maxCreateScore()'s gameType list above.
         match /playerAchievements/{achievementDocId} {
             allow read: if true;
-            allow create: if isRegisteredNonBanned()
+            allow create: if isPlayerNonBanned()
                 && request.resource.data.uid == request.auth.uid
                 && achievementDocId == request.auth.uid + '_' + request.resource.data.achievementId
                 && request.resource.data.achievementId in [
@@ -700,7 +774,7 @@ service cloud.firestore {
         // coupling as maxCreateScore()'s gameType list.
         match /playerMissions/{missionDocId} {
             allow read: if true;
-            allow create: if isRegisteredNonBanned()
+            allow create: if isPlayerNonBanned()
                 && request.resource.data.uid == request.auth.uid
                 && missionDocId == request.auth.uid + '_' + request.resource.data.missionId + '_' + request.resource.data.periodKey
                 && request.resource.data.missionId in [

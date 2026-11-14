@@ -43,7 +43,7 @@ panel used to operate it, and the third-party integrations that affect user-visi
 | Tournament | A timed, multi-puzzle/word run with a completion bonus (all six games; Quilt's is called Patchwork Run, Pounce's Nine Lives Run) |
 | `gameScores` | The single Firestore collection holding every scored result, across every game/mode |
 | Points | A per-game, per-player currency earned by playing; drives the leaderboard and per-game Level |
-| XP | A separate, site-wide, registered-only currency; drives Overall Level and Rank |
+| XP | A separate, site-wide currency (members and, since 2026-11-14, guests); drives Overall Level and Rank |
 | SRS | This document |
 
 ### 1.4 References
@@ -93,7 +93,7 @@ without them, by design — there is no server-rendered fallback.
 
 | ID | Requirement |
 |---|---|
-| FR-1.1 | The system shall let a visitor start playing without registering, as a **Guest**, by choosing a display name. Guest identity persists in the browser via Firebase Anonymous Auth. |
+| FR-1.1 | The system shall let a visitor start playing without registering, as a **Guest**, with one tap ("Play now") and no form; the guest gets an automatic, unique name. The account is created only on that tap, never on page load. Guest identity persists in the browser via Firebase Anonymous Auth. Guests earn XP, Rank, streaks, achievements and missions; a guest can be saved as a member keeping everything (same account). See `docs/guest-play.md`. |
 | FR-1.2 | The system shall let a visitor register with a **username**, **display name**, and **password** (min. 8 characters, at least 1 uppercase letter and 1 number). An email address is optional, used only for password recovery. |
 | FR-1.3 | The system shall let a registered user log in with their username and password. |
 | FR-1.4 | The system shall let a registered user with a recovery email on file reset their password. A username with no real recovery email on file shall be told to contact support instead. |
@@ -301,8 +301,8 @@ Numbered 3.5b so existing requirement ids don't shift. Plan, brand and decisions
 **Actor:** Anonymous visitor
 **Preconditions:** None
 **Main flow:**
-1. Visitor lands on the home page and selects "Continue as Guest," entering a display name.
-2. Visitor opens a game page (e.g. `/connections`) and its Daily Challenge tab.
+1. Visitor opens a game page (e.g. `/connections`) and taps "Play now"; a guest with an automatic name is created.
+2. The game's Daily Challenge tab loads.
 3. System checks whether this guest has already scored today's Daily Challenge for this game; if not, mounts the puzzle.
 4. Guest plays to a win or a loss.
 5. On a win, system records the score, shows the results popup with the points breakdown, and offers share bonuses.

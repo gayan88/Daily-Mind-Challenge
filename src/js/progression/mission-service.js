@@ -8,6 +8,7 @@ import {
     serverTimestamp,
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 import { db } from '../api/firebase-init.js';
+import { profileDocRef } from '../auth/profile-ref.js';
 import { getTodayDateString } from '../utils/helpers.js';
 import { GAMES } from './game-registry.js';
 import { checkPlayedTodayAll } from '../utils/points.js';
@@ -156,8 +157,8 @@ function missionDocId(uid, missionId, periodKey) {
  * Evaluates today's Daily missions and awards XP for any newly-completed one the player hasn't
  * already claimed today, via one `playerMissions/{uid}_{missionId}_{today}` doc per mission per
  * day (create-only, so a reward can never be double-awarded even across multiple visits/tabs the
- * same day) plus an `xp` increment on the same transaction. Registered-only: callers must already
- * be scoped to registered players (this function does no `profile.kind` check itself, mirroring
+ * same day) plus an `xp` increment on the same transaction, on the player's own profile doc
+ * (auth/profile-ref.js#profileDocRef -- members and, since 2026-11-14, guests; no `profile.kind` check here, mirroring
  * achievement-engine.js's contract). Called from profile.js on every visit -- "silent" surfacing,
  * same decision as Phase 5's achievements.
  *
@@ -179,7 +180,7 @@ export async function syncDailyMissions(uid) {
 
     const results = await Promise.all(newlyCompleted.map(async (mission) => {
         const missionRef = doc(db, 'playerMissions', missionDocId(uid, mission.id, today));
-        const userRef = doc(db, 'registeredUsers', uid);
+        const userRef = profileDocRef(uid);
         try {
             await runTransaction(db, async (tx) => {
                 const userSnap = await tx.get(userRef);

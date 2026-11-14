@@ -35,10 +35,6 @@ import { getUserLifetimeStats } from '../utils/points.js';
 import { icon } from '../utils/icons.js';
 import { escapeHtml } from '../utils/helpers.js';
 
-// No MAIN_RANKS tier applies to a guest -- a fixed neutral color instead of defaulting to Novice's
-// green, which would visually claim a rank they haven't earned (same reasoning as GUEST_RANK_IMAGE
-// itself existing in the first place).
-const GUEST_WINDOW_COLOR = '#5B6472';
 
 const ACHIEVEMENT_CATEGORY_ICON = {
     game: 'TROPHY',
@@ -127,18 +123,6 @@ function ensureModal() {
     return modalEl;
 }
 
-function renderGuestContent(el) {
-    const dialog = el.querySelector('#player-profile-dialog');
-    const header = el.querySelector('#player-profile-header');
-    const body = el.querySelector('#player-profile-body');
-
-    dialog.style.background = GUEST_WINDOW_COLOR;
-    header.querySelector('.player-profile-avatar').src = GUEST_RANK_IMAGE;
-    header.querySelector('.player-profile-rank-label').textContent = 'Guest';
-    header.querySelector('.player-profile-rank-pill').hidden = true;
-    body.innerHTML = `<div class="player-profile-guest-note">Guests don't earn Rank, XP, or Achievements -- sign up to start!</div>`;
-}
-
 /** `row` is a leaderboard row as returned by leaderboard-data.js -- needs `uid`, `displayName`,
  * `isGuest` at minimum. */
 export async function showPlayerProfileModal(row) {
@@ -154,10 +138,8 @@ export async function showPlayerProfileModal(row) {
     el.hidden = false;
     header.querySelector('.player-profile-name').textContent = row.displayName;
 
-    if (row.isGuest) {
-        renderGuestContent(el);
-        return;
-    }
+    // Guests earn Rank/XP/streaks/achievements too since 2026-11-14 -- same popup for everyone
+    // (getRegisteredUserSummary() reads the guest doc when there's no member doc).
 
     dialog.style.background = 'var(--color-surface)';
     avatarEl.src = GUEST_RANK_IMAGE; // placeholder until real data resolves below

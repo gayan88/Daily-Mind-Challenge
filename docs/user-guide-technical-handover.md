@@ -17,9 +17,11 @@ Tournament mode. No download, no app install, and playable immediately as a gues
 
 ### Getting started
 1. Visit `dailymindchallenge.com`.
-2. Choose **Continue as Guest** (just a display name) or **Sign Up** (username, display name,
-   password, optional recovery email) from the home page.
-3. Pick a game tile and start playing.
+2. Pick a game tile and tap **Play now**. No sign-up: you get a guest name (e.g. "Clever Fox 482")
+   and start earning points, XP, a rank, a streak and badges straight away.
+3. Any time, choose **Save my progress** (header menu) to turn the guest into an account
+   (username, display name, password, optional recovery email). You keep everything you earned.
+   Guest progress is kept on that browser for 30 days after your last visit.
 
 ### Playing a Daily Challenge
 Every game offers one Daily Challenge per calendar day, identical for every player. Wordle and
@@ -71,8 +73,9 @@ page's Achievements section for the full list and your progress toward each unea
 
 ### Account management
 Settings (registered accounts only) lets you change your display name, password, and recovery
-email. Guests cannot rename themselves or recover a lost guest session — this is stated clearly in
-the logout confirmation for guest accounts.
+email. Guests get an automatic name and can't rename themselves; saving their progress (signing up)
+keeps everything and lets them choose a name. A guest session can't be recovered after logging out
+or clearing the browser, which the logout confirmation says clearly. Details: `docs/guest-play.md`.
 
 ### Getting help
 `support@dailymindchallenge.com`, or the site's Facebook Page/Group (linked from the footer and

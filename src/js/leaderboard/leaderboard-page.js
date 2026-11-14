@@ -129,12 +129,12 @@ async function init() {
     const avatarCache = new Map();
 
     async function ensureAvatars(rows) {
-        const missingUids = [...new Set(rows.filter((r) => !r.isGuest && !avatarCache.has(r.uid)).map((r) => r.uid))];
+        const missingUids = [...new Set(rows.filter((r) => !avatarCache.has(r.uid)).map((r) => r.uid))];
         if (missingUids.length > 0) {
             const xpByUid = await getXpForUids(missingUids);
             missingUids.forEach((u) => avatarCache.set(u, calculateRankProgress(xpByUid.get(u) || 0).subRankImage));
         }
-        rows.forEach((r) => { r.avatarImage = r.isGuest ? GUEST_RANK_IMAGE : avatarCache.get(r.uid); });
+        rows.forEach((r) => { r.avatarImage = avatarCache.get(r.uid) || GUEST_RANK_IMAGE; });
     }
 
     async function renderVisible() {

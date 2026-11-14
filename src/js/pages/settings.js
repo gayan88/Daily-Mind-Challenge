@@ -3,6 +3,7 @@ import { updateRegisteredProfile } from '../auth/user-profile.js';
 import { changePassword } from '../auth/auth.js';
 import { containsBlockedWord } from '../utils/profanity.js';
 import { showToast } from '../utils/helpers.js';
+import { looksLikeGuestName } from '../utils/guest-names.js';
 
 const PASSWORD_RULE = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
 
@@ -10,8 +11,8 @@ function blockGuestAccess() {
     document.getElementById('settings-content').innerHTML = `
         <div class="section">
             <div class="empty-state">
-                Guest accounts don't have a settings page. <a href="/">Back to home</a> --
-                or sign up for an account from the login page to unlock settings.
+                Guest accounts don't have a settings page.
+                <a href="/?save=1">Save your progress</a> (sign up, keeping everything you've earned) to unlock settings.
             </div>
         </div>
     `;
@@ -39,6 +40,10 @@ async function init() {
         }
         if (await containsBlockedWord(name)) {
             showToast('That display name isn\'t allowed. Please choose another.');
+            return;
+        }
+        if (looksLikeGuestName(name)) {
+            showToast('That display name looks like a guest name. Please choose another.');
             return;
         }
         await updateRegisteredProfile(uid, { displayName: name, email: email || null });

@@ -1,4 +1,5 @@
 import { initShell } from '../app.js';
+import { wireGuestCleanup } from './guest-cleanup.js';
 import { ensureConfigDefaults, updateConfig, CONFIG_DEFAULTS } from '../utils/config.js';
 import { AD_SLOTS, DEFAULT_ADS_CONFIG } from '../utils/ads.js';
 import { lookupUserByUsername, setUserBanned, setUserAdmin } from './moderation.js';
@@ -1827,6 +1828,7 @@ async function init() {
     await renderConfigForms('wordsearch-tournament-settings-form', ['wordsearchTournamentSettings']);
     await renderAdSlotForms();
     wireModeration();
+    wireGuestCleanup();
     wireDailyWordsAdd();
     wireDailyWordsImportExport();
     await renderDailyWordsTable();

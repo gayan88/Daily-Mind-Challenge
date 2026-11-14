@@ -23,8 +23,8 @@ page.on('console', async (m) => {
 
 await page.goto(`${site}/?redirect=%2Fleaderboard`, { waitUntil: 'domcontentloaded' });
 await page.waitForSelector('#cookie-banner-decline', { visible: true, timeout: 15000 }).then(() => page.$eval('#cookie-banner-decline', (el) => el.click())).catch(() => {});
-await page.waitForSelector('#guest-name', { visible: true, timeout: 60000 });
-await page.type('#guest-name', `Smoke${Date.now() % 100000}`);
+// One-tap guest (since 2026-11-14 there's no name to type; the guest gets an automatic name).
+await page.waitForSelector('#guest-submit', { visible: true, timeout: 60000 });
 await page.click('#guest-submit');
 await page.waitForFunction(() => location.pathname === '/leaderboard', { timeout: 60000 });
 

@@ -28,7 +28,7 @@ export async function getPlayerAchievements(uid) {
  * Called from profile.js only (Phase 5's "silent, shows up on next profile visit" surfacing
  * decision -- see docs/progression-gamification-roadmap.md) rather than from every game
  * completion, so this is the one place that assembles `context` and the one place that needs to
- * check profile.kind === 'registered' before calling (this function itself does no such check,
+ * decide who it runs for (members and, since 2026-11-14, guests) (this function itself does no such check,
  * since `context` is passed in already computed -- it has no registeredUsers read of its own).
  *
  * Idempotent and safe to call on every profile visit: `setDoc` on an ID that already exists is a

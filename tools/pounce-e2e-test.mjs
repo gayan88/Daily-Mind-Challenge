@@ -1,5 +1,5 @@
 // End-to-end Daily Pounce check against the local Firebase emulators, in the system Google Chrome:
-// signed-out page, guest sign-in, a Daily solve with one hiss + one tip, the summary popup, the
+// signed-out page, one-tap guest Play now, a Daily solve with one hiss + one tip, the summary popup, the
 // gameScores doc, the +20 share update (firestore.rules), the already-played view, leaderboard,
 // profile and the home tile.
 // Setup: `cd tools && npm i --no-save puppeteer-core@23.11.1` (as for pounce-browser-test.mjs) and
@@ -18,7 +18,7 @@ const site = `http://127.0.0.1:${process.argv[3] || 5002}`;
 const fsBase = 'http://127.0.0.1:8080/v1/projects/playdailymindchallenge/databases/(default)/documents';
 const log = [];
 const check = (cond, msg) => { const l = `${cond ? 'PASS' : 'FAIL'} ${msg}`; log.push(l); console.log(l); };
-const NAME = `Tester${Date.now() % 100000}`;
+let NAME = ''; // the automatic guest name, read from the header after Play now
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 // The local emulator answers slowly after the home page (~25 s, the same for live Quilt), so every
 // page waits for its real content rather than a fixed time.
@@ -41,21 +41,19 @@ page.on('dialog', (d) => d.dismiss());
 
 // 1. Signed out: crawlable page with the sign-in prompt, How to Play example and FAQ.
 await page.goto(`${site}/pounce`, { waitUntil: 'domcontentloaded' });
-await page.waitForFunction(() => document.querySelector('#game-mount')?.textContent.includes('Sign in'), { timeout: 15000 });
-check(await page.$eval('#game-mount', (el) => el.textContent.includes('Sign in or continue as a guest')), 'signed out: sign-in prompt shown');
+await page.waitForSelector('#game-mount .play-gate', { timeout: 30000 });
+check(await page.$eval('#game-mount', (el) => el.textContent.includes('Play now')), 'signed out: one-tap Play now shown');
 // Decline the cookie banner (it covers the board's bottom rows on a phone; accepting loads ad/analytics scripts that freeze headless Chrome on localhost).
 await page.waitForSelector('#cookie-banner-decline', { visible: true, timeout: 10000 }).then(() => page.click('#cookie-banner-decline')).catch(() => {});
 check(await page.$$eval('#htp-pounce-example .pn-cat', (els) => els.length) === 5, 'How to Play example board shows 5 sleeping cats');
 check(await page.$$eval('.faq-item', (els) => els.length) === 20, 'FAQ has 20 questions');
 await page.screenshot({ path: `${out}/e1-signed-out.png`, fullPage: true });
 
-// 2. Guest sign-in on the home page; the Pounce tile is there.
-await page.click('#game-mount a.btn');
-await page.waitForSelector('#guest-name', { visible: true, timeout: 15000 });
-await page.type('#guest-name', NAME);
-await page.click('#guest-submit');
-await page.waitForSelector('#pounce-round-mount .pn-cell', { timeout: 30000 });
-check(page.url() === `${site}/pounce`, 'sign-in redirects back to /pounce with the Daily loaded');
+// 2. Play now: an instant guest, straight into the Daily.
+await page.click('#game-mount [data-play-gate-start]');
+await page.waitForSelector('#pounce-round-mount .pn-cell', { timeout: 60000 });
+check(page.url() === `${site}/pounce`, 'Play now stays on /pounce with the Daily loaded');
+NAME = await page.$eval('.user-name-text', (el) => el.textContent.trim());
 // 3. Daily: one wrong cat, one tip, then solve.
 await page.waitForSelector('#pounce-round-mount .pn-cell', { timeout: 5000 }).catch(async () => {
     console.log('DAILY DID NOT LOAD. game-mount says:', await page.$eval('#game-mount', (el) => el.innerText));
@@ -163,7 +161,7 @@ await page.screenshot({ path: `${out}/e7-profile.png`, fullPage: true });
 // 8. Home tile marked done.
 await page.goto(`${site}/`, { waitUntil: 'domcontentloaded' });
 await page.waitForFunction(() => document.querySelector('#tile-pounce')?.classList.contains('completed'), { timeout: 60000 }).catch(() => {});
-check(!!(await page.$('#tile-pounce img[src="/assets/images/tile-pounce-wide.png"]')), 'home: Pounce tile with its logo');
+check(!!(await page.$('#tile-pounce img[src="/assets/images/home-tile-pounce.png"]')), 'home: Pounce tile with its logo');
 check(await page.$eval('#tile-pounce', (el) => el.classList.contains('completed')), 'home: Pounce tile marked done');
 await page.screenshot({ path: `${out}/e5-home.png`, fullPage: true });
 

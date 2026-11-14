@@ -10,7 +10,8 @@ import { ACHIEVEMENTS } from '../progression/achievement-registry.js';
 import { syncPlayerAchievements } from '../progression/achievement-engine.js';
 import { claimChampionshipAchievements, getChampionshipTallies } from '../progression/championship-service.js';
 import { DAILY_MISSIONS, syncDailyMissions } from '../progression/mission-service.js';
-import { calculateRankProgress, GUEST_RANK_IMAGE, MAIN_RANKS } from '../progression/rank-service.js';
+import { calculateRankProgress, MAIN_RANKS } from '../progression/rank-service.js';
+import { looksLikeGuestName } from '../utils/guest-names.js';
 import { getAdoptedCats } from '../games/pounce/pounce-cafe-data.js';
 import { catSvg } from '../games/pounce/pounce-cats.js';
 
@@ -43,34 +44,23 @@ const GAME_LABELS = {
     'pounce-tournament-bonus': 'Nine Lives Run Bonus',
 };
 
-/** Avatar (a Rank badge image -- see progression/rank-service.js), name, current-rank tagline
- * (replaces the old static "Play daily..." text), and streak. Rank tagline/streak are
- * registered-player-only concepts (see docs/progression-gamification-roadmap.md's ground rules),
- * so guests get the original static tagline back and no streak line at all, rather than a
- * placeholder "—". The avatar itself is shown for guests too, just as the fixed GUEST_RANK_IMAGE
- * rather than a real rank -- guests don't earn XP/Rank (Section 4 of the spec), so defaulting
- * them into "Novice" would misrepresent it as a real, if low, rank. */
+/** Avatar (a Rank badge image -- see progression/rank-service.js), name, current-rank tagline and
+ * streak. Originally member-only; since 2026-11-14 guests earn XP/Rank/Streak too, so this is the
+ * same for everyone (guests also get the "save your progress" banner, see init()). */
 function renderHero(profile) {
     const avatarEl = document.getElementById('profile-avatar');
     const taglineEl = document.getElementById('profile-hero-tagline');
 
-    if (profile.kind === 'registered') {
-        const progress = calculateRankProgress(profile.xp);
-        avatarEl.src = progress.subRankImage;
-        avatarEl.alt = `${progress.label} rank badge`;
-        avatarEl.title = progress.label;
-        taglineEl.textContent = progress.label;
-    } else {
-        avatarEl.src = GUEST_RANK_IMAGE;
-        avatarEl.alt = 'Guest';
-        avatarEl.title = 'Guest';
-        taglineEl.textContent = 'Play daily. Keep your streak alive!';
-    }
+    const progress = calculateRankProgress(profile.xp);
+    avatarEl.src = progress.subRankImage;
+    avatarEl.alt = `${progress.label} rank badge`;
+    avatarEl.title = progress.label;
+    taglineEl.textContent = progress.label;
 
     document.getElementById('profile-name-display').textContent = profile.displayName;
 
     const streakEl = document.getElementById('profile-streak');
-    if (profile.kind === 'registered') {
+    {
         const streak = profile.raw.currentStreak || 0;
         streakEl.innerHTML = `${icon('FLAME')} ${streak} day streak`;
         // Milestone (7/30/100/365 days) is a visual-only highlight for now -- Achievements
@@ -79,8 +69,6 @@ function renderHero(profile) {
         const tier = getStreakMilestoneTier(streak);
         if (tier) streakEl.classList.add(`profile-hero-streak-tier-${tier}`);
         streakEl.hidden = false;
-    } else {
-        streakEl.hidden = true;
     }
 }
 
@@ -589,7 +577,7 @@ async function init() {
     if (profile.kind === 'guest') {
         nameInput.disabled = true;
         saveBtn.disabled = true;
-        saveBtn.title = 'Guests cannot change their display name. Sign up for an account to do that.';
+        saveBtn.title = 'Guests get an automatic name. Save your progress (sign up) to choose your own.';
     } else {
         saveBtn.addEventListener('click', async () => {
             const name = nameInput.value.trim();
@@ -599,6 +587,10 @@ async function init() {
             }
             if (await containsBlockedWord(name)) {
                 showToast('That display name isn\'t allowed. Please choose another.');
+                return;
+            }
+            if (looksLikeGuestName(name)) {
+                showToast('That display name looks like a guest name. Please choose another.');
                 return;
             }
             await updateRegisteredProfile(uid, { displayName: name });
@@ -618,14 +610,19 @@ async function init() {
     const totalPoints = isRegistered ? profile.loginPoints + totalScore : totalScore;
     const gameProgress = getGameProgressByGame(byGameType);
 
+    // Guests: the "save your progress" banner. Everything below (missions, achievements, levels)
+    // now runs for guests too (2026-11-14); only championships stay members-only (a guest can't be
+    // crowned -- championship-service.js#topRegisteredPlayer -- so there's nothing to claim).
+    document.getElementById('profile-save-banner').hidden = isRegistered;
+
     let earnedCounts = new Map();
     let missionContext = null;
     let completedMissionIds = new Set();
     let achievementContext = null;
-    if (isRegistered) {
+    {
         // Claiming (Phase 6) happens before syncing (Phase 5) so a championship win claimed just
         // now shows up in the same render, not only on the next visit.
-        await claimChampionshipAchievements(uid);
+        if (isRegistered) await claimChampionshipAchievements(uid);
 
         const missionResult = await syncDailyMissions(uid);
         missionContext = missionResult.context;
@@ -659,12 +656,15 @@ async function init() {
     // Level/XP reflects any mission reward just awarded this visit rather than the value loaded
     // at session-start.
     renderHero(profile);
-    renderRankCard(profile, isRegistered);
-    renderRankPanel(profile, isRegistered);
-    renderStats(isRegistered, totalPoints, profile.xp || 0, gamesPlayedCount, achievementsEarnedCount);
-    renderGameProgress(gameProgress, isRegistered);
-    renderMissions(missionContext, completedMissionIds, isRegistered);
-    renderAchievements(earnedCounts, achievementContext, isRegistered);
+    // `true` = show full progression. These renderers still accept false (the old locked guest
+    // view), but since 2026-11-14 every player -- guest or member -- has real progression.
+    const hasProgression = true;
+    renderRankCard(profile, hasProgression);
+    renderRankPanel(profile, hasProgression);
+    renderStats(hasProgression, totalPoints, profile.xp || 0, gamesPlayedCount, achievementsEarnedCount);
+    renderGameProgress(gameProgress, hasProgression);
+    renderMissions(missionContext, completedMissionIds, hasProgression);
+    renderAchievements(earnedCounts, achievementContext, hasProgression);
     renderCafe(adoptedCats);
     renderHistory(history);
 }

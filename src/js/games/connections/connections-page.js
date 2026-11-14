@@ -1,4 +1,5 @@
 import { trySession, showLoggedOutHeader } from '../../app.js';
+import { renderPlayGate } from '../../utils/guest-start.js';
 import { icon } from '../../utils/icons.js';
 import { showToast, escapeHtml, getQueryParam, getTodayDateString } from '../../utils/helpers.js';
 import { checkPlayedToday, checkPlayedTodayAll } from '../../utils/points.js';
@@ -48,14 +49,7 @@ function renderAdminBlocked(mount) {
 
 /** Shown in place of the game when there's no session, so /connections stays a real, crawlable page. */
 function renderSignInPrompt(mount) {
-    const redirectTo = encodeURIComponent(window.location.pathname + window.location.search);
-    mount.innerHTML = `
-        <div class="empty-state">
-            Sign in or continue as a guest to play Connections.
-            <br><br>
-            <a class="btn primary" href="/?redirect=${redirectTo}">Sign In to Play</a>
-        </div>
-    `;
+    renderPlayGate(mount, 'Connections');
 }
 
 function renderLoadError(mount, err) {

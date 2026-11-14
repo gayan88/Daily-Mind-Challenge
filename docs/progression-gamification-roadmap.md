@@ -3,6 +3,12 @@
 > Note (2026-10-20): this roadmap is a historical build record. Games added later (Connections,
 > Quilt, Pounce) plug into everything here through `GAMES` in `game-registry.js`; their achievements, XP and
 > championships needed no changes beyond the rules allow-lists.
+>
+> **Change 2026-11-14: guests now get progression.** Everything below that says "registered-only"
+> (XP, Rank, Level, streak, achievements, missions) now applies to guests too; only championships,
+> Challenge a Friend and the login bonus stay members-only. Progression writes go to the player's own
+> profile doc (`auth/profile-ref.js#profileDocRef`), and a guest who signs up keeps all of it. See
+> `docs/guest-play.md`.
 
 Tracking doc for implementing `Daily-Mind-Challenge-Master-Progression-Gamification-Specification.md`.
 Update the Status column as work lands — this file is the running source of truth for "what phase are we on."

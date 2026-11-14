@@ -1,4 +1,5 @@
 import { trySession, showLoggedOutHeader } from '../../app.js';
+import { renderPlayGate } from '../../utils/guest-start.js';
 import { icon } from '../../utils/icons.js';
 import { showToast, escapeHtml, getQueryParam, getTodayDateString, shareUrl } from '../../utils/helpers.js';
 import { checkPlayedToday, checkPlayedTodayAll } from '../../utils/points.js';
@@ -70,14 +71,7 @@ function renderAdminBlocked(mount) {
  * block in wordle.html) rather than one that always bounces an anonymous visitor away before
  * anything renders, which made the page invisible to crawlers/an AdSense reviewer. */
 function renderSignInPrompt(mount) {
-    const redirectTo = encodeURIComponent(window.location.pathname + window.location.search);
-    mount.innerHTML = `
-        <div class="empty-state">
-            Sign in or continue as a guest to play today's Wordle.
-            <br><br>
-            <a class="btn primary" href="/?redirect=${redirectTo}">Sign In to Play</a>
-        </div>
-    `;
+    renderPlayGate(mount, 'Wordle');
 }
 
 function renderNoWordsSeeded(mount) {

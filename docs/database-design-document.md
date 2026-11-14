@@ -32,9 +32,19 @@ Every collection falls into one of five groups:
 ### `guests/{uid}`
 | Field | Type | Notes |
 |---|---|---|
-| `displayName` | string | Chosen at guest creation |
+| `displayName` | string | Automatic, unique ("Clever Fox 482", since 2026-11-14; older guests typed their own) |
+| `nameKey` | string | Id of its `guestNames` reservation ("clever-fox-482") |
 | `createdAt` | timestamp | Server timestamp |
-| `isBanned` | boolean | Admin-settable |
+| `lastLoginAt` | timestamp | Refreshed on every page load; Admin's Guest Clean-up uses it |
+| `xp`, `currentStreak`, `lastStreakDate`, `lastPerfectDayDate`, `lastFlawlessDayDate`, `perfectDayCount` | | Guest progression (since 2026-11-14), same meaning and rule bounds as on `registeredUsers`; copied onto the member doc when the guest saves their progress |
+
+### `guestNames/{nameKey}`
+| Field | Type | Notes |
+|---|---|---|
+| `uid` | string | The guest holding the name. Create-only (never overwritten), so names are unique; removed on conversion or clean-up |
+| `createdAt` | timestamp | |
+
+Design and rules: `docs/guest-play.md`.
 
 ### `registeredUsers/{uid}`
 | Field | Type | Notes |

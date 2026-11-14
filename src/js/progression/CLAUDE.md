@@ -1,5 +1,13 @@
 # src/js/progression
 
+> **Since 2026-11-14 (guest play, `docs/guest-play.md`):** XP, streaks, achievements and missions are
+> no longer registered-only. `xp-service`, `streak-service` and `mission-service` write to
+> `auth/profile-ref.js#profileDocRef(uid)` (the guest's or member's own doc), achievements/missions
+> are allowed for any non-banned player (`isPlayerNonBanned()` in the rules), and `xp-service`
+> fires `dmc:guest-daily-complete` after a guest's Daily (the "save your progress" card). Notes below
+> that say "registered-only" / "no-ops for guests" describe the earlier design. **Championships stay
+> members-only** (`computeWinner` still skips guests).
+
 Phases 1-7 of `docs/progression-gamification-roadmap.md` — the game-agnostic engine that turns a
 player's existing lifetime `gameScores` Points into a per-game Level (read-only, no new Firestore
 writes), plus the global XP system (Phase 3), the Streak (Phase 4), the Achievement Engine

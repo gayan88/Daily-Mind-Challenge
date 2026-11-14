@@ -8,6 +8,7 @@ import { applyAdSlots } from './utils/ads.js';
 import { initCookieConsentBanner } from './utils/cookie-consent.js';
 import { showToast, getTodayDateString, shareUrl } from './utils/helpers.js';
 import { XP_AMOUNTS } from './progression/xp-service.js';
+import { initSaveProgressNudge } from './utils/save-progress-nudge.js';
 
 async function injectPartial(placeholderId, path) {
     const el = document.getElementById(placeholderId);
@@ -32,7 +33,7 @@ function wireLogout(profile) {
     if (!btn) return;
     btn.addEventListener('click', async () => {
         const message = profile.kind === 'guest'
-            ? 'Logging out will end this guest session. Without this browser\'s saved login, your points and progress on this guest identity cannot be recovered. Continue?'
+            ? 'Logging out ends this guest session, and your guest points, rank, streak and badges cannot be recovered afterwards. To keep them, choose "Save my progress" in this menu first.\n\nLog out anyway?'
             : 'Log out of your account?';
         if (!window.confirm(message)) return;
         await signOutSession();
@@ -104,6 +105,12 @@ function updateHeader(profile) {
     document.querySelectorAll('.user-guest-badge').forEach((el) => {
         el.hidden = profile.kind !== 'guest';
     });
+    // Guests: "Save my progress" (sign up keeping everything) instead of Settings (which only has
+    // member things -- password, email).
+    const isGuest = profile.kind === 'guest';
+    document.getElementById('save-progress-link')?.toggleAttribute('hidden', !isGuest);
+    document.getElementById('guest-login-link')?.toggleAttribute('hidden', !isGuest);
+    document.getElementById('settings-menu-link')?.toggleAttribute('hidden', isGuest);
     const adminLink = document.getElementById('admin-nav-link');
     if (adminLink) {
         adminLink.hidden = !profile.isAdmin;
@@ -183,6 +190,7 @@ async function resolveSession(user) {
 
     updateHeader(profile);
     wireLogout(profile);
+    if (profile.kind === 'guest') initSaveProgressNudge(profile);
 
     if (bonusApplied) {
         showToast('+10 points for visiting today!');
