@@ -17,8 +17,9 @@ Tournament mode. No download, no app install, and playable immediately as a gues
 
 ### Getting started
 1. Visit `dailymindchallenge.com`.
-2. Pick a game tile and tap **Play now**. No sign-up: you get a guest name (e.g. "Clever Fox 482")
-   and start earning points, XP, a rank, a streak and badges straight away.
+2. Pick a game tile. The puzzle starts straight away, with no sign-up: you get a guest name (e.g.
+   "Clever Fox 482") and earn points, XP, a rank, a streak and badges. Already have an account? Use
+   the "Log in" link in the bar above the game.
 3. Any time, choose **Save my progress** (header menu) to turn the guest into an account
    (username, display name, password, optional recovery email). You keep everything you earned.
    Guest progress is kept on that browser for 30 days after your last visit.

@@ -1,4 +1,4 @@
-import { trySession, showLoggedOutHeader } from '../../app.js';
+import { trySessionOrGuest, showLoggedOutHeader } from '../../app.js';
 import { renderPlayGate } from '../../utils/guest-start.js';
 import { icon } from '../../utils/icons.js';
 import { getTodayDateString, showToast, getQueryParam, escapeHtml, formatDuration } from '../../utils/helpers.js';
@@ -528,7 +528,7 @@ function renderHowToPlayExample() {
 
 async function init() {
     renderHowToPlayExample();
-    const session = await trySession();
+    const session = await trySessionOrGuest();
     const mount = document.getElementById('game-mount');
     if (!session) {
         showLoggedOutHeader();

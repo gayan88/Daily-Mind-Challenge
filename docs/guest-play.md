@@ -5,13 +5,15 @@
 > before trying a single puzzle. Guests also earned no Rank, XP, streak or badges, and signing up
 > created a *new* account, so a guest lost everything they had earned. This change removes the
 > barrier, gives guests the full ranking system, and makes "save your progress" the reason to sign up.
+> 2026-11-15: guests are now created **automatically** on game pages (no tap), with bot detection and
+> an "Already have an account? Log in" bar for members on a new device.
 
 ## What players see
 
 | Moment | What happens |
 |---|---|
-| A new visitor opens a game | A **"Play now"** card (no form). One tap creates a guest and the puzzle starts. |
-| The account is created | Only on that tap, **never on page load**, so crawlers and one-glance visitors don't create empty accounts. |
+| A new visitor opens a game | **Since 2026-11-15: a guest is created automatically and the puzzle loads straight away**, with no tap. A slim bar above the game says *"You're playing as Clever Fox 482. Already have an account? Log in"* until it's dismissed, they log in, or they finish a Daily. |
+| When it is *not* automatic | **Home page** (browsing needs no account), **search-engine bots / automated browsers** (they see the **"Play now"** card, so the page stays crawlable), a **browser a member has used** ("Welcome back, Log in" first), and right after a **guest logged out on purpose** ("Play now" instead, so logging out works). |
 | Guest name | Automatic and unique: **adjective + animal + 3 digits**, e.g. "Clever Fox 482" (4 digits after repeated clashes). Guests can't rename themselves; choosing a name is a member perk. |
 | Guests earn | Points, **XP, Rank, Level, streak, achievements, missions**, Cat Café: everything members earn. |
 | Members only | Weekly/Monthly/Daily **championships** (titles and champion badges), **Challenge a Friend**, the daily login bonus, Settings. |
@@ -26,9 +28,13 @@
 
 ## How it works
 
-- **Starting a guest:** `utils/guest-start.js`:
-  - `renderPlayGate()` is the game pages' no-session view;
+- **Starting a guest:** `app.js#trySessionOrGuest()` (all six game pages) and `utils/guest-start.js`:
+  - `trySessionOrGuest()` resolves the session, or creates a guest automatically when `shouldAutoStartGuest()` allows it;
+  - `shouldAutoStartGuest()` = not a bot (`isLikelyBot()`: `navigator.webdriver` or a crawler/headless/link-preview user agent), no member flag on this browser, and no "guest logged out" flag (`dmc_no_auto_guest`, set by app.js on a guest's logout, cleared when a guest starts again);
+  - `renderAutoGuestBar()` shows the "Already have an account?" bar while `dmc_new_auto_guest` is set;
+  - `renderPlayGate()` is the game pages' no-session view (bots, members' browsers, after logout);
   - `startGuestSession()` does the anonymous sign-in plus the profile.
+- **Slow first read:** `app.js` retries the profile read twice when Firestore says it can't reach the server yet ("client is offline"), so a slow phone connection no longer bounces a signed-in player to the home page.
 - **Unique names:** `utils/guest-names.js` and `auth/user-profile.js#createGuestProfile()`.
   - The guest doc and `guestNames/{nameKey}` (e.g. `clever-fox-482`) are written in one batch.
   - The rules let a name be *created* once and never overwritten, so a clash fails the batch and the guest draws again (5 tries, then 4 digits).
@@ -69,7 +75,7 @@
 
 Admin → General → **Guest Clean-up** (`admin/guest-cleanup.js`):
 
-1. **Check** lists guests whose last visit (`lastLoginAt`, refreshed on every page load) is older than N days (default 30). It shows how many there are, their scores and records, and the oldest last-seen date. **It deletes nothing.**
+1. **Check** lists guests whose last visit (`lastLoginAt`, refreshed on every page load) is older than N days (default 30). Tick **"Only guests who never finished a game"** to list just the empty guests that automatic guest creation leaves behind (safe to clear after about 7 days). It shows how many there are, their scores and records, and the oldest last-seen date. **It deletes nothing.**
 2. **Delete N guests** asks for confirmation, then removes each guest along with:
    - their `gameScores`, achievements and missions;
    - every game's attempt docs;
@@ -86,13 +92,15 @@ Admin → General → **Guest Clean-up** (`admin/guest-cleanup.js`):
 
 - **Rank costs nothing to store:** it is derived from XP at display time.
 - **Extra writes:** guest progression adds roughly one small write per finished puzzle, one per achievement or mission, and one name reservation per guest. Cost follows players, not account type.
-- **No crawler accounts:** nothing is created until someone taps Play.
+- **No crawler accounts:** bots are detected and get no account; real visitors get one only on a game page (about 2 small writes each), never on the home page. Empty guests can be cleared with the "never finished a game" filter.
 
 ## Testing
 
-`tools/guest-e2e-test.mjs` (emulators; setup as in `pounce-e2e-test.mjs`) covers 36 checks:
+`tools/guest-e2e-test.mjs` (emulators; setup as in `pounce-e2e-test.mjs`) covers 43 checks. Pages act as a real visitor (normal user agent, `navigator.webdriver` false); one page keeps headless Chrome's signals to act as a bot:
 
-- the Play now gate and unique names;
+- a bot gets the Play now gate and no account; a real visitor gets a guest automatically, the Daily and the "Already have an account?" bar; the home page and later game visits keep the same guest;
+- a guest who logs out gets Play now (not a new guest), and Play now still works;
+- unique names;
 - guest XP, streak and achievements, plus the rules that refuse:
   - inflated XP;
   - an anonymous member doc;
@@ -102,7 +110,7 @@ Admin → General → **Guest Clean-up** (`admin/guest-cleanup.js`):
 - the account-creation fix (no self-admin, no free XP);
 - the log-in warning (cancel keeps the guest);
 - the returning-member gate;
-- Admin clean-up (Check changes nothing; Delete removes guest data; members untouched);
+- Admin clean-up ("never finished a game" filter; Check changes nothing; Delete removes guest data; members untouched);
 - a cleaned-up guest coming back.
 
 `pounce-e2e-test.mjs`, `pounce-e2e-modes-test.mjs` and `site-smoke-test.mjs` were updated to the one-tap flow.

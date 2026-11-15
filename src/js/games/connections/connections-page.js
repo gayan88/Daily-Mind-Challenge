@@ -1,4 +1,4 @@
-import { trySession, showLoggedOutHeader } from '../../app.js';
+import { trySessionOrGuest, showLoggedOutHeader } from '../../app.js';
 import { renderPlayGate } from '../../utils/guest-start.js';
 import { icon } from '../../utils/icons.js';
 import { showToast, escapeHtml, getQueryParam, getTodayDateString } from '../../utils/helpers.js';
@@ -449,7 +449,7 @@ function wireModeTabs(uid, profile, initialMode) {
 }
 
 async function init() {
-    const session = await trySession();
+    const session = await trySessionOrGuest();
     const mount = document.getElementById('game-mount');
     if (!session) {
         showLoggedOutHeader();

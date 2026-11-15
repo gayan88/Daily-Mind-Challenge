@@ -2221,3 +2221,42 @@
     font-size: 14px;
     color: var(--color-text-secondary);
 }
+
+/* Game pages: guest created automatically (2026-11-15) -- "Already have an account? Log in". */
+.auto-guest-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    background: var(--color-primary-tint);
+    border: 1px solid var(--color-primary-light);
+    border-radius: var(--radius-md);
+    padding: 8px 12px;
+    margin-bottom: 12px;
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    line-height: 1.4;
+}
+
+.auto-guest-bar a {
+    color: var(--color-primary);
+    font-weight: 700;
+}
+
+.auto-guest-bar-close {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    font-size: 20px;
+    line-height: 1;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    padding: 0 2px;
+}
+
+.guest-cleanup-row input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    accent-color: var(--color-primary);
+}

@@ -53,7 +53,7 @@ function openAuthModal(redirectTarget) {
 function openGuestLoginModal() {
     document.getElementById('tab-guest').hidden = true;
     document.getElementById('tab-login').click();
-    openAuthModal('/');
+    openAuthModal(getQueryParam('redirect') || '/');
 }
 
 /** "Save your progress" mode, for a signed-in guest (header menu / profile / nudge link to

@@ -9,6 +9,13 @@ import { initCookieConsentBanner } from './utils/cookie-consent.js';
 import { showToast, getTodayDateString, shareUrl } from './utils/helpers.js';
 import { XP_AMOUNTS } from './progression/xp-service.js';
 import { initSaveProgressNudge } from './utils/save-progress-nudge.js';
+import {
+    shouldAutoStartGuest,
+    startGuestSession,
+    noteGuestLoggedOut,
+    isNewAutoGuest,
+    renderAutoGuestBar,
+} from './utils/guest-start.js';
 
 async function injectPartial(placeholderId, path) {
     const el = document.getElementById(placeholderId);
@@ -36,6 +43,8 @@ function wireLogout(profile) {
             ? 'Logging out ends this guest session, and your guest points, rank, streak and badges cannot be recovered afterwards. To keep them, choose "Save my progress" in this menu first.\n\nLog out anyway?'
             : 'Log out of your account?';
         if (!window.confirm(message)) return;
+        // A guest who logs out on purpose isn't silently given a new guest by the next game page.
+        if (profile.kind === 'guest') noteGuestLoggedOut();
         await signOutSession();
         window.location.href = '/';
     });
@@ -154,14 +163,31 @@ export async function loadHeaderFooter() {
     initCookieConsentBanner();
 }
 
+/** loadSessionProfile(), retried twice when Firestore reports it can't reach the server yet
+ * ("client is offline" / `unavailable` -- a slow or briefly dropped phone connection on the first
+ * read of a page load). Without this, one slow read bounced a signed-in player to the home page as if
+ * logged out. Banned / missing-profile errors are not retried. */
+async function loadProfileWithRetry(user) {
+    for (let attempt = 0; ; attempt++) {
+        try {
+            return await loadSessionProfile(user);
+        } catch (err) {
+            const transient = err?.code === 'unavailable' || /offline/i.test(err?.message || '');
+            if (!transient || attempt >= 2) throw err;
+            await new Promise((resolve) => setTimeout(resolve, 1500 * (attempt + 1)));
+        }
+    }
+}
+
 /** Resolves an existing session (loads its profile, applies the daily bonus, wires the header)
  * without redirecting. Returns null if there's no session, or if it's banned/broken (in which
  * case the caller has already been signed out by loadSessionProfile). */
 async function resolveSession(user) {
     let profile;
     try {
-        profile = await loadSessionProfile(user);
-    } catch {
+        profile = await loadProfileWithRetry(user);
+    } catch (err) {
+        console.warn('Could not load the session profile:', err?.message || err);
         return null;
     }
 
@@ -232,4 +258,38 @@ export async function trySession() {
     const user = await getSessionUser();
     if (!user) return null;
     return resolveSession(user);
+}
+
+function showAutoGuestBarIfNew(session) {
+    if (session?.profile.kind === 'guest' && isNewAutoGuest()) {
+        renderAutoGuestBar(document.getElementById('game-mount'), session.profile.displayName);
+    }
+}
+
+/**
+ * For the six game pages (2026-11-15): like trySession(), but a real visitor with no session gets
+ * a guest created automatically and the game loads straight away -- no button to press. Returns
+ * null (so the page shows its "Play now" / "Welcome back, Log in" gate instead) for crawlers and
+ * automated browsers, on a browser a member has used, after a guest logged out on purpose, or if
+ * starting the guest fails. A guest made this way sees an "Already have an account? Log in" bar
+ * above the game (utils/guest-start.js#renderAutoGuestBar) until they dismiss it or finish a Daily.
+ * Never used on the home page: browsing the home page doesn't need an account.
+ */
+export async function trySessionOrGuest() {
+    const session = await trySession();
+    if (session) {
+        showAutoGuestBarIfNew(session);
+        return session;
+    }
+    if (!shouldAutoStartGuest()) return null;
+    try {
+        await startGuestSession({ auto: true });
+    } catch {
+        return null;
+    }
+    const user = await getSessionUser();
+    if (!user) return null;
+    const created = await resolveSession(user);
+    showAutoGuestBarIfNew(created);
+    return created;
 }

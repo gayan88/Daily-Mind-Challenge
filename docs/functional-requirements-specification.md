@@ -93,7 +93,7 @@ without them, by design — there is no server-rendered fallback.
 
 | ID | Requirement |
 |---|---|
-| FR-1.1 | The system shall let a visitor start playing without registering, as a **Guest**, with one tap ("Play now") and no form; the guest gets an automatic, unique name. The account is created only on that tap, never on page load. Guest identity persists in the browser via Firebase Anonymous Auth. Guests earn XP, Rank, streaks, achievements and missions; a guest can be saved as a member keeping everything (same account). See `docs/guest-play.md`. |
+| FR-1.1 | The system shall let a visitor start playing without registering, as a **Guest**, with no form and no tap: opening a game page creates the guest automatically (automated browsers/crawlers, browsers a member has used, and guests who just logged out get a one-tap "Play now" / "Log in" instead; the home page never creates one); the guest gets an automatic, unique name. Guest identity persists in the browser via Firebase Anonymous Auth. Guests earn XP, Rank, streaks, achievements and missions; a guest can be saved as a member keeping everything (same account). See `docs/guest-play.md`. |
 | FR-1.2 | The system shall let a visitor register with a **username**, **display name**, and **password** (min. 8 characters, at least 1 uppercase letter and 1 number). An email address is optional, used only for password recovery. |
 | FR-1.3 | The system shall let a registered user log in with their username and password. |
 | FR-1.4 | The system shall let a registered user with a recovery email on file reset their password. A username with no real recovery email on file shall be told to contact support instead. |

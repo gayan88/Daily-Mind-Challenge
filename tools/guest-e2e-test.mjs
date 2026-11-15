@@ -35,8 +35,16 @@ const val = (f) => f && (f.integerValue !== undefined ? Number(f.integerValue) :
 const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: 'new', protocolTimeout: 240000 });
 const errors = [];
 
-async function newPage(context) {
+// Pages act as a real visitor by default (normal Chrome user agent, navigator.webdriver false), so
+// game pages create a guest automatically; `{ bot: true }` keeps headless Chrome's own signals, which
+// the site treats as a crawler (no automatic guest, the Play now gate instead).
+const HUMAN_UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1';
+async function newPage(context, { bot = false } = {}) {
     const page = await context.newPage();
+    if (!bot) {
+        await page.setUserAgent(HUMAN_UA);
+        await page.evaluateOnNewDocument(() => Object.defineProperty(navigator, 'webdriver', { get: () => false }));
+    }
     await page.setViewport({ width: 400, height: 860, deviceScaleFactor: 2 });
     page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
     page.on('console', (m) => { if (m.type() === 'error' && !/Could not reach Cloud Firestore backend|favicon|googlesyndication|adsbygoogle|google-analytics|googletagmanager|facebook|fbevents|ERR_BLOCKED|net::ERR|Missing or insufficient permissions|PERMISSION_DENIED/.test(m.text())) errors.push(m.text()); });
@@ -55,11 +63,10 @@ const currentUser = (page) => page.evaluate(async () => {
     return u ? { uid: u.uid, anonymous: u.isAnonymous } : null;
 });
 async function startGuestOnPounce(page) {
+    // A real visitor: the guest is created automatically and the Daily loads with no tap.
     await page.goto(`${site}/pounce`, { waitUntil: 'domcontentloaded' });
-    await page.waitForSelector('.play-gate [data-play-gate-start]', { timeout: 60000 });
-    await declineCookies(page);
-    await page.click('.play-gate [data-play-gate-start]');
     await page.waitForSelector('#pounce-round-mount .pn-cell', { timeout: 90000 });
+    await declineCookies(page);
     return currentUser(page);
 }
 // Runs the real app modules in the page (same module instances the page uses).
@@ -81,20 +88,31 @@ const tryWrite = (page, path, data, merge = false) => page.evaluate(async (path,
     try { await setDoc(doc(db, path), data, merge ? { merge: true } : {}); return 'ok'; } catch (e) { return e.code || e.message; }
 }, path, data, merge);
 
-// ---- 1. Signed out: the game page offers one-tap Play now ----------------------------------------
+// ---- 1. A crawler / automated browser: the Play now gate, no account ----------------------------------
+const ctxBot = await browser.createBrowserContext();
+const bot = await newPage(ctxBot, { bot: true });
+await bot.goto(`${site}/pounce`, { waitUntil: 'domcontentloaded' });
+await bot.waitForSelector('.play-gate', { timeout: 60000 });
+check(await bot.$eval('.play-gate', (el) => el.textContent.includes('Play now') && el.textContent.includes('No sign-up needed')), 'a bot sees the Play now gate (page stays crawlable)');
+check((await currentUser(bot)) === null, 'no account is created for a bot');
+await declineCookies(bot);
+await bot.screenshot({ path: `${out}/g1-play-gate.png` });
+await ctxBot.close();
+
+// ---- 2. A real visitor: a guest is created automatically, straight into the Daily ----------------------
 const ctxA = await browser.createBrowserContext();
 const a = await newPage(ctxA);
+const guestA = await startGuestOnPounce(a);
+check(guestA?.anonymous === true, 'a real visitor gets a guest automatically and the Daily board loads with no tap');
+await a.waitForSelector('#auto-guest-bar', { timeout: 10000 }).catch(() => {});
+check(await a.$eval('#auto-guest-bar', (el) => /Already have an account\? Log in/.test(el.textContent)).catch(() => false), 'the "Already have an account? Log in" bar shows above the game');
+await a.screenshot({ path: `${out}/g1b-auto-guest.png` });
+await a.goto(`${site}/`, { waitUntil: 'domcontentloaded' });
+await wait(4000);
+check(!!(await currentUser(a)) && (await a.$('#auth-modal[hidden]')) !== null, 'the home page keeps the same guest (no new account, no sign-in box)');
 await a.goto(`${site}/pounce`, { waitUntil: 'domcontentloaded' });
-await a.waitForSelector('.play-gate', { timeout: 60000 });
-check(await a.$eval('.play-gate', (el) => el.textContent.includes('Play now') && el.textContent.includes('No sign-up needed')), 'signed out: /pounce shows the Play now gate');
-await declineCookies(a);
-await a.screenshot({ path: `${out}/g1-play-gate.png` });
-
-// ---- 2. Play now: a guest with a unique automatic name, straight into the Daily -------------------
-await a.click('.play-gate [data-play-gate-start]');
 await a.waitForSelector('#pounce-round-mount .pn-cell', { timeout: 90000 });
-const guestA = await currentUser(a);
-check(guestA?.anonymous === true, 'Play now signs in an anonymous guest and loads the Daily board');
+check((await currentUser(a))?.uid === guestA.uid, 'returning to a game keeps the same guest');
 const gdoc = await fsGet(`guests/${guestA.uid}`);
 const guestNameA = val(gdoc?.fields?.displayName);
 check(GUEST_NAME.test(guestNameA || ''), `guest got an automatic name (${guestNameA})`);
@@ -195,6 +213,21 @@ await c.waitForSelector('.play-gate', { timeout: 60000 });
 check(await c.$eval('.play-gate', (el) => el.textContent.includes('Welcome back') && el.textContent.includes('Play as a guest')), 'a browser a member used shows "Welcome back / Log in" first');
 await c.screenshot({ path: `${out}/g5-welcome-back.png` });
 
+// ---- 8b. A guest who logs out on purpose isn't given a new guest automatically -------------------------
+const ctxE = await browser.createBrowserContext();
+const e = await newPage(ctxE);
+await startGuestOnPounce(e);
+e.dialogAnswer = true;
+await e.click('#user-trigger');
+await Promise.all([e.waitForNavigation({ timeout: 60000 }), e.click('#logout-btn')]);
+await e.goto(`${site}/pounce`, { waitUntil: 'domcontentloaded' });
+await e.waitForSelector('.play-gate [data-play-gate-start]', { timeout: 60000 });
+check((await currentUser(e)) === null, 'after a guest logs out, the game page shows Play now instead of a new guest');
+await e.click('.play-gate [data-play-gate-start]');
+await e.waitForSelector('#pounce-round-mount .pn-cell', { timeout: 90000 });
+check((await currentUser(e))?.anonymous === true, 'Play now still starts a guest after logging out');
+await ctxE.close();
+
 // ---- 9. A guest who will be cleaned up and then comes back -------------------------------------------
 const ctxD = await browser.createBrowserContext();
 const d = await newPage(ctxD);
@@ -233,6 +266,13 @@ await a.evaluate(() => {
     if (header && !header.closest('[data-collapsible]').classList.contains('open')) header.click();
 });
 await a.waitForSelector('#guest-cleanup-check', { visible: true, timeout: 10000 });
+// "Never played" filter: guest C has a score, guest D doesn't.
+await a.click('#guest-cleanup-never-played');
+await a.click('#guest-cleanup-check');
+await a.waitForFunction(() => /inactive|Nothing|failed/.test(document.getElementById('guest-cleanup-result').textContent) && !/Checking/.test(document.getElementById('guest-cleanup-result').textContent), { timeout: 60000 }).catch(() => {});
+const neverPlayed = await a.$eval('#guest-cleanup-result', (el) => el.textContent.replace(/\s+/g, ' ').trim());
+check(/^1 never-played guest inactive 30\+ days/.test(neverPlayed), `"never finished a game" filter finds only the empty guest (${neverPlayed})`);
+await a.click('#guest-cleanup-never-played');
 await a.click('#guest-cleanup-check');
 await a.waitForFunction(() => /inactive|Nothing|failed/.test(document.getElementById('guest-cleanup-result').textContent) && !/Checking/.test(document.getElementById('guest-cleanup-result').textContent), { timeout: 60000 })
     .catch(async () => console.log('cleanup result:', await a.$eval('#guest-cleanup-result', (el) => el.textContent)));

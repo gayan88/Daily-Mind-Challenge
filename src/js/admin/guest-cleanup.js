@@ -4,6 +4,7 @@ import {
     getDocs,
     query,
     where,
+    limit,
     writeBatch,
     Timestamp,
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
@@ -48,6 +49,14 @@ export async function findInactiveGuests(days) {
     return snap.docs
         .map((d) => ({ uid: d.id, ...d.data() }))
         .sort((a, b) => (a.lastLoginAt?.toMillis() || 0) - (b.lastLoginAt?.toMillis() || 0));
+}
+
+/** Guests from `guests` that have no `gameScores` at all -- the empty guests left by visitors who
+ * opened a game (a guest is created automatically there since 2026-11-15) but never finished one. */
+export async function filterNeverPlayed(guests) {
+    const checks = await Promise.all(guests.map((g) =>
+        getDocs(query(collection(db, 'gameScores'), where('userId', '==', g.uid), limit(1)))));
+    return guests.filter((g, i) => checks[i].empty);
 }
 
 /** Every doc reference owned by one guest, including the guest doc and its name reservation. */
@@ -113,16 +122,19 @@ export function wireGuestCleanup() {
         deleteBtn.hidden = true;
         resultEl.textContent = 'Checking…';
         try {
+            const neverPlayedOnly = document.getElementById('guest-cleanup-never-played')?.checked;
             found = await findInactiveGuests(days());
+            if (neverPlayedOnly) found = await filterNeverPlayed(found);
+            const which = neverPlayedOnly ? 'never-played guests' : 'guests';
             if (found.length === 0) {
-                resultEl.textContent = `No guests inactive for ${days()}+ days. Nothing to delete.`;
+                resultEl.textContent = `No ${which} inactive for ${days()}+ days. Nothing to delete.`;
                 return;
             }
             const summary = await previewCleanup(found, (done, total) => {
                 resultEl.textContent = `Checking… ${done} / ${total} guests`;
             });
             resultEl.innerHTML = `
-                <strong>${summary.guests.toLocaleString()}</strong> guest${summary.guests === 1 ? '' : 's'} inactive ${days()}+ days
+                <strong>${summary.guests.toLocaleString()}</strong> ${neverPlayedOnly ? 'never-played ' : ''}guest${summary.guests === 1 ? '' : 's'} inactive ${days()}+ days
                 · <strong>${summary.scores.toLocaleString()}</strong> score${summary.scores === 1 ? '' : 's'}
                 · <strong>${summary.records.toLocaleString()}</strong> record${summary.records === 1 ? '' : 's'} in all
                 · oldest last seen ${escapeHtml(formatDate(found[0].lastLoginAt))}
